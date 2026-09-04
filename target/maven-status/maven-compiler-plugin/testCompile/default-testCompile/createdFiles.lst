@@ -1,0 +1,12 @@
+com\tallerwebi\integracion\config\SpringWebTestConfig.class
+com\tallerwebi\infraestructura\config\HibernateInfraestructuraTestConfig.class
+com\tallerwebi\integracion\config\HibernateTestConfig.class
+com\tallerwebi\presentacion\ControladorLoginTest.class
+com\tallerwebi\punta_a_punta\vistas\VistaNuevoUsuario.class
+com\tallerwebi\integracion\ControladorLoginTest.class
+com\tallerwebi\punta_a_punta\VistaLoginE2E.class
+com\tallerwebi\punta_a_punta\vistas\VistaWeb.class
+com\tallerwebi\punta_a_punta\vistas\VistaLogin.class
+com\tallerwebi\dominio\ServicioLoginTest.class
+com\tallerwebi\infraestructura\RepositorioUsuarioTest.class
+com\tallerwebi\punta_a_punta\ReiniciarDB.class
