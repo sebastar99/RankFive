@@ -1,4 +1,4 @@
-Proyecto base Taller Web I (Maven and Thymeleaf)
+Proyecto RankFive - TallerWeb 1 Grupo 14 - FechaLibre
 ===============================
 
 ## Preparación del ambiente de desarrollo
