@@ -1,4 +1,5 @@
 com\tallerwebi\config\DatabaseInitializationConfig.class
+com\tallerwebi\dominio\PerfilJugador.class
 com\tallerwebi\dominio\ServicioLoginImpl.class
 com\tallerwebi\dominio\ServicioLogin.class
 com\tallerwebi\MyServletInitializer.class

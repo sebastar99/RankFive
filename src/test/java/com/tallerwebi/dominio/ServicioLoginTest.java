@@ -41,8 +41,10 @@ public class ServicioLoginTest {
     // preparacion
     Usuario usuario = new Usuario();
     usuario.setEmail("nuevo@test.com");
+    usuario.getPerfil().setNombreUsuario("nuevojugador");
     usuario.setPassword("123");
-    when(this.repositorioUsuarioMock.buscarUsuario(usuario.getEmail(), usuario.getPassword()))
+    when(this.repositorioUsuarioMock.buscar(usuario.getEmail())).thenReturn(null);
+    when(this.repositorioUsuarioMock.buscarPorNombreUsuario(usuario.getPerfil().getNombreUsuario()))
       .thenReturn(null);
 
     // ejecucion
@@ -57,9 +59,9 @@ public class ServicioLoginTest {
     // preparacion
     Usuario usuario = new Usuario();
     usuario.setEmail("existe@test.com");
+    usuario.getPerfil().setNombreUsuario("jugadorexistente");
     usuario.setPassword("123");
-    when(this.repositorioUsuarioMock.buscarUsuario(usuario.getEmail(), usuario.getPassword()))
-      .thenReturn(new Usuario());
+    when(this.repositorioUsuarioMock.buscar(usuario.getEmail())).thenReturn(new Usuario());
 
     // ejecucion y validacion
     assertThrows(UsuarioExistente.class, () -> this.servicioLogin.registrar(usuario));

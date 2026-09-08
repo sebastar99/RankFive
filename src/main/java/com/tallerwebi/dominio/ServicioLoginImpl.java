@@ -23,12 +23,18 @@ public class ServicioLoginImpl implements ServicioLogin {
 
   @Override
   public void registrar(Usuario usuario) throws UsuarioExistente {
-    Usuario usuarioEncontrado = repositorioUsuario.buscarUsuario(
-      usuario.getEmail(),
-      usuario.getPassword()
+    Usuario usuarioConMismoEmail = repositorioUsuario.buscar(usuario.getEmail());
+    Usuario usuarioConMismoNombre = repositorioUsuario.buscarPorNombreUsuario(
+      usuario.getPerfil().getNombreUsuario()
     );
-    if (usuarioEncontrado != null) {
+    if (usuarioConMismoEmail != null || usuarioConMismoNombre != null) {
       throw new UsuarioExistente();
+    }
+    if (usuario.getRol() == null || usuario.getRol().isBlank()) {
+      usuario.setRol("JUGADOR");
+    }
+    if (usuario.getPerfil().getPl() == null) {
+      usuario.getPerfil().setPl(1000);
     }
     repositorioUsuario.guardar(usuario);
   }

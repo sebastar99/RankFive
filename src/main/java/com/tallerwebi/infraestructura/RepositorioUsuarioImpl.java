@@ -42,6 +42,15 @@ public class RepositorioUsuarioImpl implements RepositorioUsuario {
   }
 
   @Override
+  public Usuario buscarPorNombreUsuario(String nombreUsuario) {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery("from Usuario where perfil.nombreUsuario = :nombreUsuario", Usuario.class)
+      .setParameter("nombreUsuario", nombreUsuario)
+      .uniqueResult();
+  }
+
+  @Override
   public void modificar(Usuario usuario) {
     Usuario existente = sessionFactory
       .getCurrentSession()

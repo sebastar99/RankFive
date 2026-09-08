@@ -1,12 +1,12 @@
 package com.tallerwebi.dominio;
 
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
-
 
 @Getter
 @Setter
@@ -21,6 +21,9 @@ public class Usuario {
   private String password;
   private String rol;
   private Boolean activo = false;
+
+  @Embedded
+  private PerfilJugador perfil = new PerfilJugador();
 
   public void activar() {
     activo = true;
