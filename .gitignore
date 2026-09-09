@@ -24,3 +24,6 @@ hs_err_pid*
 
 # Reportes de codigo limpio y cobertura de pruebas
 .calidad-de-codigo/
+
+# Variables de entorno (credenciales de base de datos)
+.env

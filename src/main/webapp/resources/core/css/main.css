@@ -136,10 +136,14 @@ body {
 .hero-bg {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse at 20% 0%, rgba(0, 224, 123, 0.12) 0%, transparent 45%),
-    radial-gradient(ellipse at 80% 80%, rgba(241, 196, 15, 0.08) 0%, transparent 40%),
-    linear-gradient(135deg, var(--rf-navy) 0%, var(--rf-black) 100%);
+  background-image:
+    linear-gradient(90deg, rgba(5, 8, 15, 0.9) 0%, rgba(5, 8, 15, 0.72) 52%, rgba(5, 8, 15, 0.82) 100%),
+    radial-gradient(ellipse at 20% 0%, rgba(0, 224, 123, 0.18) 0%, transparent 45%),
+    radial-gradient(ellipse at 80% 80%, rgba(241, 196, 15, 0.1) 0%, transparent 40%),
+    url('../images/cancha-futbol-rank5.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
   z-index: 0;
 }
 
