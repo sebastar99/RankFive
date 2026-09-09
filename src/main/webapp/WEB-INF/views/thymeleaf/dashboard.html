@@ -96,7 +96,7 @@
         <section class="quick-actions card-glass p-4">
           <div class="d-flex flex-wrap gap-3">
             <a href="#" class="btn btn-primary btn-action"><i class="bi bi-plus-circle me-2"></i>Crear partido</a>
-            <a href="#" class="btn btn-outline-light btn-action"><i class="bi bi-person-plus me-2"></i>Buscar amigos</a>
+            <a th:href="@{/buscar}" class="btn btn-outline-light btn-action"><i class="bi bi-person-plus me-2"></i>Buscar amigos</a>
             <a href="#" class="btn btn-outline-light btn-action"><i class="bi bi-trophy me-2"></i>Ver ranking</a>
           </div>
         </section>
@@ -109,26 +109,17 @@
             <a href="#" class="text-muted small">Ver todos</a>
           </div>
           <div class="ranking-list">
-            <div class="ranking-item">
-              <div class="pos">1</div>
+            <div class="ranking-item" th:each="amigo, iter : ${rankingAmigos}">
+              <div class="pos" th:text="${iter.count}">1</div>
               <div class="avatar"><i class="bi bi-person-circle"></i></div>
-              <div class="name">María Gómez <span class="username">@maria</span></div>
-              <div class="points">1840 pts</div>
-              <div class="range"><span class="rank-badge rank-gold"><i class="bi bi-trophy-fill"></i> Oro</span></div>
+              <div class="name">
+                <span th:text="${amigo.perfil.nombreCompleto} ?: ${amigo.email}">Nombre</span>
+                <span class="username" th:text="'@' + (${amigo.perfil.nombreUsuario} ?: 'usuario')">@usuario</span>
+              </div>
+              <div class="points" th:text="(${amigo.perfil.pl} ?: 0) + ' pts'">0 pts</div>
             </div>
-            <div class="ranking-item">
-              <div class="pos">2</div>
-              <div class="avatar"><i class="bi bi-person-circle"></i></div>
-              <div class="name">Pedro Ruiz <span class="username">@pedro</span></div>
-              <div class="points">1760 pts</div>
-              <div class="range"><span class="rank-badge rank-silver"><i class="bi bi-trophy"></i> Plata</span></div>
-            </div>
-            <div class="ranking-item">
-              <div class="pos">3</div>
-              <div class="avatar"><i class="bi bi-person-circle"></i></div>
-              <div class="name">Laura Sosa <span class="username">@laura</span></div>
-              <div class="points">1685 pts</div>
-              <div class="range"><span class="rank-badge rank-bronze"><i class="bi bi-award"></i> Bronce</span></div>
+            <div class="text-muted" th:if="${#lists.isEmpty(rankingAmigos)}">
+              Todavía no agregaste amigos. Usá "Buscar amigos" para empezar.
             </div>
           </div>
         </section>

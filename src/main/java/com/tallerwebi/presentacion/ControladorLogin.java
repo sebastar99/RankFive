@@ -1,9 +1,12 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.ServicioLogin;
+import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -23,10 +26,16 @@ public class ControladorLogin {
   private static final int GOLD_MIN = 2001;
   private static final int SILVER_MIN = 1501;
   private ServicioLogin servicioLogin;
+  private ServicioRelacionAmistad servicioRelacionAmistad;
 
   @Autowired
   public ControladorLogin(ServicioLogin servicioLogin) {
     this.servicioLogin = servicioLogin;
+  }
+
+  @Autowired(required = false)
+  public void setServicioRelacionAmistad(ServicioRelacionAmistad servicioRelacionAmistad) {
+    this.servicioRelacionAmistad = servicioRelacionAmistad;
   }
 
   @RequestMapping("/login")
@@ -104,45 +113,50 @@ public class ControladorLogin {
     if (usuario == null) {
       return new ModelAndView("redirect:/login");
     }
-    Integer pl = usuario.getPerfil() != null ? usuario.getPerfil().getPl() : null;
-    int puntos = pl != null ? pl : 0;
-
-    String rangoNombre;
-    String rangoCss;
-    String rangoIcon;
-    if (puntos >= LEGEND_MIN) {
-      rangoNombre = "Legendario";
-      rangoCss = "rank-legend";
-      rangoIcon = "bi-lightning-charge-fill";
-    } else if (puntos >= DIAMOND_MIN) {
-      rangoNombre = "Diamante";
-      rangoCss = "rank-diamond";
-      rangoIcon = "bi-gem";
-    } else if (puntos >= PLATINUM_MIN) {
-      rangoNombre = "Platino";
-      rangoCss = "rank-plat";
-      rangoIcon = "bi-diamond";
-    } else if (puntos >= GOLD_MIN) {
-      rangoNombre = "Oro";
-      rangoCss = "rank-gold";
-      rangoIcon = "bi-trophy-fill";
-    } else if (puntos >= SILVER_MIN) {
-      rangoNombre = "Plata";
-      rangoCss = "rank-silver";
-      rangoIcon = "bi-trophy";
-    } else {
-      rangoNombre = "Bronce";
-      rangoCss = "rank-bronze";
-      rangoIcon = "bi-award";
-    }
+    int puntos = calcularPuntos(usuario);
+    String[] rango = calcularRango(puntos);
 
     Map<String, Object> model = new ModelMap();
     model.put(ATRIBUTO_USUARIO, usuario);
     model.put("puntos", puntos);
-    model.put("rangoNombre", rangoNombre);
-    model.put("rangoCss", rangoCss);
-    model.put("rangoIcon", rangoIcon);
+    model.put("rangoNombre", rango[0]);
+    model.put("rangoCss", rango[1]);
+    model.put("rangoIcon", rango[2]);
+    model.put("rankingAmigos", obtenerRankingAmigos(usuario));
     return new ModelAndView("dashboard", model);
+  }
+
+  private int calcularPuntos(Usuario usuario) {
+    if (usuario.getPerfil() == null || usuario.getPerfil().getPl() == null) {
+      return 0;
+    }
+    return usuario.getPerfil().getPl();
+  }
+
+  private String[] calcularRango(int puntos) {
+    if (puntos >= LEGEND_MIN) {
+      return new String[] { "Legendario", "rank-legend", "bi-lightning-charge-fill" };
+    }
+    if (puntos >= DIAMOND_MIN) {
+      return new String[] { "Diamante", "rank-diamond", "bi-gem" };
+    }
+    if (puntos >= PLATINUM_MIN) {
+      return new String[] { "Platino", "rank-plat", "bi-diamond" };
+    }
+    if (puntos >= GOLD_MIN) {
+      return new String[] { "Oro", "rank-gold", "bi-trophy-fill" };
+    }
+    if (puntos >= SILVER_MIN) {
+      return new String[] { "Plata", "rank-silver", "bi-trophy" };
+    }
+    return new String[] { "Bronce", "rank-bronze", "bi-award" };
+  }
+
+  private List<Usuario> obtenerRankingAmigos(Usuario usuario) {
+    if (servicioRelacionAmistad == null) {
+      return Collections.emptyList();
+    }
+    return servicioRelacionAmistad.listarAmigosDe(usuario);
   }
 
   @RequestMapping(path = "/logout", method = RequestMethod.GET)
