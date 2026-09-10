@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.Amistad;
+import com.tallerwebi.dominio.Rango;
 import com.tallerwebi.dominio.ServicioLogin;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Usuario;
@@ -22,11 +23,6 @@ import org.springframework.web.servlet.ModelAndView;
 public class ControladorLogin {
 
   private static final String ATRIBUTO_USUARIO = "usuario";
-  private static final int LEGEND_MIN = 3501;
-  private static final int DIAMOND_MIN = 3001;
-  private static final int PLATINUM_MIN = 2501;
-  private static final int GOLD_MIN = 2001;
-  private static final int SILVER_MIN = 1501;
   private ServicioLogin servicioLogin;
   private ServicioRelacionAmistad servicioRelacionAmistad;
 
@@ -119,14 +115,14 @@ public class ControladorLogin {
       return new ModelAndView("redirect:/login");
     }
     int puntos = calcularPuntos(usuario);
-    String[] rango = calcularRango(puntos);
+    Rango rango = Rango.de(puntos);
 
     Map<String, Object> model = new ModelMap();
     model.put(ATRIBUTO_USUARIO, usuario);
     model.put("puntos", puntos);
-    model.put("rangoNombre", rango[0]);
-    model.put("rangoCss", rango[1]);
-    model.put("rangoIcon", rango[2]);
+    model.put("rangoNombre", rango.getNombre());
+    model.put("rangoCss", rango.getCss());
+    model.put("rangoIcon", rango.getIcono());
     model.put("rankingAmigos", obtenerRankingAmigos(usuario));
     model.put("solicitudesPendientes", obtenerSolicitudesPendientes(usuario));
     model.put("cantidadSolicitudes", contarSolicitudesPendientes(usuario));
@@ -139,25 +135,6 @@ public class ControladorLogin {
       return 0;
     }
     return usuario.getPerfil().getPl();
-  }
-
-  private String[] calcularRango(int puntos) {
-    if (puntos >= LEGEND_MIN) {
-      return new String[] { "Legendario", "rank-legend", "bi-lightning-charge-fill" };
-    }
-    if (puntos >= DIAMOND_MIN) {
-      return new String[] { "Diamante", "rank-diamond", "bi-gem" };
-    }
-    if (puntos >= PLATINUM_MIN) {
-      return new String[] { "Platino", "rank-plat", "bi-diamond" };
-    }
-    if (puntos >= GOLD_MIN) {
-      return new String[] { "Oro", "rank-gold", "bi-trophy-fill" };
-    }
-    if (puntos >= SILVER_MIN) {
-      return new String[] { "Plata", "rank-silver", "bi-trophy" };
-    }
-    return new String[] { "Bronce", "rank-bronze", "bi-award" };
   }
 
   private List<Usuario> obtenerRankingAmigos(Usuario usuario) {

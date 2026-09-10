@@ -7,50 +7,88 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" th:href="@{/css/main.css}" />
-  <link rel="stylesheet" th:href="@{/css/dashboard.css}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=4)}" />
 </head>
 <body class="dashboard-page">
-  <div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="h4 text-light m-0">Buscar amigos</h1>
-      <div class="d-flex align-items-center gap-3">
-        <div th:replace="~{fragments/notificaciones :: campana}"></div>
-        <a th:href="@{/dashboard}" class="btn btn-outline-light btn-sm">
-          <i class="bi bi-arrow-left me-1"></i> Volver al dashboard
-        </a>
+  <div class="pitch-bg"></div>
+
+  <header class="db-header fixed-top">
+    <div class="container">
+      <div class="db-header-content">
+        <div class="db-left d-flex align-items-center gap-2">
+          <a th:href="@{/dashboard}" class="db-brand">
+            <span class="db-brand-logo"><i class="bi bi-trophy-fill"></i></span>
+            <span class="db-brand-text">Rank<span class="db-brand-accent">5</span></span>
+          </a>
+        </div>
+        <div class="db-center d-flex align-items-center gap-2">
+          <span class="db-page-title"><i class="bi bi-person-plus"></i>Buscar amigos</span>
+        </div>
+        <div class="db-right d-flex align-items-center gap-4">
+          <div th:replace="~{fragments/notificaciones :: campana}"></div>
+          <span class="db-divider"></span>
+          <a th:href="@{/dashboard}" class="db-link"><i class="bi bi-arrow-left"></i> Dashboard</a>
+        </div>
       </div>
     </div>
+  </header>
 
-    <form class="card-glass p-3 mb-4" th:action="@{/buscar}" method="get">
-      <div class="row g-2 align-items-center">
-        <div class="col-sm-8">
-          <input class="form-control" type="text" name="nombreUsuario" placeholder="Nombre de usuario" required>
-        </div>
-        <div class="col-sm-4">
-          <button class="btn btn-primary w-100" type="submit"><i class="bi bi-search me-1"></i> Buscar</button>
-        </div>
-      </div>
-    </form>
-
-    <div th:if="${amigo != null}" class="card-glass p-3 mb-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <div class="text-light fw-semibold" th:text="${amigo.perfil.nombreCompleto} ?: ${amigo.email}">Nombre</div>
-          <div class="text-secondary" th:text="'@' + (${amigo.perfil.nombreUsuario} ?: 'usuario')">@usuario</div>
-          <div class="text-secondary">Puntos: <span th:text="${amigo.perfil.pl} ?: 0">0</span></div>
-        </div>
-        <form th:action="@{/enviar-solicitud}" method="post" class="m-0">
-          <input type="hidden" name="nombreUsuario" th:value="${amigo.perfil.nombreUsuario}">
-          <button type="submit" class="btn btn-success">
-            <i class="bi bi-person-plus me-1"></i> Enviar solicitud
+  <main class="container db-content">
+    <section class="search-hero card-glass mb-4">
+      <div class="search-hero-inner">
+        <h1 class="search-title">Encontrá a tu equipo</h1>
+        <p class="search-subtitle">Buscá jugadores por su nombre de usuario y enviales una solicitud de amistad.</p>
+        <form th:action="@{/buscar}" method="get" class="search-form">
+          <div class="search-input-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" name="nombreUsuario" placeholder="Ej: juanperez10"
+                   th:value="${param.nombreUsuario}" required autocomplete="off">
+          </div>
+          <button type="submit" class="btn btn-primary btn-action">
+            <i class="bi bi-search me-1"></i>Buscar
           </button>
         </form>
       </div>
+    </section>
+
+    <div th:if="${error != null}" class="alert alert-warning d-flex align-items-center gap-2">
+      <i class="bi bi-exclamation-triangle"></i><span th:text="${error}">Error</span>
+    </div>
+    <div th:if="${ok != null}" class="alert alert-success d-flex align-items-center gap-2">
+      <i class="bi bi-check-circle"></i><span th:text="${ok}">OK</span>
     </div>
 
-    <div th:if="${error != null}" class="alert alert-warning">[[${error}]]</div>
-    <div th:if="${ok != null}" class="alert alert-success">[[${ok}]]</div>
-  </div>
+    <section th:if="${amigo != null}" class="card-glass result-card p-4">
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div class="db-avatar db-avatar-lg">
+          <i class="bi bi-person-circle"></i>
+        </div>
+        <div class="result-info">
+          <div class="db-user-name fs-5" th:text="${amigo.perfil.nombreCompleto} ?: ${amigo.email}">Nombre</div>
+          <div class="text-muted" th:text="'@' + (${amigo.perfil.nombreUsuario} ?: 'usuario')">@usuario</div>
+          <div class="mt-2">
+            <span class="rank-badge"
+                  th:classappend="${T(com.tallerwebi.dominio.Rango).de(amigo.perfil.pl).css}">
+              <i class="bi" th:classappend="' ' + ${T(com.tallerwebi.dominio.Rango).de(amigo.perfil.pl).icono}"></i>
+              <span th:text="${T(com.tallerwebi.dominio.Rango).de(amigo.perfil.pl).nombre}">Plata</span>
+            </span>
+          </div>
+        </div>
+        <div class="ms-auto d-flex align-items-center gap-4">
+          <div class="mini-stat text-center">
+            <div class="label"><i class="bi bi-star-fill me-1"></i>Puntos</div>
+            <div class="stat" th:text="${amigo.perfil.pl} ?: 0">0</div>
+          </div>
+          <form th:action="@{/enviar-solicitud}" method="post" class="m-0">
+            <input type="hidden" name="nombreUsuario" th:value="${amigo.perfil.nombreUsuario}">
+            <button type="submit" class="btn btn-primary btn-action">
+              <i class="bi bi-person-plus me-1"></i>Enviar solicitud
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

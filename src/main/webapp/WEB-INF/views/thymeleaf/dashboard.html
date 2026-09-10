@@ -8,7 +8,7 @@
         integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" th:href="@{/css/main.css}" />
-  <link rel="stylesheet" th:href="@{/css/dashboard.css}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=4)}" />
 </head>
 <body class="dashboard-page">
   <div class="pitch-bg"></div>
@@ -16,30 +16,21 @@
   <header class="db-header fixed-top">
     <div class="container">
       <div class="db-header-content">
-        <div class="db-left d-flex align-items-center gap-3">
+        <div class="db-left d-flex align-items-center gap-2">
+          <a th:href="@{/dashboard}" class="db-brand">
+            <span class="db-brand-logo"><i class="bi bi-trophy-fill"></i></span>
+            <span class="db-brand-text">Rank<span class="db-brand-accent">5</span></span>
+          </a>
+        </div>
+        <div class="db-center d-flex align-items-center gap-2">
           <div class="db-avatar">
             <i class="bi bi-person-circle"></i>
           </div>
-          <div class="db-user-meta">
-            <div class="db-user-name" th:text="${usuario.perfil.nombreCompleto} ?: ${usuario.email}">Juan Pérez</div>
-            <div class="db-username text-muted" th:text="'@' + (${usuario.perfil.nombreUsuario} ?: 'usuario')">@juanperez10</div>
-          </div>
+          <span class="db-header-user" th:text="${usuario.perfil.nombreUsuario} ?: 'usuario'">juanperez10</span>
         </div>
-        <div class="db-center d-flex align-items-center gap-4">
-          <div class="db-pill">
-            <span class="label">Puntos</span>
-            <span class="value" th:text="${puntos}">1200</span>
-          </div>
-          <div class="db-pill">
-            <span class="label">Rango</span>
-            <span class="value rank-badge" th:classappend="${rangoCss}">
-              <i class="bi" th:classappend="' ' + ${rangoIcon}"></i>
-              <span th:text="${rangoNombre}">Plata</span>
-            </span>
-          </div>
-        </div>
-        <div class="db-right d-flex align-items-center gap-3">
+        <div class="db-right d-flex align-items-center gap-4">
           <div th:replace="~{fragments/notificaciones :: campana}"></div>
+          <span class="db-divider"></span>
           <a href="#" class="db-link"><i class="bi bi-gear"></i> Configuración</a>
           <a th:href="@{/logout}" class="db-link text-danger"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a>
         </div>
@@ -53,41 +44,44 @@
     </div>
     <div class="row g-4">
       <div class="col-12">
-        <section class="profile-summary card-glass p-4">
-          <div class="row g-4 align-items-center">
-            <div class="col-md-4 d-flex align-items-center gap-3">
-              <div class="db-avatar db-avatar-lg">
-                <i class="bi bi-person-circle"></i>
+        <section class="profile-summary card-glass">
+          <div class="profile-accent" th:classappend="${rangoCss}"></div>
+          <div class="p-4">
+            <div class="row g-4 align-items-center">
+              <div class="col-md-5 d-flex align-items-center gap-3">
+                <div class="db-avatar db-avatar-lg">
+                  <i class="bi bi-person-circle"></i>
+                </div>
+                <div>
+                  <div class="db-user-name fs-4" th:text="${usuario.perfil.nombreCompleto} ?: ${usuario.email}">Juan Pérez</div>
+                  <div class="text-muted" th:text="'@' + (${usuario.perfil.nombreUsuario} ?: 'usuario')">@juanperez10</div>
+                  <div class="mt-2">
+                    <span class="rank-badge" th:classappend="${rangoCss}">
+                      <i class="bi" th:classappend="' ' + ${rangoIcon}"></i>
+                      <span th:text="${rangoNombre}">Plata</span>
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <div class="db-user-name fs-4" th:text="${usuario.perfil.nombreCompleto} ?: ${usuario.email}">Juan Pérez</div>
-                <div class="text-muted" th:text="'@' + (${usuario.perfil.nombreUsuario} ?: 'usuario')">@juanperez10</div>
-              </div>
-            </div>
-            <div class="col-md-8">
-              <div class="row g-3 text-center text-md-start">
-                <div class="col-6 col-md-3">
-                  <div class="mini-stat">
-                    <div class="label">Puntos</div>
-                    <div class="stat" th:text="${puntos}">1200</div>
+              <div class="col-md-7">
+                <div class="row g-3 text-center text-md-start">
+                  <div class="col-6 col-md-4">
+                    <div class="mini-stat">
+                      <div class="label"><i class="bi bi-star-fill me-1"></i>Puntos</div>
+                      <div class="stat" th:text="${puntos}">1200</div>
+                    </div>
                   </div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div class="mini-stat">
-                    <div class="label">Rango</div>
-                    <div class="stat"><span class="rank-badge" th:classappend="${rangoCss}"><i class="bi" th:classappend="' ' + ${rangoIcon}"></i> <span th:text="${rangoNombre}">Plata</span></span></div>
+                  <div class="col-6 col-md-4">
+                    <div class="mini-stat">
+                      <div class="label"><i class="bi bi-people-fill me-1"></i>Amigos</div>
+                      <div class="stat" th:text="${#lists.size(rankingAmigos)}">0</div>
+                    </div>
                   </div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div class="mini-stat">
-                    <div class="label">Usuario</div>
-                    <div class="stat" th:text="${usuario.perfil.nombreUsuario} ?: 'usuario'">juanperez10</div>
-                  </div>
-                </div>
-                <div class="col-6 col-md-3">
-                  <div class="mini-stat">
-                    <div class="label">Avatar</div>
-                    <div class="stat"><i class="bi bi-image"></i> Próximamente</div>
+                  <div class="col-6 col-md-4">
+                    <div class="mini-stat">
+                      <div class="label"><i class="bi bi-bell-fill me-1"></i>Solicitudes</div>
+                      <div class="stat" th:text="${cantidadSolicitudes}">0</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -101,12 +95,15 @@
           <div class="d-flex flex-wrap gap-3">
             <a href="#" class="btn btn-primary btn-action"><i class="bi bi-plus-circle me-2"></i>Crear partido</a>
             <a th:href="@{/buscar}" class="btn btn-outline-light btn-action"><i class="bi bi-person-plus me-2"></i>Buscar amigos</a>
-            <a href="#" class="btn btn-outline-light btn-action"><i class="bi bi-trophy me-2"></i>Ver ranking</a>
+            <a href="#" class="btn btn-outline-light btn-action"><i class="bi bi-people-fill me-2"></i>Agregar equipo</a>
+            <a href="#" class="btn btn-outline-light btn-action"><i class="bi bi-flag-fill me-2"></i>Liga/Torneos</a>
+            <a href="#" class="btn btn-outline-light btn-action"><i class="bi bi-clock-history me-2"></i>Ver historial</a>
+            <a href="#" class="btn btn-outline-light btn-action"><i class="bi bi-bar-chart-line-fill me-2"></i>Ranking de equipos</a>
           </div>
         </section>
       </div>
 
-      <div class="col-12">
+      <div class="col-12 col-lg-6">
         <section class="friends-ranking card-glass p-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h5 m-0">Ranking de amigos</h2>
@@ -120,10 +117,208 @@
                 <span th:text="${amigo.perfil.nombreCompleto} ?: ${amigo.email}">Nombre</span>
                 <span class="username" th:text="'@' + (${amigo.perfil.nombreUsuario} ?: 'usuario')">@usuario</span>
               </div>
-              <div class="points" th:text="(${amigo.perfil.pl} ?: 0) + ' pts'">0 pts</div>
+              <div class="points">
+                <span class="rank-badge rank-badge-sm"
+                      th:classappend="${T(com.tallerwebi.dominio.Rango).de(amigo.perfil.pl).css}">
+                  <i class="bi" th:classappend="' ' + ${T(com.tallerwebi.dominio.Rango).de(amigo.perfil.pl).icono}"></i>
+                  <span th:text="${T(com.tallerwebi.dominio.Rango).de(amigo.perfil.pl).nombre}">Platino</span>
+                </span>
+                <span th:text="(${amigo.perfil.pl} ?: 0) + ' pts'">0 pts</span>
+              </div>
             </div>
-            <div class="text-muted" th:if="${#lists.isEmpty(rankingAmigos)}">
-              Todavía no tenés amigos. Usá "Buscar amigos" para enviar una solicitud.
+            <div class="ranking-empty" th:if="${#lists.isEmpty(rankingAmigos)}">
+              <i class="bi bi-people"></i>
+              <p class="m-0">Todavía no tenés amigos.</p>
+              <a th:href="@{/buscar}" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-person-plus me-1"></i>Buscar amigos
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <section class="team-ranking card-glass p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 m-0">Ranking de tu equipo</h2>
+            <span class="text-muted small"><i class="bi bi-arrow-left-right me-1"></i>Deslizá</span>
+          </div>
+          <div class="team-carousel">
+            <div class="team-card">
+              <div class="team-name">
+                <span class="team-title"><i class="bi bi-shield-fill"></i>Los Pibes FC</span>
+                <span class="rank-badge rank-badge-sm rank-gold" title="Promedio del equipo">
+                  <i class="bi bi-trophy-fill"></i><span>Oro · 2320 pts</span>
+                </span>
+              </div>
+              <div class="ranking-list">
+                <div class="ranking-item">
+                  <div class="pos">1</div>
+                  <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                  <div class="name">
+                    <span>Diego Ramírez</span>
+                    <span class="username">@diegor</span>
+                  </div>
+                  <div class="points">
+                    <span class="rank-badge rank-badge-sm rank-legend"><i class="bi bi-lightning-charge-fill"></i><span>Legendario</span></span>
+                    <span>3600 pts</span>
+                  </div>
+                </div>
+                <div class="ranking-item">
+                  <div class="pos">2</div>
+                  <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                  <div class="name">
+                    <span>Usuario 15</span>
+                    <span class="username">@user15</span>
+                  </div>
+                  <div class="points">
+                    <span class="rank-badge rank-badge-sm rank-plat"><i class="bi bi-diamond"></i><span>Platino</span></span>
+                    <span>3000 pts</span>
+                  </div>
+                </div>
+                <div class="ranking-item">
+                  <div class="pos">3</div>
+                  <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                  <div class="name">
+                    <span>Juan Pérez</span>
+                    <span class="username">@juanperez10</span>
+                  </div>
+                  <div class="points">
+                    <span class="rank-badge rank-badge-sm rank-gold"><i class="bi bi-trophy-fill"></i><span>Oro</span></span>
+                    <span>2300 pts</span>
+                  </div>
+                </div>
+                <div class="ranking-item">
+                  <div class="pos">4</div>
+                  <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                  <div class="name">
+                    <span>Martín Gómez</span>
+                    <span class="username">@martin_g</span>
+                  </div>
+                  <div class="points">
+                    <span class="rank-badge rank-badge-sm rank-silver"><i class="bi bi-trophy"></i><span>Plata</span></span>
+                    <span>1800 pts</span>
+                  </div>
+                </div>
+                <div class="ranking-item">
+                  <div class="pos">5</div>
+                  <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                  <div class="name">
+                    <span>Carlos Méndez</span>
+                    <span class="username">@carlosm</span>
+                  </div>
+                  <div class="points">
+                    <span class="rank-badge rank-badge-sm rank-bronze"><i class="bi bi-award"></i><span>Bronce</span></span>
+                    <span>900 pts</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="team-card">
+              <div class="team-name">
+                <span class="team-title"><i class="bi bi-shield-fill"></i>Dream Team</span>
+                <span class="rank-badge rank-badge-sm rank-gold" title="Promedio del equipo">
+                  <i class="bi bi-trophy-fill"></i><span>Oro · 2250 pts</span>
+                </span>
+              </div>
+              <div class="ranking-list">
+                <div class="ranking-item">
+                  <div class="pos">1</div>
+                  <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                  <div class="name">
+                    <span>Usuario 15</span>
+                    <span class="username">@user15</span>
+                  </div>
+                  <div class="points">
+                    <span class="rank-badge rank-badge-sm rank-plat"><i class="bi bi-diamond"></i><span>Platino</span></span>
+                    <span>3000 pts</span>
+                  </div>
+                </div>
+                <div class="ranking-item">
+                  <div class="pos">2</div>
+                  <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                  <div class="name">
+                    <span>Juan Pérez</span>
+                    <span class="username">@juanperez10</span>
+                  </div>
+                  <div class="points">
+                    <span class="rank-badge rank-badge-sm rank-gold"><i class="bi bi-trophy-fill"></i><span>Oro</span></span>
+                    <span>2300 pts</span>
+                  </div>
+                </div>
+                <div class="ranking-item">
+                  <div class="pos">3</div>
+                  <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                  <div class="name">
+                    <span>Lucas Paz</span>
+                    <span class="username">@lucasp</span>
+                  </div>
+                  <div class="points">
+                    <span class="rank-badge rank-badge-sm rank-gold"><i class="bi bi-trophy-fill"></i><span>Oro</span></span>
+                    <span>2100 pts</span>
+                  </div>
+                </div>
+                <div class="ranking-item">
+                  <div class="pos">4</div>
+                  <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                  <div class="name">
+                    <span>Ana Torres</span>
+                    <span class="username">@anat</span>
+                  </div>
+                  <div class="points">
+                    <span class="rank-badge rank-badge-sm rank-silver"><i class="bi bi-trophy"></i><span>Plata</span></span>
+                    <span>1600 pts</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="team-card">
+              <div class="team-name">
+                <span class="team-title"><i class="bi bi-shield-fill"></i>Los Galácticos</span>
+                <span class="rank-badge rank-badge-sm rank-plat" title="Promedio del equipo">
+                  <i class="bi bi-diamond"></i><span>Platino · 2967 pts</span>
+                </span>
+              </div>
+              <div class="ranking-list">
+                <div class="ranking-item">
+                  <div class="pos">1</div>
+                  <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                  <div class="name">
+                    <span>Diego Ramírez</span>
+                    <span class="username">@diegor</span>
+                  </div>
+                  <div class="points">
+                    <span class="rank-badge rank-badge-sm rank-legend"><i class="bi bi-lightning-charge-fill"></i><span>Legendario</span></span>
+                    <span>3600 pts</span>
+                  </div>
+                </div>
+                <div class="ranking-item">
+                  <div class="pos">2</div>
+                  <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                  <div class="name">
+                    <span>Usuario 15</span>
+                    <span class="username">@user15</span>
+                  </div>
+                  <div class="points">
+                    <span class="rank-badge rank-badge-sm rank-plat"><i class="bi bi-diamond"></i><span>Platino</span></span>
+                    <span>3000 pts</span>
+                  </div>
+                </div>
+                <div class="ranking-item">
+                  <div class="pos">3</div>
+                  <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                  <div class="name">
+                    <span>Juan Pérez</span>
+                    <span class="username">@juanperez10</span>
+                  </div>
+                  <div class="points">
+                    <span class="rank-badge rank-badge-sm rank-gold"><i class="bi bi-trophy-fill"></i><span>Oro</span></span>
+                    <span>2300 pts</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
