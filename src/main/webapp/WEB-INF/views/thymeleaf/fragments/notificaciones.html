@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div class="dropdown notif-dropdown" th:fragment="campana">
+  <button class="notif-btn" type="button" id="notifDropdown" data-bs-toggle="dropdown"
+          data-bs-auto-close="outside" aria-expanded="false"
+          th:title="${cantidadSolicitudes} + ' solicitudes pendientes'">
+    <i class="bi bi-bell-fill"></i>
+    <span class="notif-badge" th:if="${cantidadSolicitudes > 0}" th:text="${cantidadSolicitudes}">0</span>
+  </button>
+
+  <div class="dropdown-menu dropdown-menu-end notif-menu" aria-labelledby="notifDropdown">
+    <div class="notif-header">
+      <span><i class="bi bi-person-plus me-2"></i>Solicitudes de amistad</span>
+      <span class="notif-count" th:text="${cantidadSolicitudes}">0</span>
+    </div>
+
+    <div class="notif-empty" th:if="${#lists.isEmpty(solicitudesPendientes)}">
+      <i class="bi bi-inbox"></i>
+      <span>No tenés solicitudes pendientes</span>
+    </div>
+
+    <div class="notif-item" th:each="solicitud : ${solicitudesPendientes}">
+      <div class="notif-avatar"><i class="bi bi-person-circle"></i></div>
+      <div class="notif-info">
+        <div class="notif-name"
+             th:text="${solicitud.usuario.perfil.nombreCompleto} ?: ${solicitud.usuario.email}">Nombre</div>
+        <div class="notif-user"
+             th:text="'@' + (${solicitud.usuario.perfil.nombreUsuario} ?: 'usuario')">@usuario</div>
+        <div class="notif-points">
+          <i class="bi bi-star-fill"></i>
+          <span th:text="(${solicitud.usuario.perfil.pl} ?: 0) + ' pts'">0 pts</span>
+        </div>
+      </div>
+      <div class="notif-actions">
+        <form th:action="@{/aceptar-solicitud}" method="post" class="m-0">
+          <input type="hidden" name="solicitudId" th:value="${solicitud.id}">
+          <button type="submit" class="btn btn-sm btn-success" title="Aceptar">
+            <i class="bi bi-check-lg"></i>
+          </button>
+        </form>
+        <form th:action="@{/rechazar-solicitud}" method="post" class="m-0">
+          <input type="hidden" name="solicitudId" th:value="${solicitud.id}">
+          <button type="submit" class="btn btn-sm btn-outline-danger" title="Rechazar">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

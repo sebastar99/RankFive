@@ -122,9 +122,105 @@
 .rank-diamond { color: #7df9ff; background: rgba(125,249,255,.12); }
 .rank-legend { color: #b16cff; background: rgba(177,108,255,.12); }
 
+/* Campana de notificaciones / solicitudes de amistad */
+.notif-dropdown { position: relative; }
+
+.notif-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  color: var(--rf-text);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--rf-surface-border);
+  transition: background .15s ease, color .15s ease;
+}
+.notif-btn:hover { background: rgba(255,255,255,0.12); color: var(--rf-primary); }
+.notif-btn i { font-size: 1.05rem; }
+
+.notif-badge {
+  position: absolute;
+  top: -.25rem;
+  right: -.25rem;
+  min-width: 1.15rem;
+  padding: 0 .3rem;
+  border-radius: 999px;
+  background: #e5484d;
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 800;
+  line-height: 1.15rem;
+  text-align: center;
+}
+
+.notif-menu {
+  width: 22rem;
+  max-height: 24rem;
+  overflow-y: auto;
+  padding: 0;
+  border-radius: .9rem;
+  background: rgba(16, 20, 28, 0.98);
+  border: 1px solid var(--rf-surface-border);
+  box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,.45);
+}
+
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .75rem 1rem;
+  font-weight: 700;
+  color: var(--rf-text);
+  border-bottom: 1px solid var(--rf-surface-border);
+}
+.notif-header .notif-count {
+  min-width: 1.4rem;
+  padding: 0 .4rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  color: var(--rf-text-muted);
+  font-size: .8rem;
+  text-align: center;
+}
+
+.notif-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .4rem;
+  padding: 1.5rem 1rem;
+  color: var(--rf-text-muted);
+  font-size: .9rem;
+}
+.notif-empty i { font-size: 1.6rem; opacity: .6; }
+
+.notif-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: .75rem;
+  padding: .75rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: rgba(255,255,255,.03); }
+
+.notif-avatar { display: grid; place-items: center; color: var(--rf-text-muted); font-size: 1.7rem; }
+.notif-info { min-width: 0; }
+.notif-name { color: var(--rf-text); font-weight: 600; font-size: .92rem; }
+.notif-user { color: var(--rf-text-muted); font-size: .82rem; }
+.notif-points { color: var(--rf-primary); font-size: .78rem; font-weight: 700; }
+.notif-points i { font-size: .7rem; }
+
+.notif-actions { display: flex; gap: .35rem; }
+.notif-actions .btn { padding: .25rem .5rem; line-height: 1; }
+
 @media (max-width: 991px) {
   .db-header .db-header-content { grid-template-columns: 1fr; row-gap: .5rem; }
   .db-left, .db-center, .db-right { justify-self: stretch; }
   .db-center { order: 3; }
   .db-right { justify-content: space-between; display: flex; }
+  .notif-menu { width: 18rem; }
 }

@@ -61,10 +61,11 @@ Estas clases están definidas en `dashboard.css` y se aplican en la vista con `t
 Además:
 - Si el usuario ya tiene sesión activa y navega a `/login`, es redirigido automáticamente a `/dashboard`.
 
-## Búsqueda y gestión de amigos
+## Búsqueda y solicitud de amistad
 
-Esta funcionalidad permite buscar usuarios por su nombre de usuario y agregarlos directamente
-como amigos (sin confirmación por parte del otro usuario).
+Esta funcionalidad permite buscar usuarios por su nombre de usuario y enviarles una solicitud
+de amistad. El destinatario recibe una notificación y puede aceptar o rechazar la solicitud.
+La relación de amistad es bidireccional: si A es amigo de B, B también ve a A en su ranking.
 
 ### Capa de dominio
 
@@ -72,12 +73,24 @@ como amigos (sin confirmación por parte del otro usuario).
   - Interfaz anotada con `@FunctionalInterface` (requerido por la regla `ImplicitFunctionalInterface` de PMD).
   - Declara `Usuario buscarAmigoPorNombreDeUsuario(String nombreUsuario)`.
 - `src/main/java/com/tallerwebi/dominio/ServicioRelacionAmistad.java`
-  - Interfaz con `agregarAmigo(Usuario, Usuario)` y `listarAmigosDe(Usuario)`.
+  - Interfaz con `enviarSolicitud(Usuario, Usuario)`, `aceptarSolicitud(Long, Usuario)`,
+    `rechazarSolicitud(Long, Usuario)`, `listarAmigosDe(Usuario)`,
+    `listarSolicitudesPendientes(Usuario)` y `contarSolicitudesPendientes(Usuario)`.
 - `src/main/java/com/tallerwebi/dominio/Amistad.java`
   - Entidad JPA que modela la relación. Tabla `amistad` con dos `@ManyToOne`:
-    `usuario_id` (quien agrega) y `amigo_id` (el agregado).
+    `usuario_id` (solicitante) y `amigo_id` (destinatario).
+  - Campos adicionales: `estado` (`EstadoAmistad`: PENDIENTE, ACEPTADA, RECHAZADA) y
+    `fechaSolicitud` (`LocalDateTime`).
+  - Métodos helper: `estaPendiente()` y `fueEnviadaA(Long usuarioId)`.
+- `src/main/java/com/tallerwebi/dominio/EstadoAmistad.java`
+  - Enum con valores `PENDIENTE`, `ACEPTADA` y `RECHAZADA`.
+- `src/main/java/com/tallerwebi/dominio/ResultadoSolicitud.java`
+  - Enum con mensajes de resultado del envío de solicitudes: `ENVIADA`, `YA_SON_AMIGOS`,
+    `SOLICITUD_YA_ENVIADA`, `SOLICITUD_RECIBIDA_PENDIENTE`, `ES_UNO_MISMO`, `USUARIO_INVALIDO`.
+    Incluye `getMensaje()` y `fueExitosa()`.
 - `src/main/java/com/tallerwebi/dominio/RepositorioAmistad.java`
-  - Interfaz con `guardar`, `existeRelacion(usuarioId, amigoId)` y `listarAmigosDe(usuarioId)`.
+  - Interfaz con `guardar`, `actualizar`, `buscarPorId`, `buscarRelacionEntre`,
+    `listarAmigosDe`, `listarSolicitudesPendientesPara` y `contarSolicitudesPendientesPara`.
 
 ### Capa de implementación
 
@@ -88,7 +101,12 @@ para separar contratos de implementaciones:
 - `src/main/java/com/tallerwebi/dominio/implementacion/ServicioAmigosImpl.java`
   - Delega la búsqueda a `RepositorioUsuario.buscarPorNombreUsuario`.
 - `src/main/java/com/tallerwebi/dominio/implementacion/ServicioRelacionAmistadImpl.java`
-  - Valida que no se agregue a sí mismo ni duplique una relación existente antes de persistir.
+  - `enviarSolicitud`: valida usuarios, impide auto-solicitud, verifica relación existente
+    (aceptada, pendiente enviada o pendiente recibida) y persiste como PENDIENTE si no hay relación.
+  - `aceptarSolicitud` / `rechazarSolicitud`: verifican que la solicitud exista, esté pendiente
+    y haya sido enviada al usuario actual antes de cambiar el estado.
+  - `listarAmigosDe`, `listarSolicitudesPendientes`, `contarSolicitudesPendientes`: delegan al
+    repositorio con validación de usuario no nulo.
 
 > El `@ComponentScan` de `SpringWebConfig` apunta a `com.tallerwebi.dominio`, que incluye
 > los subpaquetes, por lo que los beans se detectan sin cambios de configuración.
@@ -96,8 +114,12 @@ para separar contratos de implementaciones:
 ### Capa de infraestructura
 
 - `src/main/java/com/tallerwebi/infraestructura/RepositorioAmistadImpl.java`
-  - Implementación con Hibernate. La consulta de listado ordena por
-    `a.amigo.perfil.pl desc`, de modo que el ranking ya llega ordenado al controlador.
+  - Implementación con Hibernate.
+  - `buscarRelacionEntre`: consulta bidireccional (A→B o B→A), excluye relaciones RECHAZADAS.
+  - `listarAmigosDe`: filtra por estado ACEPTADA en ambos sentidos y ordena por PL descendente.
+  - `listarSolicitudesPendientesPara`: filtra por `amigo_id` y estado PENDIENTE, ordenado por
+    `fechaSolicitud` descendente.
+  - `contarSolicitudesPendientesPara`: cuenta las solicitudes pendientes recibidas.
 
 ### Capa de presentación
 
@@ -107,13 +129,22 @@ para separar contratos de implementaciones:
     - El **nombre explícito** es obligatorio porque el proyecto no compila con el flag `-parameters`,
       y sin él Spring lanza `IllegalArgumentException`.
     - `required = false` permite entrar a la pantalla desde el dashboard sin haber buscado nada.
-  - `POST /agregar-amigo`: busca al usuario y persiste la amistad vía `ServicioRelacionAmistad`.
+  - `POST /enviar-solicitud`: busca al destinatario y envía la solicitud vía `ServicioRelacionAmistad`.
+    Muestra mensaje de éxito (`ok`) o error según el `ResultadoSolicitud`.
+  - `POST /aceptar-solicitud`: acepta una solicitud pendiente y redirige al dashboard con aviso.
+  - `POST /rechazar-solicitud`: rechaza una solicitud pendiente y redirige al dashboard con aviso.
   - `ServicioRelacionAmistad` se inyecta por setter para no alterar el constructor usado en los tests.
+  - Incluye métodos privados `modeloBase`, `listarPendientes`, `contarPendientes` y
+    `redirigirAlDashboard` para mantener baja la complejidad ciclomática.
 - `src/main/java/com/tallerwebi/presentacion/DatosAmigos.java`
   - DTO con el campo `nombreUsuario` para el formulario.
 - `src/main/webapp/WEB-INF/views/thymeleaf/buscarAmigos.html`
-  - Formulario de búsqueda, tarjeta de resultado con botón "Agregar",
-    mensajes de `error` / `ok` y enlace de vuelta al dashboard.
+  - Formulario de búsqueda, tarjeta de resultado con botón "Enviar solicitud",
+    mensajes de `error` / `ok`, campana de notificaciones y enlace de vuelta al dashboard.
+- `src/main/webapp/WEB-INF/views/thymeleaf/fragments/notificaciones.html`
+  - Fragmento Thymeleaf reutilizable con icono de campana y dropdown desplegable.
+  - Muestra solicitudes pendientes con botones "Aceptar" y "Rechazar".
+  - Badge con contador de solicitudes pendientes.
 
 ### Atributos del modelo
 
@@ -121,25 +152,49 @@ para separar contratos de implementaciones:
 |---|---|---|
 | `amigo` | `buscarAmigos` | Usuario encontrado en la búsqueda |
 | `error` | `buscarAmigos` | Mensaje de error (ej: "Usuario no encontrado") |
-| `ok` | `buscarAmigos` | Confirmación (ej: "Amigo agregado") |
+| `ok` | `buscarAmigos` | Confirmación (ej: "Solicitud enviada") |
 | `datosAmigos` | `buscarAmigos` | DTO del formulario |
-| `rankingAmigos` | `dashboard` | Lista de amigos ordenada por PL |
+| `rankingAmigos` | `dashboard` | Lista de amigos aceptados ordenada por PL |
+| `solicitudesPendientes` | `dashboard`, `buscarAmigos` | Lista de solicitudes pendientes recibidas |
+| `cantidadSolicitudes` | `dashboard`, `buscarAmigos` | Cantidad de solicitudes pendientes |
+| `aviso` | `dashboard` | Mensaje tras aceptar/rechazar solicitud (via query param) |
 
 ### Flujo completo
 
 1. Desde el dashboard, el botón "Buscar amigos" navega a `/buscar`.
 2. El usuario escribe un nombre de usuario y envía el formulario (`GET /buscar?nombreUsuario=...`).
-3. Si existe, se muestra su nombre, usuario y puntos con un botón "Agregar".
-4. "Agregar" hace `POST /agregar-amigo`, se persiste la fila en `amistad` y se muestra "Amigo agregado".
-5. Al volver al dashboard, el amigo aparece en el ranking ordenado por PL.
+3. Si existe, se muestra su nombre, usuario y puntos con un botón "Enviar solicitud".
+4. "Enviar solicitud" hace `POST /enviar-solicitud`, se persiste la amistad con estado PENDIENTE
+   y se muestra el mensaje correspondiente ("Solicitud enviada", "Ya son amigos", etc.).
+5. El destinatario ve la campana de notificaciones en el header del dashboard con un badge
+   mostrando la cantidad de solicitudes pendientes.
+6. Al desplegar la campana, puede "Aceptar" (`POST /aceptar-solicitud`) o "Rechazar"
+   (`POST /rechazar-solicitud`) cada solicitud.
+7. Al aceptar, la amistad pasa a estado ACEPTADA y ambos usuarios aparecen en sus respectivos
+   rankings ordenados por PL.
+8. Al rechazar, la amistad pasa a estado RECHAZADA y no aparece en el ranking ni en notificaciones.
 
 ## Tests
 
 - `src/test/java/com/tallerwebi/dominio/ServicioAmigosTest.java`
   - Tests unitarios con mock de `RepositorioUsuario`: usuario existente, inexistente y nombre vacío.
+- `src/test/java/com/tallerwebi/dominio/ServicioRelacionAmistadTest.java`
+  - Tests unitarios del servicio de solicitudes: envío con éxito, auto-solicitud, relación existente
+    (aceptada, pendiente enviada, pendiente recibida), aceptar, rechazar, casos nulos y edge cases.
+- `src/test/java/com/tallerwebi/dominio/PerfilJugadorTest.java`
+  - Tests de `PerfilJugador.getEdad()`, `Usuario.activar()`, `DatosAmigos` y `DatosLogin`.
+- `src/test/java/com/tallerwebi/infraestructura/RepositorioAmistadTest.java`
+  - Tests de integración con Hibernate (HSQLDB in-memory): guardar, actualizar, buscarPorId,
+    buscarRelacionEntre bidireccional, listarAmigosDe en ambos sentidos, solicitudes pendientes,
+    conteo y ordenamiento por PL.
 - `src/test/java/com/tallerwebi/presentacion/ControladorAmigosTest.java`
-  - Tests unitarios con mocks de `ServicioAmigos`, `HttpServletRequest` y `HttpSession`:
-    búsqueda con resultado y búsqueda sin resultado (verifica la clave `error` del modelo).
+  - Tests unitarios del controlador: búsqueda con/sin resultado, envío de solicitud con éxito/error,
+    aceptar, rechazar, sin sesión, destinatario inexistente y solicitudes fallidas.
+- `src/test/java/com/tallerwebi/presentacion/ControladorLoginTest.java`
+  - Tests unitarios del controlador: login válido/inválido, registro, dashboard con todos los rangos,
+    notificaciones pendientes, logout con/sin sesión y redirecciones.
+
+**Cobertura de código:** 95.6% de líneas cubiertas (requisito JaCoCo: 80%).
 
 ## Notas sobre calidad de código
 
@@ -171,5 +226,5 @@ El build corre Checkstyle y PMD antes de levantar Jetty. Puntos a tener en cuent
 - Mostrar más métricas (partidos jugados, winrate, últimos resultados).
 - Implementar la lógica de “Crear partido” y “Ver ranking”.
 - Proteger rutas con un filtro/interceptor que fuerce sesión para `/dashboard`.
-- Agregar tests de integración y punta a punta para el flujo de amigos.
-- Permitir eliminar amigos y, opcionalmente, un flujo de solicitud/confirmación.
+- Agregar tests punta a punta (E2E) para el flujo completo de solicitudes de amistad.
+- Permitir eliminar amigos.

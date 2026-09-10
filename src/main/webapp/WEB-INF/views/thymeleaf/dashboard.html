@@ -39,6 +39,7 @@
           </div>
         </div>
         <div class="db-right d-flex align-items-center gap-3">
+          <div th:replace="~{fragments/notificaciones :: campana}"></div>
           <a href="#" class="db-link"><i class="bi bi-gear"></i> Configuración</a>
           <a th:href="@{/logout}" class="db-link text-danger"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a>
         </div>
@@ -47,6 +48,9 @@
   </header>
 
   <main class="container db-content">
+    <div th:if="${aviso != null}" class="alert alert-info d-flex align-items-center gap-2">
+      <i class="bi bi-info-circle"></i> <span th:text="${aviso}">Aviso</span>
+    </div>
     <div class="row g-4">
       <div class="col-12">
         <section class="profile-summary card-glass p-4">
@@ -119,7 +123,7 @@
               <div class="points" th:text="(${amigo.perfil.pl} ?: 0) + ' pts'">0 pts</div>
             </div>
             <div class="text-muted" th:if="${#lists.isEmpty(rankingAmigos)}">
-              Todavía no agregaste amigos. Usá "Buscar amigos" para empezar.
+              Todavía no tenés amigos. Usá "Buscar amigos" para enviar una solicitud.
             </div>
           </div>
         </section>

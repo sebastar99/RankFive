@@ -1,5 +1,6 @@
 package com.tallerwebi.presentacion;
 
+import com.tallerwebi.dominio.Amistad;
 import com.tallerwebi.dominio.ServicioLogin;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Usuario;
@@ -14,6 +15,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
@@ -108,7 +110,10 @@ public class ControladorLogin {
   }
 
   @RequestMapping(path = "/dashboard", method = RequestMethod.GET)
-  public ModelAndView irADashboard(HttpServletRequest request) {
+  public ModelAndView irADashboard(
+    HttpServletRequest request,
+    @RequestParam(name = "aviso", required = false) String aviso
+  ) {
     Usuario usuario = (Usuario) request.getSession().getAttribute(ATRIBUTO_USUARIO);
     if (usuario == null) {
       return new ModelAndView("redirect:/login");
@@ -123,6 +128,9 @@ public class ControladorLogin {
     model.put("rangoCss", rango[1]);
     model.put("rangoIcon", rango[2]);
     model.put("rankingAmigos", obtenerRankingAmigos(usuario));
+    model.put("solicitudesPendientes", obtenerSolicitudesPendientes(usuario));
+    model.put("cantidadSolicitudes", contarSolicitudesPendientes(usuario));
+    model.put("aviso", aviso);
     return new ModelAndView("dashboard", model);
   }
 
@@ -157,6 +165,20 @@ public class ControladorLogin {
       return Collections.emptyList();
     }
     return servicioRelacionAmistad.listarAmigosDe(usuario);
+  }
+
+  private List<Amistad> obtenerSolicitudesPendientes(Usuario usuario) {
+    if (servicioRelacionAmistad == null) {
+      return Collections.emptyList();
+    }
+    return servicioRelacionAmistad.listarSolicitudesPendientes(usuario);
+  }
+
+  private long contarSolicitudesPendientes(Usuario usuario) {
+    if (servicioRelacionAmistad == null) {
+      return 0L;
+    }
+    return servicioRelacionAmistad.contarSolicitudesPendientes(usuario);
   }
 
   @RequestMapping(path = "/logout", method = RequestMethod.GET)
