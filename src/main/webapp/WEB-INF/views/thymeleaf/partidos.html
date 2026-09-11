@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Partidos | Rank5</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/main.css}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=4)}" />
+</head>
+<body class="dashboard-page">
+  <div class="pitch-bg"></div>
+
+  <header class="db-header fixed-top">
+    <div class="container">
+      <div class="db-header-content">
+        <div class="db-left d-flex align-items-center gap-2">
+          <a th:href="@{/dashboard}" class="db-brand">
+            <span class="db-brand-logo"><i class="bi bi-trophy-fill"></i></span>
+            <span class="db-brand-text">Rank<span class="db-brand-accent">5</span></span>
+          </a>
+        </div>
+        <div class="db-center d-flex align-items-center gap-2">
+          <span class="db-page-title"><i class="bi bi-dribbble"></i>Partidos</span>
+        </div>
+        <div class="db-right d-flex align-items-center gap-4">
+          <div th:replace="~{fragments/notificaciones :: campana}"></div>
+          <span class="db-divider"></span>
+          <a th:href="@{/dashboard}" class="db-link"><i class="bi bi-arrow-left"></i> Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container db-content">
+    <div th:if="${aviso != null}" class="alert alert-info d-flex align-items-center gap-2">
+      <i class="bi bi-info-circle"></i> <span th:text="${aviso}">Aviso</span>
+    </div>
+    <div th:if="${error != null}" class="alert alert-warning d-flex align-items-center gap-2">
+      <i class="bi bi-exclamation-triangle"></i><span th:text="${error}">Error</span>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-12 col-lg-5">
+        <section class="card-glass p-4">
+          <h2 class="h5 mb-3"><i class="bi bi-plus-circle me-2"></i>Crear partido</h2>
+
+          <div th:if="${#lists.isEmpty(amigos)}" class="ranking-empty">
+            <i class="bi bi-people"></i>
+            <p class="m-0">Necesitás tener amigos agregados para armar un partido.</p>
+            <a th:href="@{/buscar}" class="btn btn-sm btn-outline-light">
+              <i class="bi bi-person-plus me-1"></i>Buscar amigos
+            </a>
+          </div>
+
+          <form th:if="${!#lists.isEmpty(amigos)}" th:action="@{/partidos/crear}" method="post">
+            <div class="mb-3">
+              <label class="form-label">Vos jugás en:</label>
+              <div class="d-flex gap-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="miEquipo" value="A" id="miEquipoA" checked>
+                  <label class="form-check-label" for="miEquipoA">Equipo A</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="miEquipo" value="B" id="miEquipoB">
+                  <label class="form-check-label" for="miEquipoB">Equipo B</label>
+                </div>
+              </div>
+            </div>
+
+            <label class="form-label">Tus amigos:</label>
+            <div class="ranking-list mb-3">
+              <div class="ranking-item" th:each="amigo : ${amigos}">
+                <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                <div class="name">
+                  <span th:text="${amigo.perfil.nombreCompleto} ?: ${amigo.email}">Nombre</span>
+                  <span class="username" th:text="'@' + (${amigo.perfil.nombreUsuario} ?: 'usuario')">@usuario</span>
+                </div>
+                <div class="points d-flex gap-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="equipoAIds" th:value="${amigo.id}"
+                           th:id="'a-' + ${amigo.id}">
+                    <label class="form-check-label" th:for="'a-' + ${amigo.id}">A</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="equipoBIds" th:value="${amigo.id}"
+                           th:id="'b-' + ${amigo.id}">
+                    <label class="form-check-label" th:for="'b-' + ${amigo.id}">B</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-action w-100">
+              <i class="bi bi-plus-circle me-1"></i>Crear partido
+            </button>
+          </form>
+        </section>
+      </div>
+
+      <div class="col-12 col-lg-7">
+        <section class="card-glass p-4">
+          <h2 class="h5 mb-3"><i class="bi bi-clock-history me-2"></i>Historial de partidos</h2>
+
+          <div th:if="${#lists.isEmpty(historial)}" class="ranking-empty">
+            <i class="bi bi-dribbble"></i>
+            <p class="m-0">Todavía no jugaste ningún partido.</p>
+          </div>
+
+          <div th:each="partido : ${historial}" class="card-glass p-3 mb-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div>
+                <div class="fw-bold">
+                  Equipo A
+                  <span th:each="jugador, iter : ${partido.equipoA}">
+                    <span th:text="${jugador.perfil.nombreUsuario} ?: ${jugador.email}">jugador</span><span th:if="${!iter.last}">, </span>
+                  </span>
+                  vs
+                  Equipo B
+                  <span th:each="jugador, iter : ${partido.equipoB}">
+                    <span th:text="${jugador.perfil.nombreUsuario} ?: ${jugador.email}">jugador</span><span th:if="${!iter.last}">, </span>
+                  </span>
+                </div>
+                <div class="text-muted small" th:text="${#temporals.format(partido.fecha, 'dd/MM/yyyy HH:mm')}">fecha</div>
+              </div>
+
+              <div th:if="${partido.fueJugado()}" class="rank-badge">
+                <span th:text="${partido.golesEquipoA} + ' - ' + ${partido.golesEquipoB}">0 - 0</span>
+              </div>
+
+              <form th:if="${!partido.fueJugado()}" th:action="@{/partidos/registrar-resultado}" method="post"
+                    class="d-flex align-items-center gap-2 m-0">
+                <input type="hidden" name="partidoId" th:value="${partido.id}">
+                <input type="number" name="golesEquipoA" min="0" class="form-control form-control-sm" style="width:4.5rem" required>
+                <span>-</span>
+                <input type="number" name="golesEquipoB" min="0" class="form-control form-control-sm" style="width:4.5rem" required>
+                <button type="submit" class="btn btn-sm btn-primary">
+                  <i class="bi bi-check-lg"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
