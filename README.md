@@ -49,6 +49,9 @@ Docker es una plataforma de contenedores que permite empaquetar aplicaciones con
 docker build -f DockerfileSQL -t mysql .
 docker run --env-file .env --name tallerwebi-mysql -d -p 3306:3306 mysql
 
+# Cuando el contenedor ya esta iniciado
+docker start tallerwebi-mysql
+
 # Iniciamos el proyecto
 mvn clean jetty:run
 # http://localhost:8080/spring

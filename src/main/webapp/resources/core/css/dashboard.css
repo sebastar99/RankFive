@@ -317,6 +317,226 @@
   .search-hero-inner { padding: 1.75rem 1rem; }
 }
 
+/* Formulario agregar equipo */
+.form-card { max-width: 640px; }
+.form-label-rf {
+  display: block;
+  font-weight: 700;
+  font-size: .85rem;
+  color: var(--rf-text);
+  margin-bottom: .5rem;
+}
+.form-control-rf {
+  width: 100%;
+  padding: .75rem 1rem;
+  border-radius: .6rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--rf-surface-border);
+  color: var(--rf-text);
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.form-control-rf:focus {
+  border-color: var(--rf-primary);
+  box-shadow: 0 0 0 3px rgba(0,224,123,.15);
+}
+.form-control-rf::placeholder { color: var(--rf-text-muted); }
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .35rem;
+  padding: 1.75rem 1rem;
+  border: 1.5px dashed var(--rf-surface-border);
+  border-radius: .75rem;
+  color: var(--rf-text-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+.dropzone:hover {
+  border-color: var(--rf-primary);
+  background: rgba(0,224,123,.05);
+  color: var(--rf-text);
+}
+.dropzone > i { font-size: 1.6rem; color: var(--rf-primary); }
+.dropzone-hint { font-size: .78rem; }
+
+.count-pills { display: flex; gap: .5rem; flex-wrap: wrap; }
+.count-pill {
+  padding: .5rem 1.1rem;
+  border-radius: .6rem;
+  border: 1px solid var(--rf-surface-border);
+  background: rgba(255,255,255,0.04);
+  color: var(--rf-text-muted);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .15s ease;
+  user-select: none;
+}
+.count-pill:hover { border-color: var(--rf-primary); color: var(--rf-text); }
+.btn-check:checked + .count-pill {
+  background: var(--rf-primary);
+  color: #04101f;
+  border-color: var(--rf-primary);
+}
+
+.friend-picker {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rf-surface-border) transparent;
+}
+.friend-option {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .65rem .9rem;
+  border: 1px solid var(--rf-surface-border);
+  border-radius: .75rem;
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.friend-option:hover { background: rgba(255,255,255,0.06); }
+.friend-option input { display: none; }
+.friend-option .avatar { color: var(--rf-text); font-size: 1.4rem; }
+.friend-option .name { flex: 1; min-width: 0; color: var(--rf-text); font-weight: 600; }
+.friend-option .username { color: var(--rf-text-muted); font-weight: 500; margin-left: .25rem; font-size: .85rem; }
+.friend-check { color: var(--rf-primary); opacity: 0; transition: opacity .15s ease; font-size: 1.1rem; }
+.friend-option:has(input:checked) {
+  border-color: var(--rf-primary);
+  background: rgba(0,224,123,.07);
+}
+.friend-option:has(input:checked) .friend-check { opacity: 1; }
+
+/* Liga y torneos */
+.torneo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+.torneo-card {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: .85rem;
+}
+.torneo-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: .5rem;
+}
+.torneo-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: .7rem;
+  display: grid;
+  place-items: center;
+  background: rgba(0,224,123,.12);
+  color: var(--rf-primary);
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.torneo-name { font-weight: 800; color: var(--rf-text); }
+.torneo-meta {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  color: var(--rf-text-muted);
+  font-size: .85rem;
+}
+.torneo-meta i { color: var(--rf-primary); margin-right: .4rem; }
+
+.status-badge {
+  padding: .2rem .6rem;
+  border-radius: .5rem;
+  font-size: .72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.status-open { color: #00e07b; background: rgba(0,224,123,.12); border: 1px solid rgba(0,224,123,.35); }
+.status-live { color: #ffd700; background: rgba(255,215,0,.12); border: 1px solid rgba(255,215,0,.35); }
+.status-soon { color: #00e4ff; background: rgba(0,228,255,.12); border: 1px solid rgba(0,228,255,.35); }
+.status-done { color: var(--rf-text-muted); background: rgba(255,255,255,.06); border: 1px solid var(--rf-surface-border); }
+
+/* Historial */
+.history-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: .75rem;
+}
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .85rem 1rem;
+  border: 1px solid var(--rf-surface-border);
+  border-radius: .75rem;
+  background: rgba(255,255,255,0.03);
+}
+.result-chip {
+  width: 38px;
+  height: 38px;
+  border-radius: .6rem;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+.result-v { color: #00e07b; background: rgba(0,224,123,.12); border: 1px solid rgba(0,224,123,.35); }
+.result-e { color: var(--rf-text-muted); background: rgba(255,255,255,.06); border: 1px solid var(--rf-surface-border); }
+.result-d { color: #e5484d; background: rgba(229,72,77,.12); border: 1px solid rgba(229,72,77,.35); }
+.history-info { flex: 1; min-width: 0; }
+.history-teams { font-weight: 700; color: var(--rf-text); }
+.history-meta { color: var(--rf-text-muted); font-size: .82rem; }
+.history-pl { font-weight: 800; white-space: nowrap; }
+.history-pl.up { color: var(--rf-primary); }
+.history-pl.down { color: #e5484d; }
+
+/* Ranking de equipos */
+.team-rank-row {
+  display: grid;
+  grid-template-columns: 36px 44px 1fr auto auto;
+  align-items: center;
+  gap: .9rem;
+  padding: .8rem 1rem;
+  border: 1px solid var(--rf-surface-border);
+  border-radius: .75rem;
+  background: rgba(255,255,255,0.03);
+}
+.team-rank-row.mine {
+  border-color: rgba(0,224,123,.4);
+  background: rgba(0,224,123,.05);
+}
+.team-shield {
+  width: 40px;
+  height: 40px;
+  border-radius: .6rem;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.06);
+  color: var(--rf-primary);
+  font-size: 1.1rem;
+}
+.team-rank-row .pos { font-weight: 900; color: var(--rf-text-muted); text-align: center; }
+.team-rank-row .pos.top { color: var(--rf-primary); }
+.team-rank-row .name { color: var(--rf-text); font-weight: 600; min-width: 0; }
+.team-rank-row .name .username { color: var(--rf-text-muted); font-weight: 500; margin-left: .25rem; font-size: .82rem; }
+.team-record { color: var(--rf-text-muted); font-size: .82rem; font-weight: 600; white-space: nowrap; }
+
+@media (max-width: 767px) {
+  .team-rank-row { grid-template-columns: 28px 40px 1fr auto; }
+  .team-record { display: none; }
+}
+
 /* Rank badges by PL */
 .rank-badge {
   display: inline-flex; align-items: center; gap: .4rem;

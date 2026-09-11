@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Liga y Torneos | Rank5</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/main.css}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=5)}" />
+</head>
+<body class="dashboard-page">
+  <div class="pitch-bg"></div>
+
+  <header class="db-header fixed-top">
+    <div class="container">
+      <div class="db-header-content">
+        <div class="db-left d-flex align-items-center gap-2">
+          <a th:href="@{/dashboard}" class="db-brand">
+            <span class="db-brand-logo"><i class="bi bi-trophy-fill"></i></span>
+            <span class="db-brand-text">Rank<span class="db-brand-accent">5</span></span>
+          </a>
+        </div>
+        <div class="db-center d-flex align-items-center gap-2">
+          <span class="db-page-title"><i class="bi bi-flag-fill"></i>Liga y Torneos</span>
+        </div>
+        <div class="db-right d-flex align-items-center gap-4">
+          <div th:replace="~{fragments/notificaciones :: campana}"></div>
+          <span class="db-divider"></span>
+          <a th:href="@{/dashboard}" class="db-link"><i class="bi bi-arrow-left"></i> Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container db-content">
+    <section class="card-glass p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+          <h1 class="h5 m-0">Torneos disponibles</h1>
+          <p class="text-muted small m-0 mt-1">Inscribí a tu equipo y competí por puntos de ranking.</p>
+        </div>
+        <a href="#" class="btn btn-primary btn-action"><i class="bi bi-plus-circle me-2"></i>Crear torneo</a>
+      </div>
+
+      <div class="torneo-grid">
+        <div class="torneo-card card-glass">
+          <div class="torneo-head">
+            <div class="torneo-icon"><i class="bi bi-trophy-fill"></i></div>
+            <span class="status-badge status-live">En curso</span>
+          </div>
+          <div>
+            <div class="torneo-name">Copa Rank5 · Apertura</div>
+            <div class="torneo-meta mt-2">
+              <span><i class="bi bi-people-fill"></i>16 equipos · F5</span>
+              <span><i class="bi bi-calendar-event"></i>Fecha 4 de 8 · Sábados 20hs</span>
+              <span><i class="bi bi-geo-alt-fill"></i>Complejo La Canchita, CABA</span>
+            </div>
+          </div>
+          <a href="#" class="btn btn-outline-light btn-action w-100 mt-auto">
+            <i class="bi bi-list-ol me-1"></i>Ver fixture
+          </a>
+        </div>
+
+        <div class="torneo-card card-glass">
+          <div class="torneo-head">
+            <div class="torneo-icon"><i class="bi bi-moon-stars-fill"></i></div>
+            <span class="status-badge status-open">Inscripción abierta</span>
+          </div>
+          <div>
+            <div class="torneo-name">Liga Nocturna</div>
+            <div class="torneo-meta mt-2">
+              <span><i class="bi bi-people-fill"></i>8 equipos · F7</span>
+              <span><i class="bi bi-calendar-event"></i>Inicia 21/09 · Martes y jueves 22hs</span>
+              <span><i class="bi bi-geo-alt-fill"></i>Fútbol City, Villa Crespo</span>
+            </div>
+          </div>
+          <a href="#" class="btn btn-primary btn-action w-100 mt-auto">
+            <i class="bi bi-pencil-square me-1"></i>Inscribir equipo
+          </a>
+        </div>
+
+        <div class="torneo-card card-glass">
+          <div class="torneo-head">
+            <div class="torneo-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+            <span class="status-badge status-soon">Próximamente</span>
+          </div>
+          <div>
+            <div class="torneo-name">Torneo Relámpago</div>
+            <div class="torneo-meta mt-2">
+              <span><i class="bi bi-people-fill"></i>12 equipos · F5 · Eliminación directa</span>
+              <span><i class="bi bi-calendar-event"></i>Sábado 27/09 · Jornada única</span>
+              <span><i class="bi bi-geo-alt-fill"></i>Predio Deportivo Sur, Lanús</span>
+            </div>
+          </div>
+          <a href="#" class="btn btn-outline-light btn-action w-100 mt-auto" disabled>
+            <i class="bi bi-bell me-1"></i>Avisame
+          </a>
+        </div>
+
+        <div class="torneo-card card-glass">
+          <div class="torneo-head">
+            <div class="torneo-icon"><i class="bi bi-award-fill"></i></div>
+            <span class="status-badge status-done">Finalizado</span>
+          </div>
+          <div>
+            <div class="torneo-name">Copa Invierno 2026</div>
+            <div class="torneo-meta mt-2">
+              <span><i class="bi bi-people-fill"></i>16 equipos · F8</span>
+              <span><i class="bi bi-trophy"></i>Campeón: Los Galácticos</span>
+              <span><i class="bi bi-geo-alt-fill"></i>Club Atlético River Plate</span>
+            </div>
+          </div>
+          <a href="#" class="btn btn-outline-light btn-action w-100 mt-auto">
+            <i class="bi bi-bar-chart-line me-1"></i>Ver resultados
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

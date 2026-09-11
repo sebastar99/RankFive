@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Agregar equipo | Rank5</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/main.css}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=5)}" />
+</head>
+<body class="dashboard-page">
+  <div class="pitch-bg"></div>
+
+  <header class="db-header fixed-top">
+    <div class="container">
+      <div class="db-header-content">
+        <div class="db-left d-flex align-items-center gap-2">
+          <a th:href="@{/dashboard}" class="db-brand">
+            <span class="db-brand-logo"><i class="bi bi-trophy-fill"></i></span>
+            <span class="db-brand-text">Rank<span class="db-brand-accent">5</span></span>
+          </a>
+        </div>
+        <div class="db-center d-flex align-items-center gap-2">
+          <span class="db-page-title"><i class="bi bi-people-fill"></i>Agregar equipo</span>
+        </div>
+        <div class="db-right d-flex align-items-center gap-4">
+          <div th:replace="~{fragments/notificaciones :: campana}"></div>
+          <span class="db-divider"></span>
+          <a th:href="@{/dashboard}" class="db-link"><i class="bi bi-arrow-left"></i> Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container db-content">
+    <section class="card-glass form-card mx-auto">
+      <div class="p-4">
+        <h1 class="h5 mb-1 text-light fw-bold">Crear equipo</h1>
+        <p class="text-muted small mb-4">Armá tu equipo con tus amigos y competí en torneos.</p>
+
+        <form th:action="@{/agregar-equipo}" method="post">
+          <div class="mb-4">
+            <label class="form-label-rf" for="nombre">Nombre del equipo</label>
+            <input type="text" id="nombre" name="nombre" class="form-control-rf"
+                   placeholder="Ej: Los Pibes FC" required maxlength="40">
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label-rf">Escudo del equipo</label>
+            <label class="dropzone" for="escudo">
+              <i class="bi bi-cloud-arrow-up"></i>
+              <span id="escudo-label">Subí una imagen o arrastrala acá</span>
+              <span class="dropzone-hint">PNG, JPG hasta 2MB</span>
+            </label>
+            <input type="file" id="escudo" name="escudo" accept="image/*" hidden>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label-rf">Formato</label>
+            <div class="count-pills">
+              <input type="radio" class="btn-check" name="cantidad" id="c5" value="5" checked>
+              <label class="count-pill" for="c5">F5</label>
+              <input type="radio" class="btn-check" name="cantidad" id="c7" value="7">
+              <label class="count-pill" for="c7">F7</label>
+              <input type="radio" class="btn-check" name="cantidad" id="c8" value="8">
+              <label class="count-pill" for="c8">F8</label>
+              <input type="radio" class="btn-check" name="cantidad" id="c9" value="9">
+              <label class="count-pill" for="c9">F9</label>
+              <input type="radio" class="btn-check" name="cantidad" id="c11" value="11">
+              <label class="count-pill" for="c11">F11</label>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label-rf">
+              Jugadores
+              <span class="text-muted fw-normal">(elegí hasta <span id="maxJugadores">5</span> amigos)</span>
+            </label>
+            <div class="friend-picker">
+              <label class="friend-option" th:each="amigo : ${amigos}">
+                <input type="checkbox" name="jugadores" th:value="${amigo.perfil.nombreUsuario}">
+                <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                <div class="name">
+                  <span th:text="${amigo.perfil.nombreCompleto} ?: ${amigo.email}">Nombre</span>
+                  <span class="username" th:text="'@' + (${amigo.perfil.nombreUsuario} ?: 'usuario')">@usuario</span>
+                </div>
+                <span class="rank-badge rank-badge-sm"
+                      th:classappend="${T(com.tallerwebi.dominio.Rango).de(amigo.perfil.pl).css}">
+                  <i class="bi" th:classappend="' ' + ${T(com.tallerwebi.dominio.Rango).de(amigo.perfil.pl).icono}"></i>
+                  <span th:text="${T(com.tallerwebi.dominio.Rango).de(amigo.perfil.pl).nombre}">Plata</span>
+                </span>
+                <i class="bi bi-check-circle-fill friend-check"></i>
+              </label>
+              <div class="ranking-empty" th:if="${#lists.isEmpty(amigos)}">
+                <i class="bi bi-people"></i>
+                <p class="m-0">No tenés amigos todavía.</p>
+                <a th:href="@{/buscar}" class="btn btn-sm btn-outline-light">
+                  <i class="bi bi-person-plus me-1"></i>Buscar amigos
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex gap-3">
+            <a th:href="@{/dashboard}" class="btn btn-outline-light btn-action">Cancelar</a>
+            <button type="submit" class="btn btn-primary btn-action flex-fill">
+              <i class="bi bi-people-fill me-2"></i>Crear equipo
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const radios = document.querySelectorAll('input[name="cantidad"]');
+    const boxes = document.querySelectorAll('input[name="jugadores"]');
+    const maxLabel = document.getElementById('maxJugadores');
+    const escudoInput = document.getElementById('escudo');
+    const escudoLabel = document.getElementById('escudo-label');
+
+    function maxSeleccion() {
+      return parseInt(document.querySelector('input[name="cantidad"]:checked').value, 10);
+    }
+
+    radios.forEach(r => r.addEventListener('change', () => {
+      maxLabel.textContent = maxSeleccion();
+      const marcados = [...boxes].filter(b => b.checked);
+      marcados.slice(maxSeleccion()).forEach(b => { b.checked = false; });
+    }));
+
+    boxes.forEach(b => b.addEventListener('change', () => {
+      if ([...boxes].filter(x => x.checked).length > maxSeleccion()) {
+        b.checked = false;
+      }
+    }));
+
+    escudoInput.addEventListener('change', () => {
+      escudoLabel.textContent = escudoInput.files.length
+        ? escudoInput.files[0].name
+        : 'Subí una imagen o arrastrala acá';
+    });
+  </script>
+</body>
+</html>

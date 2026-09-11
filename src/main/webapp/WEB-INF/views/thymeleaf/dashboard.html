@@ -8,7 +8,7 @@
         integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" th:href="@{/css/main.css}" />
-  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=4)}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=5)}" />
 </head>
 <body class="dashboard-page">
   <div class="pitch-bg"></div>
@@ -95,10 +95,10 @@
           <div class="d-flex flex-wrap gap-3">
             <a href="#" class="btn btn-primary btn-action"><i class="bi bi-plus-circle me-2"></i>Crear partido</a>
             <a th:href="@{/buscar}" class="btn btn-outline-light btn-action"><i class="bi bi-person-plus me-2"></i>Buscar amigos</a>
-            <a href="#" class="btn btn-outline-light btn-action"><i class="bi bi-people-fill me-2"></i>Agregar equipo</a>
-            <a href="#" class="btn btn-outline-light btn-action"><i class="bi bi-flag-fill me-2"></i>Liga/Torneos</a>
-            <a href="#" class="btn btn-outline-light btn-action"><i class="bi bi-clock-history me-2"></i>Ver historial</a>
-            <a href="#" class="btn btn-outline-light btn-action"><i class="bi bi-bar-chart-line-fill me-2"></i>Ranking de equipos</a>
+            <a th:href="@{/agregar-equipo}" class="btn btn-outline-light btn-action"><i class="bi bi-people-fill me-2"></i>Agregar equipo</a>
+            <a th:href="@{/torneos}" class="btn btn-outline-light btn-action"><i class="bi bi-flag-fill me-2"></i>Liga/Torneos</a>
+            <a th:href="@{/historial}" class="btn btn-outline-light btn-action"><i class="bi bi-clock-history me-2"></i>Ver historial</a>
+            <a th:href="@{/ranking-equipos}" class="btn btn-outline-light btn-action"><i class="bi bi-bar-chart-line-fill me-2"></i>Ranking de equipos</a>
           </div>
         </section>
       </div>

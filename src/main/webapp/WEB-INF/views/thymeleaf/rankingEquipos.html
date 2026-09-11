@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Ranking de equipos | Rank5</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/main.css}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=5)}" />
+</head>
+<body class="dashboard-page">
+  <div class="pitch-bg"></div>
+
+  <header class="db-header fixed-top">
+    <div class="container">
+      <div class="db-header-content">
+        <div class="db-left d-flex align-items-center gap-2">
+          <a th:href="@{/dashboard}" class="db-brand">
+            <span class="db-brand-logo"><i class="bi bi-trophy-fill"></i></span>
+            <span class="db-brand-text">Rank<span class="db-brand-accent">5</span></span>
+          </a>
+        </div>
+        <div class="db-center d-flex align-items-center gap-2">
+          <span class="db-page-title"><i class="bi bi-bar-chart-line-fill"></i>Ranking de equipos</span>
+        </div>
+        <div class="db-right d-flex align-items-center gap-4">
+          <div th:replace="~{fragments/notificaciones :: campana}"></div>
+          <span class="db-divider"></span>
+          <a th:href="@{/dashboard}" class="db-link"><i class="bi bi-arrow-left"></i> Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container db-content">
+    <section class="card-glass p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+          <h1 class="h5 m-0">Ranking general de equipos</h1>
+          <p class="text-muted small m-0 mt-1">Ordenado por puntaje promedio de sus integrantes.</p>
+        </div>
+        <a th:href="@{/agregar-equipo}" class="btn btn-primary btn-action">
+          <i class="bi bi-people-fill me-2"></i>Crear equipo
+        </a>
+      </div>
+
+      <div class="ranking-list">
+        <div class="team-rank-row">
+          <div class="pos top">1</div>
+          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
+          <div class="name">
+            <span>Los Galácticos</span>
+            <span class="username">3 jugadores · F5</span>
+          </div>
+          <span class="team-record">12V · 2E · 1D</span>
+          <div class="points">
+            <span class="rank-badge rank-badge-sm rank-plat"><i class="bi bi-diamond"></i><span>Platino</span></span>
+            <span>2967 pts</span>
+          </div>
+        </div>
+        <div class="team-rank-row">
+          <div class="pos top">2</div>
+          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
+          <div class="name">
+            <span>Deportivo Sur</span>
+            <span class="username">7 jugadores · F7</span>
+          </div>
+          <span class="team-record">10V · 3E · 2D</span>
+          <div class="points">
+            <span class="rank-badge rank-badge-sm rank-plat"><i class="bi bi-diamond"></i><span>Platino</span></span>
+            <span>2650 pts</span>
+          </div>
+        </div>
+        <div class="team-rank-row mine">
+          <div class="pos top">3</div>
+          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
+          <div class="name">
+            <span>Los Pibes FC</span>
+            <span class="username">5 jugadores · F5 · <span class="text-primary">Tu equipo</span></span>
+          </div>
+          <span class="team-record">8V · 2E · 3D</span>
+          <div class="points">
+            <span class="rank-badge rank-badge-sm rank-gold"><i class="bi bi-trophy-fill"></i><span>Oro</span></span>
+            <span>2320 pts</span>
+          </div>
+        </div>
+        <div class="team-rank-row mine">
+          <div class="pos">4</div>
+          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
+          <div class="name">
+            <span>Dream Team</span>
+            <span class="username">4 jugadores · F7 · <span class="text-primary">Tu equipo</span></span>
+          </div>
+          <span class="team-record">6V · 4E · 4D</span>
+          <div class="points">
+            <span class="rank-badge rank-badge-sm rank-gold"><i class="bi bi-trophy-fill"></i><span>Oro</span></span>
+            <span>2250 pts</span>
+          </div>
+        </div>
+        <div class="team-rank-row">
+          <div class="pos">5</div>
+          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
+          <div class="name">
+            <span>Atlético Norte</span>
+            <span class="username">8 jugadores · F8</span>
+          </div>
+          <span class="team-record">5V · 3E · 6D</span>
+          <div class="points">
+            <span class="rank-badge rank-badge-sm rank-gold"><i class="bi bi-trophy-fill"></i><span>Oro</span></span>
+            <span>2100 pts</span>
+          </div>
+        </div>
+        <div class="team-rank-row">
+          <div class="pos">6</div>
+          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
+          <div class="name">
+            <span>FC Amigos</span>
+            <span class="username">5 jugadores · F5</span>
+          </div>
+          <span class="team-record">4V · 2E · 7D</span>
+          <div class="points">
+            <span class="rank-badge rank-badge-sm rank-silver"><i class="bi bi-trophy"></i><span>Plata</span></span>
+            <span>1840 pts</span>
+          </div>
+        </div>
+        <div class="team-rank-row">
+          <div class="pos">7</div>
+          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
+          <div class="name">
+            <span>Real Mandiyú</span>
+            <span class="username">11 jugadores · F11</span>
+          </div>
+          <span class="team-record">3V · 1E · 9D</span>
+          <div class="points">
+            <span class="rank-badge rank-badge-sm rank-silver"><i class="bi bi-trophy"></i><span>Plata</span></span>
+            <span>1620 pts</span>
+          </div>
+        </div>
+        <div class="team-rank-row">
+          <div class="pos">8</div>
+          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
+          <div class="name">
+            <span>Sportivo Oeste</span>
+            <span class="username">5 jugadores · F5</span>
+          </div>
+          <span class="team-record">2V · 2E · 9D</span>
+          <div class="points">
+            <span class="rank-badge rank-badge-sm rank-bronze"><i class="bi bi-award"></i><span>Bronce</span></span>
+            <span>1310 pts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
