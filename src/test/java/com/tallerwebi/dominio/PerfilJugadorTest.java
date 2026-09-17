@@ -6,8 +6,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
-import com.tallerwebi.presentacion.DatosAmigos;
-import com.tallerwebi.presentacion.DatosLogin;
+import com.tallerwebi.presentacion.DTO.DatosAmigos;
+import com.tallerwebi.presentacion.DTO.DatosLogin;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 

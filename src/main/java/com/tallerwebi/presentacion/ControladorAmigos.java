@@ -5,6 +5,7 @@ import com.tallerwebi.dominio.ResultadoSolicitud;
 import com.tallerwebi.dominio.ServicioAmigos;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Usuario;
+import com.tallerwebi.presentacion.DTO.DatosAmigos;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.net.URLEncoder;

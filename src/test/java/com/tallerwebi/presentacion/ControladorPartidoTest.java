@@ -93,6 +93,7 @@ public class ControladorPartidoTest {
     ModelAndView modelAndView = controladorPartido.crearPartido(
       requestMock,
       "A",
+      5,
       List.of(2L),
       List.of(3L)
     );
@@ -112,6 +113,7 @@ public class ControladorPartidoTest {
     ModelAndView modelAndView = controladorPartido.crearPartido(
       requestMock,
       "A",
+      5,
       List.of(2L),
       List.of(3L)
     );
@@ -128,10 +130,16 @@ public class ControladorPartidoTest {
       .thenReturn(List.of(amigo1, amigo2));
     when(servicioPartidoMock.crearPartido(anyList(), anyList())).thenReturn(new Partido());
 
-    controladorPartido.crearPartido(requestMock, "A", List.of(2L), List.of(3L));
+    controladorPartido.crearPartido(requestMock, "A", 5, List.of(2L), List.of(3L));
 
-    ArgumentCaptor<List<Usuario>> equipoACaptor = ArgumentCaptor.forClass(List.class);
-    ArgumentCaptor<List<Usuario>> equipoBCaptor = ArgumentCaptor.forClass(List.class);
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<Usuario>> equipoACaptor = (ArgumentCaptor<List<Usuario>>) (ArgumentCaptor<
+        ?
+      >) ArgumentCaptor.forClass(List.class);
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<Usuario>> equipoBCaptor = (ArgumentCaptor<List<Usuario>>) (ArgumentCaptor<
+        ?
+      >) ArgumentCaptor.forClass(List.class);
     verify(servicioPartidoMock).crearPartido(equipoACaptor.capture(), equipoBCaptor.capture());
     assertThat(equipoACaptor.getValue(), containsInAnyOrder(amigo1, usuarioActual));
     assertThat(equipoBCaptor.getValue(), containsInAnyOrder(amigo2));
@@ -146,6 +154,7 @@ public class ControladorPartidoTest {
     ModelAndView modelAndView = controladorPartido.crearPartido(
       requestMock,
       "A",
+      5,
       List.of(),
       List.of()
     );

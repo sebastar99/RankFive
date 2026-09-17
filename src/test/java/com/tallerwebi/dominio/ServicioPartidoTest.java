@@ -18,18 +18,64 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 public class ServicioPartidoTest {
 
   private ServicioPartido servicioPartido;
   private RepositorioPartido repositorioPartidoMock;
   private RepositorioUsuario repositorioUsuarioMock;
+  private RepositorioNotificacionPl repositorioNotificacionPlMock;
 
   @BeforeEach
   public void init() {
     this.repositorioPartidoMock = mock(RepositorioPartido.class);
     this.repositorioUsuarioMock = mock(RepositorioUsuario.class);
-    this.servicioPartido = new ServicioPartidoImpl(repositorioPartidoMock, repositorioUsuarioMock);
+    this.repositorioNotificacionPlMock = mock(RepositorioNotificacionPl.class);
+    this.servicioPartido =
+      new ServicioPartidoImpl(
+        repositorioPartidoMock,
+        repositorioUsuarioMock,
+        repositorioNotificacionPlMock
+      );
+  }
+
+  @Test
+  public void registrarResultadoConDiferenciaExtremaFavoritoEnEquipoBDeberiaAplicarAjusteMinimo() {
+    // Favorito en equipo B con PL muy alto vs rival muy bajo en equipo A
+    Usuario rivalA = usuarioConPl(1L, 1100);
+    Usuario favoritoB = usuarioConPl(2L, 3800);
+    Partido partido = partidoConEquipos(1L, List.of(rivalA), List.of(favoritoB));
+    when(repositorioPartidoMock.buscarPorId(1L)).thenReturn(partido);
+
+    boolean ok = servicioPartido.registrarResultado(1L, 0, 4); // gana el favorito (equipo B)
+
+    assertThat(ok, is(true));
+    // Ajuste mínimo forzado: favorito +1, rival -1
+    assertThat(favoritoB.getPerfil().getPl(), equalTo(3801));
+    assertThat(rivalA.getPerfil().getPl(), equalTo(1099));
+    verify(repositorioPartidoMock, times(1)).actualizar(partido);
+    verify(repositorioUsuarioMock, times(1)).modificar(favoritoB);
+    verify(repositorioUsuarioMock, times(1)).modificar(rivalA);
+  }
+
+  @Test
+  public void registrarResultadoConDiferenciaExtremaDeberiaAplicarAjusteMinimoAlFavorito() {
+    // Favorito con PL muy alto vs rival muy bajo
+    Usuario favorito = usuarioConPl(1L, 3800);
+    Usuario rival = usuarioConPl(2L, 1100);
+    Partido partido = partidoConEquipos(1L, List.of(favorito), List.of(rival));
+    when(repositorioPartidoMock.buscarPorId(1L)).thenReturn(partido);
+
+    boolean ok = servicioPartido.registrarResultado(1L, 5, 0); // gana el favorito
+
+    assertThat(ok, is(true));
+    // Con diferencias extremas el redondeo daría 0; ahora se fuerza +1/-1
+    assertThat(favorito.getPerfil().getPl(), equalTo(3801));
+    assertThat(rival.getPerfil().getPl(), equalTo(1099));
+    verify(repositorioPartidoMock, times(1)).actualizar(partido);
+    verify(repositorioUsuarioMock, times(1)).modificar(favorito);
+    verify(repositorioUsuarioMock, times(1)).modificar(rival);
   }
 
   private Usuario usuarioConPl(Long id, Integer pl) {
@@ -170,6 +216,73 @@ public class ServicioPartidoTest {
     assertThat(uA2.getPerfil().getPl(), equalTo(1392));
     assertThat(uB1.getPerfil().getPl(), equalTo(1008));
     assertThat(uB2.getPerfil().getPl(), equalTo(1008));
+  }
+
+  @Test
+  public void registrarResultadoDeberiaCrearUnaNotificacionPorCadaJugadorConSuPropioDelta() {
+    Usuario u1 = usuarioConPl(1L, 1000);
+    Usuario u2 = usuarioConPl(2L, 1000);
+    Partido partido = partidoConEquipos(1L, List.of(u1), List.of(u2));
+    when(repositorioPartidoMock.buscarPorId(1L)).thenReturn(partido);
+
+    servicioPartido.registrarResultado(1L, 3, 1);
+
+    ArgumentCaptor<NotificacionPl> captor = ArgumentCaptor.forClass(NotificacionPl.class);
+    verify(repositorioNotificacionPlMock, times(2)).guardar(captor.capture());
+    List<NotificacionPl> notificaciones = captor.getAllValues();
+    NotificacionPl deU1 = notificaciones
+      .stream()
+      .filter(n -> n.getUsuario() == u1)
+      .findFirst()
+      .orElse(null);
+    NotificacionPl deU2 = notificaciones
+      .stream()
+      .filter(n -> n.getUsuario() == u2)
+      .findFirst()
+      .orElse(null);
+    assertThat(deU1, is(notNullValue()));
+    assertThat(deU2, is(notNullValue()));
+    assertThat(deU1.getDelta(), equalTo(16));
+    assertThat(deU2.getDelta(), equalTo(-16));
+    assertThat(deU1.getPartido(), equalTo(partido));
+    assertThat(deU1.getLeida(), is(false));
+  }
+
+  @Test
+  public void registrarResultadoInvalidoNoDeberiaCrearNotificaciones() {
+    when(repositorioPartidoMock.buscarPorId(1L)).thenReturn(null);
+
+    servicioPartido.registrarResultado(1L, 2, 0);
+
+    verify(repositorioNotificacionPlMock, never()).guardar(any(NotificacionPl.class));
+  }
+
+  @Test
+  public void listarNotificacionesNoLeidasDeberiaDelegarEnElRepositorio() {
+    Usuario usuario = usuarioConPl(1L, 1000);
+    NotificacionPl notificacion = new NotificacionPl();
+    when(repositorioNotificacionPlMock.listarNoLeidasDe(1L)).thenReturn(List.of(notificacion));
+
+    List<NotificacionPl> resultado = servicioPartido.listarNotificacionesNoLeidas(usuario);
+
+    assertThat(resultado, equalTo(List.of(notificacion)));
+  }
+
+  @Test
+  public void listarNotificacionesNoLeidasDeUsuarioNuloDeberiaRetornarListaVacia() {
+    List<NotificacionPl> resultado = servicioPartido.listarNotificacionesNoLeidas(null);
+
+    assertThat(resultado.isEmpty(), is(true));
+    verify(repositorioNotificacionPlMock, never()).listarNoLeidasDe(any());
+  }
+
+  @Test
+  public void marcarNotificacionesLeidasDeberiaDelegarEnElRepositorio() {
+    Usuario usuario = usuarioConPl(7L, 1000);
+
+    servicioPartido.marcarNotificacionesLeidas(usuario);
+
+    verify(repositorioNotificacionPlMock, times(1)).marcarLeidasDe(7L);
   }
 
   @Test

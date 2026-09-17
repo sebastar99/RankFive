@@ -2,53 +2,106 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div class="dropdown notif-dropdown" th:fragment="campana">
-  <button class="notif-btn" type="button" id="notifDropdown" data-bs-toggle="dropdown"
-          data-bs-auto-close="outside" aria-expanded="false"
-          th:title="${cantidadSolicitudes} + ' solicitudes pendientes'">
-    <i class="bi bi-bell-fill"></i>
-    <span class="notif-badge" th:if="${cantidadSolicitudes > 0}" th:text="${cantidadSolicitudes}">0</span>
-  </button>
+<div class="d-flex align-items-center gap-2" th:fragment="campana"
+     th:with="cantidadAvisosPl=${avisosPl != null ? #lists.size(avisosPl) : 0}">
 
-  <div class="dropdown-menu dropdown-menu-end notif-menu" aria-labelledby="notifDropdown">
-    <div class="notif-header">
-      <span><i class="bi bi-person-plus me-2"></i>Solicitudes de amistad</span>
-      <span class="notif-count" th:text="${cantidadSolicitudes}">0</span>
-    </div>
+  <!-- Notificaciones de partidos / PL -->
+  <div class="dropdown notif-dropdown">
+    <button class="notif-btn" type="button" id="notifPartidosDropdown" data-bs-toggle="dropdown"
+            data-bs-auto-close="outside" aria-expanded="false"
+            th:attr="data-leidas-url=@{/partidos/notificaciones/leidas}"
+            th:title="${cantidadAvisosPl} + ' notificaciones de partidos'">
+      <i class="bi bi-bell-fill"></i>
+      <span class="notif-badge" id="notifPartidosBadge" th:if="${cantidadAvisosPl > 0}" th:text="${cantidadAvisosPl}">0</span>
+    </button>
 
-    <div class="notif-empty" th:if="${#lists.isEmpty(solicitudesPendientes)}">
-      <i class="bi bi-inbox"></i>
-      <span>No tenés solicitudes pendientes</span>
-    </div>
-
-    <div class="notif-item" th:each="solicitud : ${solicitudesPendientes}">
-      <div class="notif-avatar"><i class="bi bi-person-circle"></i></div>
-      <div class="notif-info">
-        <div class="notif-name"
-             th:text="${solicitud.usuario.perfil.nombreCompleto} ?: ${solicitud.usuario.email}">Nombre</div>
-        <div class="notif-user"
-             th:text="'@' + (${solicitud.usuario.perfil.nombreUsuario} ?: 'usuario')">@usuario</div>
-        <div class="notif-points">
-          <i class="bi bi-star-fill"></i>
-          <span th:text="(${solicitud.usuario.perfil.pl} ?: 0) + ' pts'">0 pts</span>
-        </div>
+    <div class="dropdown-menu dropdown-menu-end notif-menu" aria-labelledby="notifPartidosDropdown">
+      <div class="notif-header">
+        <span><i class="bi bi-dribbble me-2"></i>Partidos</span>
+        <span class="notif-count" th:text="${cantidadAvisosPl}">0</span>
       </div>
-      <div class="notif-actions">
-        <form th:action="@{/aceptar-solicitud}" method="post" class="m-0">
-          <input type="hidden" name="solicitudId" th:value="${solicitud.id}">
-          <button type="submit" class="btn btn-sm btn-success" title="Aceptar">
-            <i class="bi bi-check-lg"></i>
-          </button>
-        </form>
-        <form th:action="@{/rechazar-solicitud}" method="post" class="m-0">
-          <input type="hidden" name="solicitudId" th:value="${solicitud.id}">
-          <button type="submit" class="btn btn-sm btn-outline-danger" title="Rechazar">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </form>
+
+      <div class="notif-empty" th:if="${cantidadAvisosPl == 0}">
+        <i class="bi bi-inbox"></i>
+        <span>No tenés notificaciones de partidos</span>
+      </div>
+
+      <div class="notif-item" th:each="notificacion : ${avisosPl}">
+        <div class="notif-avatar"><i class="bi bi-lightning-charge-fill"></i></div>
+        <div class="notif-info">
+          <div class="notif-name" th:text="${notificacion.mensaje}">+16 PL</div>
+          <div class="notif-user">Actualización de PL</div>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Solicitudes de amistad -->
+  <div class="dropdown notif-dropdown">
+    <button class="notif-btn" type="button" id="notifAmigosDropdown" data-bs-toggle="dropdown"
+            data-bs-auto-close="outside" aria-expanded="false"
+            th:title="${cantidadSolicitudes} + ' solicitudes pendientes'">
+      <i class="bi bi-people-fill"></i>
+      <span class="notif-badge" th:if="${cantidadSolicitudes > 0}" th:text="${cantidadSolicitudes}">0</span>
+    </button>
+
+    <div class="dropdown-menu dropdown-menu-end notif-menu" aria-labelledby="notifAmigosDropdown">
+      <div class="notif-header">
+        <span><i class="bi bi-person-plus me-2"></i>Solicitudes de amistad</span>
+        <span class="notif-count" th:text="${cantidadSolicitudes}">0</span>
+      </div>
+
+      <div class="notif-empty" th:if="${#lists.isEmpty(solicitudesPendientes)}">
+        <i class="bi bi-inbox"></i>
+        <span>No tenés solicitudes pendientes</span>
+      </div>
+
+      <div class="notif-item" th:each="solicitud : ${solicitudesPendientes}">
+        <div class="notif-avatar"><i class="bi bi-person-circle"></i></div>
+        <div class="notif-info">
+          <div class="notif-name"
+               th:text="${solicitud.usuario.perfil.nombreCompleto} ?: ${solicitud.usuario.email}">Nombre</div>
+          <div class="notif-user"
+               th:text="'@' + (${solicitud.usuario.perfil.nombreUsuario} ?: 'usuario')">@usuario</div>
+          <div class="notif-points">
+            <i class="bi bi-star-fill"></i>
+            <span th:text="(${solicitud.usuario.perfil.pl} ?: 0) + ' pts'">0 pts</span>
+          </div>
+        </div>
+        <div class="notif-actions">
+          <form th:action="@{/aceptar-solicitud}" method="post" class="m-0">
+            <input type="hidden" name="solicitudId" th:value="${solicitud.id}">
+            <button type="submit" class="btn btn-sm btn-success" title="Aceptar">
+              <i class="bi bi-check-lg"></i>
+            </button>
+          </form>
+          <form th:action="@{/rechazar-solicitud}" method="post" class="m-0">
+            <input type="hidden" name="solicitudId" th:value="${solicitud.id}">
+            <button type="submit" class="btn btn-sm btn-outline-danger" title="Rechazar">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var btn = document.getElementById('notifPartidosDropdown');
+      if (!btn) return;
+      var dropdown = btn.closest('.notif-dropdown');
+      var marcadas = false;
+      dropdown.addEventListener('shown.bs.dropdown', function () {
+        var badge = document.getElementById('notifPartidosBadge');
+        if (marcadas || !badge) return;
+        marcadas = true;
+        fetch(btn.getAttribute('data-leidas-url'), { method: 'POST', credentials: 'same-origin' })
+          .then(function () { badge.remove(); })
+          .catch(function () { marcadas = false; });
+      });
+    })();
+  </script>
 </div>
 
 </body>

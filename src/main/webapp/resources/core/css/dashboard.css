@@ -11,7 +11,7 @@
   z-index: 0;
   background:
     radial-gradient(ellipse at 50% -10%, rgba(0, 224, 123, 0.08) 0%, transparent 50%),
-    linear-gradient(180deg, rgba(11,16,33,0.92) 0%, rgba(5,8,15,0.96) 100%),
+    linear-gradient(180deg, rgba(11,16,33,0.64) 0%, rgba(5,8,15,0.70) 100%),
     url('../images/cancha-futbol-rank5.png');
   background-position: center;
   background-repeat: no-repeat;
@@ -644,6 +644,176 @@
 
 .notif-actions { display: flex; gap: .35rem; }
 .notif-actions .btn { padding: .25rem .5rem; line-height: 1; }
+
+/* Crear partido: selector de jugadores */
+.team-counts { display: flex; gap: .5rem; }
+.team-count {
+  font-size: .75rem;
+  font-weight: 800;
+  padding: .15rem .55rem;
+  border-radius: .5rem;
+  border: 1px solid var(--rf-surface-border);
+  color: var(--rf-text-muted);
+  white-space: nowrap;
+}
+.team-count-a { color: var(--rf-primary); border-color: rgba(0,224,123,.35); background: rgba(0,224,123,.08); }
+.team-count-b { color: #00a4ff; border-color: rgba(0,164,255,.35); background: rgba(0,164,255,.08); }
+
+.player-filter { padding: .35rem .8rem; }
+.player-filter input { padding: .35rem 0; font-size: .85rem; }
+
+.player-picker {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: .25rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rf-surface-border) transparent;
+}
+.player-picker::-webkit-scrollbar { width: 6px; }
+.player-picker::-webkit-scrollbar-thumb { background: var(--rf-surface-border); border-radius: 3px; }
+.player-picker::-webkit-scrollbar-track { background: transparent; }
+
+.player-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: .6rem;
+  padding: .45rem .7rem;
+  border: 1px solid var(--rf-surface-border);
+  border-radius: .6rem;
+  background: rgba(255,255,255,.03);
+  transition: border-color .15s ease, background .15s ease;
+}
+.player-row:hover { background: rgba(255,255,255,.05); }
+.player-row:has(.team-check:checked) {
+  border-color: rgba(0,224,123,.35);
+  background: rgba(0,224,123,.04);
+}
+.player-avatar {
+  color: var(--rf-text);
+  font-size: 1.2rem;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.player-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.player-info .rank-badge-sm { flex-shrink: 0; }
+.player-name {
+  color: var(--rf-text);
+  font-weight: 600;
+  font-size: .88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.player-user {
+  color: var(--rf-text-muted);
+  font-size: .76rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.team-toggle { display: flex; gap: .3rem; flex-shrink: 0; margin-left: auto; }
+.team-check { position: absolute; opacity: 0; pointer-events: none; }
+.team-pill {
+  width: 1.85rem;
+  height: 1.85rem;
+  display: grid;
+  place-items: center;
+  border-radius: .5rem;
+  border: 1px solid var(--rf-surface-border);
+  background: rgba(255,255,255,.04);
+  color: var(--rf-text-muted);
+  font-weight: 800;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: all .15s ease;
+  user-select: none;
+  margin: 0;
+}
+.team-pill:hover { border-color: var(--rf-primary); color: var(--rf-text); }
+.team-check:checked + .team-pill.team-a {
+  background: rgba(0,224,123,.15);
+  border-color: var(--rf-primary);
+  color: var(--rf-primary);
+}
+.team-check:checked + .team-pill.team-b {
+  background: rgba(0,164,255,.15);
+  border-color: #00a4ff;
+  color: #00a4ff;
+}
+
+/* Partidos: pagina sin scroll general (scroll solo dentro de las listas) */
+@media (min-width: 992px) {
+  .partidos-page {
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .partidos-page .db-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 2.5rem;
+  }
+  .partidos-page .db-content > .row {
+    flex: 1;
+    min-height: 0;
+  }
+  .partidos-page .db-content > .row > [class*="col"] {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Solo las tarjetas principales ocupan el alto disponible. Las tarjetas
+     individuales del historial conservan su altura natural. */
+  .partidos-page .db-content > .row > [class*="col"] > .card-glass {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .partidos-page #crearPartidoForm {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .partidos-page .player-filter {
+    flex: none;
+  }
+  .partidos-page .player-picker {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+  }
+  .partidos-page .historial-card {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rf-surface-border) transparent;
+  }
+  .partidos-page .historial-card::-webkit-scrollbar { width: 6px; }
+  .partidos-page .historial-card::-webkit-scrollbar-thumb {
+    background: var(--rf-surface-border);
+    border-radius: 3px;
+  }
+}
 
 @media (max-width: 991px) {
   .db-header .db-header-content { grid-template-columns: 1fr; row-gap: .5rem; }

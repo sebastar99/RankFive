@@ -10,4 +10,8 @@ public interface ServicioPartido {
   List<Partido> listarPartidosDe(Usuario usuario);
 
   Usuario buscarPorEmail(String email);
+
+  List<NotificacionPl> listarNotificacionesNoLeidas(Usuario usuario);
+
+  void marcarNotificacionesLeidas(Usuario usuario);
 }

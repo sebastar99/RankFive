@@ -1,6 +1,8 @@
 package com.tallerwebi.dominio.implementacion;
 
+import com.tallerwebi.dominio.NotificacionPl;
 import com.tallerwebi.dominio.Partido;
+import com.tallerwebi.dominio.RepositorioNotificacionPl;
 import com.tallerwebi.dominio.RepositorioPartido;
 import com.tallerwebi.dominio.RepositorioUsuario;
 import com.tallerwebi.dominio.ServicioPartido;
@@ -22,14 +24,17 @@ public class ServicioPartidoImpl implements ServicioPartido {
 
   private final RepositorioPartido repositorioPartido;
   private final RepositorioUsuario repositorioUsuario;
+  private final RepositorioNotificacionPl repositorioNotificacionPl;
 
   @Autowired
   public ServicioPartidoImpl(
     RepositorioPartido repositorioPartido,
-    RepositorioUsuario repositorioUsuario
+    RepositorioUsuario repositorioUsuario,
+    RepositorioNotificacionPl repositorioNotificacionPl
   ) {
     this.repositorioPartido = repositorioPartido;
     this.repositorioUsuario = repositorioUsuario;
+    this.repositorioNotificacionPl = repositorioNotificacionPl;
   }
 
   @Override
@@ -73,6 +78,22 @@ public class ServicioPartidoImpl implements ServicioPartido {
     return repositorioUsuario.buscar(email);
   }
 
+  @Override
+  public List<NotificacionPl> listarNotificacionesNoLeidas(Usuario usuario) {
+    if (usuario == null || usuario.getId() == null) {
+      return Collections.emptyList();
+    }
+    return repositorioNotificacionPl.listarNoLeidasDe(usuario.getId());
+  }
+
+  @Override
+  public void marcarNotificacionesLeidas(Usuario usuario) {
+    if (usuario == null || usuario.getId() == null) {
+      return;
+    }
+    repositorioNotificacionPl.marcarLeidasDe(usuario.getId());
+  }
+
   private boolean sonEquiposValidos(List<Usuario> equipoA, List<Usuario> equipoB) {
     if (equipoA == null || equipoB == null || equipoA.isEmpty() || equipoB.isEmpty()) {
       return false;
@@ -100,8 +121,20 @@ public class ServicioPartidoImpl implements ServicioPartido {
     int deltaA = (int) Math.round(FACTOR_K * (resultadoA - esperadoA));
     int deltaB = (int) Math.round(FACTOR_K * (resultadoB - esperadoB));
 
-    aplicarDelta(partido.getEquipoA(), deltaA);
-    aplicarDelta(partido.getEquipoB(), deltaB);
+    // Asegurar que en resultados decisivos (no empate) haya al menos un ajuste mínimo
+    // para evitar que diferencias extremas de PL generen delta 0 por redondeo
+    if (golesEquipoA != golesEquipoB && deltaA == 0 && deltaB == 0) {
+      if (golesEquipoA > golesEquipoB) {
+        deltaA = 1;
+        deltaB = -1;
+      } else {
+        deltaA = -1;
+        deltaB = 1;
+      }
+    }
+
+    aplicarDelta(partido, partido.getEquipoA(), deltaA);
+    aplicarDelta(partido, partido.getEquipoB(), deltaB);
   }
 
   private double promedioPl(Collection<Usuario> equipo) {
@@ -122,10 +155,15 @@ public class ServicioPartidoImpl implements ServicioPartido {
     return 0.5;
   }
 
-  private void aplicarDelta(Collection<Usuario> equipo, int delta) {
+  private void aplicarDelta(Partido partido, Collection<Usuario> equipo, int delta) {
     for (Usuario jugador : equipo) {
       jugador.getPerfil().setPl(jugador.getPerfil().getPl() + delta);
       repositorioUsuario.modificar(jugador);
+      NotificacionPl notificacion = new NotificacionPl();
+      notificacion.setUsuario(jugador);
+      notificacion.setPartido(partido);
+      notificacion.setDelta(delta);
+      repositorioNotificacionPl.guardar(notificacion);
     }
   }
 }
