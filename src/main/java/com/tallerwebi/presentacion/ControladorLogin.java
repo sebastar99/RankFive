@@ -1,9 +1,12 @@
 package com.tallerwebi.presentacion;
 
+import com.tallerwebi.dominio.Amistad;
+import com.tallerwebi.dominio.Rango;
 import com.tallerwebi.dominio.ServicioLogin;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
+import com.tallerwebi.presentacion.DTO.DatosLogin;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.List;
@@ -14,17 +17,13 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 public class ControladorLogin {
 
   private static final String ATRIBUTO_USUARIO = "usuario";
-  private static final int LEGEND_MIN = 3501;
-  private static final int DIAMOND_MIN = 3001;
-  private static final int PLATINUM_MIN = 2501;
-  private static final int GOLD_MIN = 2001;
-  private static final int SILVER_MIN = 1501;
   private ServicioLogin servicioLogin;
   private ServicioRelacionAmistad servicioRelacionAmistad;
 
@@ -108,21 +107,27 @@ public class ControladorLogin {
   }
 
   @RequestMapping(path = "/dashboard", method = RequestMethod.GET)
-  public ModelAndView irADashboard(HttpServletRequest request) {
+  public ModelAndView irADashboard(
+    HttpServletRequest request,
+    @RequestParam(name = "aviso", required = false) String aviso
+  ) {
     Usuario usuario = (Usuario) request.getSession().getAttribute(ATRIBUTO_USUARIO);
     if (usuario == null) {
       return new ModelAndView("redirect:/login");
     }
     int puntos = calcularPuntos(usuario);
-    String[] rango = calcularRango(puntos);
+    Rango rango = Rango.de(puntos);
 
     Map<String, Object> model = new ModelMap();
     model.put(ATRIBUTO_USUARIO, usuario);
     model.put("puntos", puntos);
-    model.put("rangoNombre", rango[0]);
-    model.put("rangoCss", rango[1]);
-    model.put("rangoIcon", rango[2]);
+    model.put("rangoNombre", rango.getNombre());
+    model.put("rangoCss", rango.getCss());
+    model.put("rangoIcon", rango.getIcono());
     model.put("rankingAmigos", obtenerRankingAmigos(usuario));
+    model.put("solicitudesPendientes", obtenerSolicitudesPendientes(usuario));
+    model.put("cantidadSolicitudes", contarSolicitudesPendientes(usuario));
+    model.put("aviso", aviso);
     return new ModelAndView("dashboard", model);
   }
 
@@ -133,30 +138,25 @@ public class ControladorLogin {
     return usuario.getPerfil().getPl();
   }
 
-  private String[] calcularRango(int puntos) {
-    if (puntos >= LEGEND_MIN) {
-      return new String[] { "Legendario", "rank-legend", "bi-lightning-charge-fill" };
-    }
-    if (puntos >= DIAMOND_MIN) {
-      return new String[] { "Diamante", "rank-diamond", "bi-gem" };
-    }
-    if (puntos >= PLATINUM_MIN) {
-      return new String[] { "Platino", "rank-plat", "bi-diamond" };
-    }
-    if (puntos >= GOLD_MIN) {
-      return new String[] { "Oro", "rank-gold", "bi-trophy-fill" };
-    }
-    if (puntos >= SILVER_MIN) {
-      return new String[] { "Plata", "rank-silver", "bi-trophy" };
-    }
-    return new String[] { "Bronce", "rank-bronze", "bi-award" };
-  }
-
   private List<Usuario> obtenerRankingAmigos(Usuario usuario) {
     if (servicioRelacionAmistad == null) {
       return Collections.emptyList();
     }
     return servicioRelacionAmistad.listarAmigosDe(usuario);
+  }
+
+  private List<Amistad> obtenerSolicitudesPendientes(Usuario usuario) {
+    if (servicioRelacionAmistad == null) {
+      return Collections.emptyList();
+    }
+    return servicioRelacionAmistad.listarSolicitudesPendientes(usuario);
+  }
+
+  private long contarSolicitudesPendientes(Usuario usuario) {
+    if (servicioRelacionAmistad == null) {
+      return 0L;
+    }
+    return servicioRelacionAmistad.contarSolicitudesPendientes(usuario);
   }
 
   @RequestMapping(path = "/logout", method = RequestMethod.GET)

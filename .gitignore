@@ -26,4 +26,3 @@ hs_err_pid*
 .calidad-de-codigo/
 
 # Variables de entorno (credenciales de base de datos)
-.env

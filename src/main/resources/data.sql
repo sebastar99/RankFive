@@ -47,3 +47,9 @@ VALUES ('user14@rankfive.com', 'test', 'USER', true, 'user14', 'Usuario 14', '19
 
 INSERT INTO Usuario (email, password, rol, activo, nombreUsuario, nombreCompleto, fechaNacimiento, lugarResidencia, posicionPreferida, piernaHabil, pl)
 VALUES ('user15@rankfive.com', 'test', 'USER', true, 'user15', 'Usuario 15', '1994-01-20', 'Bariloche', 'Delantero', 'Derecha', 3000);
+
+-- Todos los usuarios son amigos entre si (una fila por par, la relacion es bidireccional)
+INSERT INTO amistad (usuario_id, amigo_id, estado, fechaSolicitud)
+SELECT u1.id, u2.id, 'ACEPTADA', NOW()
+FROM Usuario u1
+JOIN Usuario u2 ON u1.id < u2.id;

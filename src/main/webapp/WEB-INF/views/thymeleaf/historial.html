@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Historial | Rank5</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/main.css}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=5)}" />
+</head>
+<body class="dashboard-page">
+  <div class="pitch-bg"></div>
+
+  <header class="db-header fixed-top">
+    <div class="container">
+      <div class="db-header-content">
+        <div class="db-left d-flex align-items-center gap-2">
+          <a th:href="@{/dashboard}" class="db-brand">
+            <span class="db-brand-logo"><i class="bi bi-trophy-fill"></i></span>
+            <span class="db-brand-text">Rank<span class="db-brand-accent">5</span></span>
+          </a>
+        </div>
+        <div class="db-center d-flex align-items-center gap-2">
+          <span class="db-page-title"><i class="bi bi-clock-history"></i>Historial</span>
+        </div>
+        <div class="db-right d-flex align-items-center gap-4">
+          <div th:replace="~{fragments/notificaciones :: campana}"></div>
+          <span class="db-divider"></span>
+          <a th:href="@{/dashboard}" class="db-link"><i class="bi bi-arrow-left"></i> Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container db-content">
+    <section class="card-glass p-4 mb-4">
+      <h1 class="h5 mb-3">Resumen de partidos</h1>
+      <div class="history-stats">
+        <div class="mini-stat text-center">
+          <div class="label"><i class="bi bi-controller me-1"></i>Jugados</div>
+          <div class="stat">24</div>
+        </div>
+        <div class="mini-stat text-center">
+          <div class="label"><i class="bi bi-check-circle me-1"></i>Ganados</div>
+          <div class="stat">14</div>
+        </div>
+        <div class="mini-stat text-center">
+          <div class="label"><i class="bi bi-dash-circle me-1"></i>Empatados</div>
+          <div class="stat">4</div>
+        </div>
+        <div class="mini-stat text-center">
+          <div class="label"><i class="bi bi-x-circle me-1"></i>Perdidos</div>
+          <div class="stat">6</div>
+        </div>
+        <div class="mini-stat text-center">
+          <div class="label"><i class="bi bi-percent me-1"></i>Efectividad</div>
+          <div class="stat">58%</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card-glass p-4">
+      <h2 class="h5 mb-3">Últimos partidos</h2>
+      <div class="ranking-list">
+        <div class="history-item">
+          <div class="result-chip result-v">V</div>
+          <div class="history-info">
+            <div class="history-teams">Los Pibes FC <span class="text-muted fw-normal">3 - 1</span> Deportivo Sur</div>
+            <div class="history-meta"><i class="bi bi-calendar-event me-1"></i>07/09/2026 · F5 · Copa Rank5</div>
+          </div>
+          <div class="history-pl up">+45 PL</div>
+        </div>
+        <div class="history-item">
+          <div class="result-chip result-v">V</div>
+          <div class="history-info">
+            <div class="history-teams">Los Pibes FC <span class="text-muted fw-normal">2 - 0</span> FC Amigos</div>
+            <div class="history-meta"><i class="bi bi-calendar-event me-1"></i>31/08/2026 · F5 · Copa Rank5</div>
+          </div>
+          <div class="history-pl up">+38 PL</div>
+        </div>
+        <div class="history-item">
+          <div class="result-chip result-e">E</div>
+          <div class="history-info">
+            <div class="history-teams">Dream Team <span class="text-muted fw-normal">2 - 2</span> Atlético Norte</div>
+            <div class="history-meta"><i class="bi bi-calendar-event me-1"></i>24/08/2026 · F7 · Amistoso</div>
+          </div>
+          <div class="history-pl">+5 PL</div>
+        </div>
+        <div class="history-item">
+          <div class="result-chip result-d">D</div>
+          <div class="history-info">
+            <div class="history-teams">Los Pibes FC <span class="text-muted fw-normal">1 - 3</span> Los Galácticos</div>
+            <div class="history-meta"><i class="bi bi-calendar-event me-1"></i>17/08/2026 · F5 · Copa Rank5</div>
+          </div>
+          <div class="history-pl down">-22 PL</div>
+        </div>
+        <div class="history-item">
+          <div class="result-chip result-v">V</div>
+          <div class="history-info">
+            <div class="history-teams">Los Galácticos <span class="text-muted fw-normal">4 - 2</span> Real Mandiyú</div>
+            <div class="history-meta"><i class="bi bi-calendar-event me-1"></i>10/08/2026 · F5 · Liga Nocturna</div>
+          </div>
+          <div class="history-pl up">+52 PL</div>
+        </div>
+        <div class="history-item">
+          <div class="result-chip result-d">D</div>
+          <div class="history-info">
+            <div class="history-teams">Dream Team <span class="text-muted fw-normal">0 - 1</span> Sportivo Oeste</div>
+            <div class="history-meta"><i class="bi bi-calendar-event me-1"></i>03/08/2026 · F7 · Amistoso</div>
+          </div>
+          <div class="history-pl down">-15 PL</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
