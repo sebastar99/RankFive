@@ -2,10 +2,12 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.Amistad;
 import com.tallerwebi.dominio.Rango;
+import com.tallerwebi.dominio.ServicioEquipo;
 import com.tallerwebi.dominio.ServicioLogin;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
+import com.tallerwebi.presentacion.DTO.DatosEquipoVista;
 import com.tallerwebi.presentacion.DTO.DatosLogin;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
@@ -26,6 +28,7 @@ public class ControladorLogin {
   private static final String ATRIBUTO_USUARIO = "usuario";
   private ServicioLogin servicioLogin;
   private ServicioRelacionAmistad servicioRelacionAmistad;
+  private ServicioEquipo servicioEquipo;
 
   @Autowired
   public ControladorLogin(ServicioLogin servicioLogin) {
@@ -35,6 +38,11 @@ public class ControladorLogin {
   @Autowired(required = false)
   public void setServicioRelacionAmistad(ServicioRelacionAmistad servicioRelacionAmistad) {
     this.servicioRelacionAmistad = servicioRelacionAmistad;
+  }
+
+  @Autowired(required = false)
+  public void setServicioEquipo(ServicioEquipo servicioEquipo) {
+    this.servicioEquipo = servicioEquipo;
   }
 
   @RequestMapping("/login")
@@ -127,6 +135,7 @@ public class ControladorLogin {
     model.put("rankingAmigos", obtenerRankingAmigos(usuario));
     model.put("solicitudesPendientes", obtenerSolicitudesPendientes(usuario));
     model.put("cantidadSolicitudes", contarSolicitudesPendientes(usuario));
+    model.put("equiposUsuario", obtenerEquipos(usuario));
     model.put("aviso", aviso);
     return new ModelAndView("dashboard", model);
   }
@@ -143,6 +152,13 @@ public class ControladorLogin {
       return Collections.emptyList();
     }
     return servicioRelacionAmistad.listarAmigosDe(usuario);
+  }
+
+  private List<DatosEquipoVista> obtenerEquipos(Usuario usuario) {
+    if (servicioEquipo == null) {
+      return Collections.emptyList();
+    }
+    return DatosEquipoVista.desde(servicioEquipo.listarEquiposActivosDe(usuario));
   }
 
   private List<Amistad> obtenerSolicitudesPendientes(Usuario usuario) {

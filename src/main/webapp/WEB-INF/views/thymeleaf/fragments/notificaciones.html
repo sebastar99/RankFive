@@ -3,7 +3,10 @@
 <body>
 
 <div class="d-flex align-items-center gap-2" th:fragment="campana"
-     th:with="cantidadAvisosPl=${avisosPl != null ? #lists.size(avisosPl) : 0}">
+     th:with="cantidadAvisosPl=${avisosPl != null ? #lists.size(avisosPl) : 0},
+              cantidadInvitaciones=${invitacionesEquipo != null ? #lists.size(invitacionesEquipo) : 0},
+              cantidadSolicitudesAmistad=${cantidadSolicitudes != null ? cantidadSolicitudes : 0},
+              totalSolicitudes=${(cantidadSolicitudes != null ? cantidadSolicitudes : 0) + (invitacionesEquipo != null ? #lists.size(invitacionesEquipo) : 0)}">
 
   <!-- Notificaciones de partidos / PL -->
   <div class="dropdown notif-dropdown">
@@ -36,22 +39,63 @@
     </div>
   </div>
 
-  <!-- Solicitudes de amistad -->
+  <!-- Solicitudes de amistad e invitaciones a equipos -->
   <div class="dropdown notif-dropdown">
     <button class="notif-btn" type="button" id="notifAmigosDropdown" data-bs-toggle="dropdown"
             data-bs-auto-close="outside" aria-expanded="false"
-            th:title="${cantidadSolicitudes} + ' solicitudes pendientes'">
+            th:title="${totalSolicitudes} + ' solicitudes pendientes'">
       <i class="bi bi-people-fill"></i>
-      <span class="notif-badge" th:if="${cantidadSolicitudes > 0}" th:text="${cantidadSolicitudes}">0</span>
+      <span class="notif-badge" th:if="${totalSolicitudes > 0}" th:text="${totalSolicitudes}">0</span>
     </button>
 
     <div class="dropdown-menu dropdown-menu-end notif-menu" aria-labelledby="notifAmigosDropdown">
       <div class="notif-header">
-        <span><i class="bi bi-person-plus me-2"></i>Solicitudes de amistad</span>
-        <span class="notif-count" th:text="${cantidadSolicitudes}">0</span>
+        <span><i class="bi bi-shield-fill me-2"></i>Invitaciones a equipos</span>
+        <span class="notif-count" th:text="${cantidadInvitaciones}">0</span>
       </div>
 
-      <div class="notif-empty" th:if="${#lists.isEmpty(solicitudesPendientes)}">
+      <div class="notif-empty" th:if="${cantidadInvitaciones == 0}">
+        <i class="bi bi-inbox"></i>
+        <span>No tenés invitaciones a equipos</span>
+      </div>
+
+      <div class="notif-item" th:each="invitacion : ${invitacionesEquipo}">
+        <div class="notif-avatar">
+          <img th:if="${invitacion.equipo.fotoUrl != null}" th:src="@{${invitacion.equipo.fotoUrl}}"
+               class="notif-escudo" alt="Escudo">
+          <i th:if="${invitacion.equipo.fotoUrl == null}" class="bi bi-shield-fill"></i>
+        </div>
+        <div class="notif-info">
+          <div class="notif-name" th:text="${invitacion.equipo.nombre}">Equipo</div>
+          <div class="notif-user"
+               th:text="'Te invitó @' + (${invitacion.equipo.owner.perfil.nombreUsuario} ?: 'usuario')">Te invitó @usuario</div>
+          <div class="notif-points">
+            <i class="bi bi-people-fill"></i>
+            <span th:text="'F' + ${invitacion.equipo.formato}">F5</span>
+          </div>
+        </div>
+        <div class="notif-actions">
+          <form th:action="@{/equipos/invitaciones/aceptar}" method="post" class="m-0">
+            <input type="hidden" name="invitacionId" th:value="${invitacion.id}">
+            <button type="submit" class="btn btn-sm btn-success" title="Aceptar">
+              <i class="bi bi-check-lg"></i>
+            </button>
+          </form>
+          <form th:action="@{/equipos/invitaciones/rechazar}" method="post" class="m-0">
+            <input type="hidden" name="invitacionId" th:value="${invitacion.id}">
+            <button type="submit" class="btn btn-sm btn-outline-danger" title="Rechazar">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="notif-header">
+        <span><i class="bi bi-person-plus me-2"></i>Solicitudes de amistad</span>
+        <span class="notif-count" th:text="${cantidadSolicitudesAmistad}">0</span>
+      </div>
+
+      <div class="notif-empty" th:if="${solicitudesPendientes == null or #lists.isEmpty(solicitudesPendientes)}">
         <i class="bi bi-inbox"></i>
         <span>No tenés solicitudes pendientes</span>
       </div>
