@@ -1,11 +1,14 @@
 package com.tallerwebi.config;
 
+import com.tallerwebi.infraestructura.AlmacenamientoImagenesImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -31,6 +34,14 @@ public class SpringWebConfig implements WebMvcConfigurer {
     registry.addResourceHandler("/js/**").addResourceLocations("/resources/core/js/");
     registry.addResourceHandler("/images/**").addResourceLocations("/resources/core/images/");
     registry.addResourceHandler("/webjars/**").addResourceLocations("/webjars/");
+    registry
+      .addResourceHandler(AlmacenamientoImagenesImpl.URL_PUBLICA + "**")
+      .addResourceLocations(AlmacenamientoImagenesImpl.directorioPorDefecto().toUri().toString());
+  }
+
+  @Bean
+  public MultipartResolver multipartResolver() {
+    return new StandardServletMultipartResolver();
   }
 
   // https://www.thymeleaf.org/doc/tutorials/3.0/thymeleafspring.html

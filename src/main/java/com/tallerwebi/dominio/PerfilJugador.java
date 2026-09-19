@@ -19,6 +19,7 @@ public class PerfilJugador {
   private String posicionPreferida;
   private String piernaHabil;
   private Integer pl = 1000;
+  private String fotoPerfil;
 
   @Transient
   public Integer getEdad() {
