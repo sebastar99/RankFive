@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Transferencias | Rank5</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/main.css}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=16)}" />
+</head>
+<body class="dashboard-page">
+  <div class="pitch-bg"></div>
+
+  <header class="db-header fixed-top">
+    <div class="container">
+      <div class="db-header-content">
+        <div class="db-left d-flex align-items-center gap-2">
+          <a th:href="@{/dashboard}" class="db-brand">
+            <span class="db-brand-logo"><i class="bi bi-trophy-fill"></i></span>
+            <span class="db-brand-text">Rank<span class="db-brand-accent">5</span></span>
+          </a>
+        </div>
+        <div class="db-center d-flex align-items-center gap-2">
+          <span class="db-page-title"><i class="bi bi-arrow-left-right"></i>Transferencias</span>
+        </div>
+        <div class="db-right d-flex align-items-center gap-4">
+          <div th:replace="~{fragments/notificaciones :: campana}"></div>
+          <span class="db-divider"></span>
+          <a th:href="@{${volverUrl}}" class="db-link"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container db-content">
+    <section class="card-glass p-4">
+      <div class="mb-4">
+        <h1 class="h5 m-0">Mercado de pases</h1>
+        <p class="text-muted small m-0 mt-1">
+          <span th:text="${tipo == 'liga' ? 'Liga' : 'Torneo'}">Torneo</span>:
+          <span class="text-light" th:text="${nombreCompetencia}">Competencia</span>
+          · Elegí un equipo para ver sus jugadores y seleccioná al que quieras incorporar.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-12 col-lg-4">
+          <div class="card-glass p-3 h-100">
+            <h2 class="h6 mb-3">Equipos (<span th:text="${#lists.size(equipos)}">0</span>)</h2>
+            <div th:if="${#lists.isEmpty(equipos)}" class="text-muted small">No hay equipos inscriptos.</div>
+            <div class="transfer-equipos">
+              <a th:each="e : ${equipos}"
+                 th:href="@{/transferencias(tipo=${tipo}, id=${competenciaId}, equipo=${e.id})}"
+                 class="transfer-equipo"
+                 th:classappend="${equipoSeleccionado != null and equipoSeleccionado.id == e.id} ? ' activo' : ''">
+                <span class="transfer-escudo"><i class="bi bi-shield-fill"></i></span>
+                <span class="flex-grow-1 min-w-0">
+                  <span class="d-block fw-bold text-truncate" th:text="${e.nombre}">Equipo</span>
+                  <span class="small text-muted">
+                    <span th:text="${#sets.size(e.jugadores)}">0</span> jugadores ·
+                    <span th:text="${e.promedioPl}">0</span> PL prom.
+                  </span>
+                </span>
+                <i class="bi bi-chevron-right text-muted"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-8">
+          <div class="card-glass p-3 mb-4" th:if="${jugadorSeleccionado != null}">
+            <div class="jugador-seleccionado">
+              <img th:if="${jugadorSeleccionado.perfil.fotoPerfil != null}" th:src="@{${jugadorSeleccionado.perfil.fotoPerfil}}" class="jugador-foto" alt="Foto">
+              <span th:unless="${jugadorSeleccionado.perfil.fotoPerfil != null}" class="jugador-foto placeholder-foto"><i class="bi bi-person-fill"></i></span>
+              <div class="flex-grow-1">
+                <div class="small text-uppercase text-muted">Jugador seleccionado</div>
+                <div class="h5 m-0" th:text="${jugadorSeleccionado.perfil.nombreCompleto}">Nombre</div>
+                <div class="small text-muted">
+                  @<span th:text="${jugadorSeleccionado.perfil.nombreUsuario}">usuario</span> ·
+                  <span th:text="${jugadorSeleccionado.perfil.posicionPreferida}">Posición</span> ·
+                  <span th:text="${equipoSeleccionado.nombre}">Equipo</span>
+                </div>
+                <div class="jugador-stats mt-2">
+                  <span><strong th:text="${jugadorSeleccionado.estadisticas.partidosJugados}">0</strong> PJ</span>
+                  <span><strong th:text="${jugadorSeleccionado.estadisticas.goles}">0</strong> goles</span>
+                  <span><strong th:text="${jugadorSeleccionado.estadisticas.asistencias}">0</strong> asist.</span>
+                  <span><strong th:text="${#numbers.formatDecimal(jugadorSeleccionado.estadisticas.puntaje, 1, 1)}">0.0</strong> puntaje</span>
+                  <span><strong th:text="${jugadorSeleccionado.perfil.pl}">0</strong> PL</span>
+                </div>
+              </div>
+              <button type="button" class="btn btn-primary" disabled title="Próximamente">
+                <i class="bi bi-chat-dots me-1"></i>Iniciar conversación
+              </button>
+            </div>
+          </div>
+
+          <div class="card-glass p-3">
+            <div th:if="${equipoSeleccionado == null}" class="text-muted small">
+              <i class="bi bi-hand-index me-1"></i>Seleccioná un equipo de la lista para ver sus jugadores.
+            </div>
+            <div th:if="${equipoSeleccionado != null}">
+              <h2 class="h6 mb-3">Jugadores de <span th:text="${equipoSeleccionado.nombre}">Equipo</span></h2>
+              <div class="table-responsive">
+                <table class="tabla-posiciones tabla-jugadores">
+                  <thead>
+                    <tr>
+                      <th>Jugador</th><th>Pos.</th><th>Edad</th><th>PL</th><th>PJ</th><th>Goles</th><th>Asist.</th><th>Puntaje</th><th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="j : ${jugadores}"
+                        th:classappend="${jugadorSeleccionado != null and jugadorSeleccionado.id == j.id} ? ' fila-clasifica' : ''">
+                      <td>
+                        <div class="fw-bold" th:text="${j.perfil.nombreCompleto}">Nombre</div>
+                        <div class="small text-muted" th:text="${'@' + j.perfil.nombreUsuario}">@user</div>
+                      </td>
+                      <td th:text="${j.perfil.posicionPreferida}">DEL</td>
+                      <td th:text="${j.perfil.edad}">25</td>
+                      <td th:text="${j.perfil.pl}">1000</td>
+                      <td th:text="${j.estadisticas.partidosJugados}">0</td>
+                      <td th:text="${j.estadisticas.goles}">0</td>
+                      <td th:text="${j.estadisticas.asistencias}">0</td>
+                      <td class="pts" th:text="${#numbers.formatDecimal(j.estadisticas.puntaje, 1, 1)}">0.0</td>
+                      <td>
+                        <a th:href="@{/transferencias(tipo=${tipo}, id=${competenciaId}, equipo=${equipoSeleccionado.id}, jugador=${j.id})}"
+                           class="btn btn-sm btn-outline-light">Seleccionar</a>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
