@@ -14,4 +14,6 @@ public interface ServicioPartido {
   List<NotificacionPl> listarNotificacionesNoLeidas(Usuario usuario);
 
   void marcarNotificacionesLeidas(Usuario usuario);
+
+  List<NotificacionPl> listarNotificacionesDe(Usuario usuario);
 }

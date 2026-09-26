@@ -94,6 +94,14 @@ public class ServicioPartidoImpl implements ServicioPartido {
     repositorioNotificacionPl.marcarLeidasDe(usuario.getId());
   }
 
+  @Override
+  public List<NotificacionPl> listarNotificacionesDe(Usuario usuario) {
+    if (usuario == null || usuario.getId() == null) {
+      return Collections.emptyList();
+    }
+    return repositorioNotificacionPl.listarDe(usuario.getId());
+  }
+
   private boolean sonEquiposValidos(List<Usuario> equipoA, List<Usuario> equipoB) {
     if (equipoA == null || equipoB == null || equipoA.isEmpty() || equipoB.isEmpty()) {
       return false;

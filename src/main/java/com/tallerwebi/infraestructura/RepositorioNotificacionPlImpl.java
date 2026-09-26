@@ -44,4 +44,16 @@ public class RepositorioNotificacionPlImpl implements RepositorioNotificacionPl 
       .setParameter("u", usuarioId)
       .executeUpdate();
   }
+
+  @Override
+  public List<NotificacionPl> listarDe(Long usuarioId) {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "from NotificacionPl n where n.usuario.id = :u order by n.fecha desc",
+        NotificacionPl.class
+      )
+      .setParameter("u", usuarioId)
+      .list();
+  }
 }
