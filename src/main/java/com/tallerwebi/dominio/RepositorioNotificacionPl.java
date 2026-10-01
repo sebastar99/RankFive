@@ -8,4 +8,6 @@ public interface RepositorioNotificacionPl {
   List<NotificacionPl> listarNoLeidasDe(Long usuarioId);
 
   void marcarLeidasDe(Long usuarioId);
+
+  List<NotificacionPl> listarDe(Long usuarioId);
 }

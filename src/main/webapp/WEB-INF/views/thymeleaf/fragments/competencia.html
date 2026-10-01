@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="aviso" th:if="${aviso != null}"
+     class="alert alert-dismissible fade show d-flex align-items-center gap-2"
+     th:classappend="${avisoOk} ? ' alert-success' : ' alert-warning'" role="alert">
+  <i class="bi" th:classappend="${avisoOk} ? ' bi-check-circle-fill' : ' bi-exclamation-triangle-fill'"></i>
+  <span th:text="${aviso}">Aviso</span>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+</div>
+
+<div th:fragment="tabla(filas, clasificados)" class="table-responsive">
+  <table class="tabla-posiciones">
+    <thead>
+      <tr>
+        <th>#</th><th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="fila, st : ${filas}" th:classappend="${st.count <= clasificados} ? ' fila-clasifica' : ''">
+        <td th:text="${st.count}">1</td>
+        <td th:text="${fila.nombreEquipo}">Equipo</td>
+        <td th:text="${fila.jugados}">0</td>
+        <td th:text="${fila.ganados}">0</td>
+        <td th:text="${fila.empatados}">0</td>
+        <td th:text="${fila.perdidos}">0</td>
+        <td th:text="${fila.golesFavor}">0</td>
+        <td th:text="${fila.golesContra}">0</td>
+        <td th:text="${fila.diferencia}">0</td>
+        <td class="pts" th:text="${fila.puntos}">0</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div th:fragment="encuentroTorneo(enc, torneoId)" class="partido-item">
+  <div class="partido-equipos">
+    <span class="partido-equipo text-end"
+          th:text="${enc.participanteA != null ? (enc.participanteA.equipo != null ? enc.participanteA.equipo.nombre : enc.participanteA.nombreEquipo) : 'A definir'}">A</span>
+    <span class="partido-marcador" th:if="${enc.estado == 'JUGADO'}" th:text="${enc.golesA + ' - ' + enc.golesB}">0 - 0</span>
+    <span class="partido-marcador pendiente" th:if="${enc.estado == 'PENDIENTE'}">vs</span>
+    <span class="partido-marcador pendiente" th:if="${enc.estado == 'BYE'}">libre</span>
+    <span class="partido-equipo"
+          th:text="${enc.participanteB != null ? (enc.participanteB.equipo != null ? enc.participanteB.equipo.nombre : enc.participanteB.nombreEquipo) : '-'}">B</span>
+  </div>
+  <div class="partido-extra">
+    <span th:if="${enc.arbitro != null}"><i class="bi bi-person-badge me-1"></i><span th:text="${enc.arbitro.nombre}">Árbitro</span></span>
+    <form th:if="${enc.estado == 'PENDIENTE'}" th:action="@{/torneos/encuentro/resultado}" method="post" class="d-flex align-items-center gap-1">
+      <input type="hidden" name="torneoId" th:value="${torneoId}" />
+      <input type="hidden" name="encuentroId" th:value="${enc.id}" />
+      <input type="number" name="golesA" class="form-control form-control-sm goles-input" min="0" required>
+      <span class="text-muted">-</span>
+      <input type="number" name="golesB" class="form-control form-control-sm goles-input" min="0" required>
+      <button type="submit" class="btn btn-sm btn-primary">Guardar</button>
+    </form>
+    <form th:if="${enc.estado == 'JUGADO' and enc.arbitro != null}" th:action="@{/torneos/encuentro/calificar-arbitro}" method="post" class="d-flex align-items-center gap-1">
+      <input type="hidden" name="torneoId" th:value="${torneoId}" />
+      <input type="hidden" name="encuentroId" th:value="${enc.id}" />
+      <select name="puntaje" class="form-select form-select-sm" style="width:72px">
+        <option value="5">5 ★</option>
+        <option value="4">4 ★</option>
+        <option value="3">3 ★</option>
+        <option value="2">2 ★</option>
+        <option value="1">1 ★</option>
+      </select>
+      <button type="submit" class="btn btn-sm btn-outline-warning">Calificar</button>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>

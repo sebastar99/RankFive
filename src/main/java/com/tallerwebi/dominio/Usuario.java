@@ -25,6 +25,9 @@ public class Usuario {
   @Embedded
   private PerfilJugador perfil = new PerfilJugador();
 
+  @Embedded
+  private EstadisticasJugador estadisticas = new EstadisticasJugador();
+
   public void activar() {
     activo = true;
   }

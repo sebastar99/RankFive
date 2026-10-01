@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title th:text="${torneo != null ? torneo.nombre : 'Torneo'}">Torneo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/main.css}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=16)}" />
+</head>
+<body class="dashboard-page">
+  <div class="pitch-bg"></div>
+
+  <header class="db-header fixed-top">
+    <div class="container">
+      <div class="db-header-content">
+        <div class="db-left d-flex align-items-center gap-2">
+          <a th:href="@{/dashboard}" class="db-brand">
+            <span class="db-brand-logo"><i class="bi bi-trophy-fill"></i></span>
+            <span class="db-brand-text">Rank<span class="db-brand-accent">5</span></span>
+          </a>
+        </div>
+        <div class="db-center d-flex align-items-center gap-2">
+          <span class="db-page-title"><i class="bi bi-list-ol"></i>Detalle del torneo</span>
+        </div>
+        <div class="db-right d-flex align-items-center gap-4">
+          <div th:replace="~{fragments/notificaciones :: campana}"></div>
+          <span class="db-divider"></span>
+          <a th:href="@{/torneos}" class="db-link"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container db-content">
+    <section class="card-glass p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+          <h1 class="h5 m-0" th:text="${torneo != null ? torneo.nombre : 'Torneo'}">Torneo</h1>
+          <div class="text-muted small mt-1">
+            <span><i class="bi bi-people-fill me-1"></i><span th:text="${torneo != null ? torneo.cupoEquipos : 0}">0</span> equipos</span>
+            <span class="ms-3"><i class="bi bi-calendar-event me-1"></i>Inicio: <span th:text="${torneo != null ? #temporals.format(torneo.fechaInicio, 'dd/MM/yyyy') : ''}">fecha</span></span>
+            <span class="ms-3"><i class="bi bi-geo-alt-fill me-1"></i><span th:text="${torneo != null ? torneo.ubicacion : ''}">Sede</span></span>
+            <span class="ms-3"><i class="bi bi-dribbble me-1"></i>F<span th:text="${torneo != null ? torneo.formato : 5}">5</span></span>
+          </div>
+        </div>
+        <div>
+          <button th:if="${yaInscripto}" type="button" class="btn btn-outline-success btn-sm" disabled>
+            <i class="bi bi-check2-circle me-1"></i>Ya inscripto
+          </button>
+          <form th:if="${!yaInscripto and torneo.inscripcionAbierta and tieneEquipoActivo}"
+                th:action="@{/torneos/inscribirse}" method="post" class="m-0">
+            <input type="hidden" name="torneoId" th:value="${torneo.id}">
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="bi bi-pencil-square me-1"></i>Inscribirse
+            </button>
+          </form>
+          <div th:if="${!yaInscripto and torneo.inscripcionAbierta and !tieneEquipoActivo}" class="text-end">
+            <button type="button" class="btn btn-primary btn-sm" disabled>
+              <i class="bi bi-lock-fill me-1"></i>Inscribirse
+            </button>
+            <div class="small text-muted mt-1">Necesitás un equipo activo para inscribirte</div>
+          </div>
+        </div>
+      </div>
+
+      <div th:replace="~{fragments/competencia :: aviso}"></div>
+
+      <div th:if="${campeon != null}" class="campeon-banner mb-4">
+        <i class="bi bi-trophy-fill"></i>
+        <div>
+          <div class="small text-uppercase">Campeón</div>
+          <div class="h5 m-0" th:text="${campeon.equipo != null ? campeon.equipo.nombre : campeon.nombreEquipo}">Equipo</div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-12 col-lg-4">
+          <div class="card-glass p-3 h-100">
+            <h2 class="h6 mb-3">Equipos inscriptos (<span th:text="${#lists.size(inscripciones)}">0</span>)</h2>
+            <ul class="list-group list-group-flush lista-inscriptos">
+              <li class="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center"
+                  th:each="insc : ${inscripciones}">
+                <span>
+                  <i class="bi bi-shield-fill me-2 text-primary"></i>
+                  <span th:text="${insc.equipo != null ? insc.equipo.nombre : (insc.nombreEquipo != null ? insc.nombreEquipo : insc.usuario.perfil.nombreUsuario)}">Equipo</span>
+                </span>
+                <span class="badge grupo-badge" th:if="${insc.grupo != null}" th:text="${'Grupo ' + insc.grupo}">Grupo A</span>
+              </li>
+              <li class="list-group-item bg-transparent text-light" th:if="${#lists.isEmpty(inscripciones)}">
+                No hay inscriptos aún.
+              </li>
+            </ul>
+            <div class="mt-3 d-flex flex-wrap gap-2">
+              <a th:href="@{/transferencias(tipo='torneo', id=${torneo.id})}" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-arrow-left-right me-1"></i>Transferencias
+              </a>
+              <button type="button" class="btn btn-sm btn-outline-warning" disabled title="Próximamente: flyers y datos con IA">
+                <i class="bi bi-graph-up me-1"></i>Análisis de partido
+              </button>
+            </div>
+            <div class="small text-muted mt-2" th:if="${proximoEncuentro != null}">
+              Próximo partido:
+              <span class="text-light" th:text="${proximoEncuentro.participanteA != null ? proximoEncuentro.participanteA.nombreEquipo : ''}">A</span>
+              vs
+              <span class="text-light" th:text="${proximoEncuentro.participanteB != null ? proximoEncuentro.participanteB.nombreEquipo : ''}">B</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-8">
+          <div class="card-glass p-3 h-100">
+            <h2 class="h6 mb-1">Fixture</h2>
+            <div class="text-muted small mb-3">Formato Copa: 8 grupos de 4 (solo ida). Clasifican los 2 mejores de cada grupo a eliminación directa.</div>
+            <div th:if="${#lists.isEmpty(fases)}" class="mb-3">
+              <div class="text-muted small">Aún no hay fixture generado.</div>
+              <form th:action="@{/torneos/generar-fixture}" method="post" class="mt-2">
+                <input type="hidden" name="id" th:value="${torneo.id}" />
+                <button type="submit" class="btn btn-sm btn-primary">
+                  <i class="bi bi-diagram-3"></i> Generar fixture
+                </button>
+              </form>
+              <div class="grupos-grid mt-3" th:unless="${#maps.isEmpty(tablasGrupos)}">
+                <div class="grupo-card" th:each="grupo : ${tablasGrupos}">
+                  <div class="grupo-titulo" th:text="${'Grupo ' + grupo.key}">Grupo A</div>
+                  <div th:replace="~{fragments/competencia :: tabla(${grupo.value}, 2)}"></div>
+                </div>
+              </div>
+            </div>
+            <div th:each="fase : ${fases}" class="mb-4">
+              <div class="fase-titulo" th:text="${fase.nombre}">Fase</div>
+              <div th:if="${fase.esDeGrupos()}" class="grupos-grid">
+                <div class="grupo-card" th:each="grupo : ${tablasGrupos}">
+                  <div class="grupo-titulo" th:text="${'Grupo ' + grupo.key}">Grupo A</div>
+                  <div th:replace="~{fragments/competencia :: tabla(${grupo.value}, 2)}"></div>
+                  <div class="mt-2">
+                    <th:block th:each="enc : ${fase.encuentros}" th:if="${enc.grupo == grupo.key}">
+                      <div th:replace="~{fragments/competencia :: encuentroTorneo(${enc}, ${torneo.id})}"></div>
+                    </th:block>
+                  </div>
+                </div>
+              </div>
+              <div th:unless="${fase.esDeGrupos()}" class="eliminatoria">
+                <th:block th:each="enc : ${fase.encuentros}">
+                  <div th:replace="~{fragments/competencia :: encuentroTorneo(${enc}, ${torneo.id})}"></div>
+                </th:block>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mt-1">
+        <div class="col-12">
+          <div class="card-glass p-3 h-100">
+            <h2 class="h6 mb-1">Árbitros designados</h2>
+            <div class="text-muted small mb-3">Se designan por calificación promedio y PL. Los jugadores califican al árbitro al finalizar cada partido.</div>
+            <div th:if="${#lists.isEmpty(arbitros)}" class="text-muted small">No hay árbitros cargados.</div>
+            <div class="arbitro-item" th:each="arb, st : ${arbitros}">
+              <div class="arbitro-avatar"><i class="bi bi-person-badge-fill"></i></div>
+              <div class="arbitro-info">
+                <div class="arbitro-nombre"><span th:text="${st.count + '. '}">1. </span><span th:text="${arb.nombre}">Árbitro</span></div>
+                <div class="arbitro-meta">
+                  <span th:text="${arb.pl}">0</span> PL ·
+                  <span th:text="${arb.cantidadCalificaciones}">0</span> calificaciones
+                </div>
+              </div>
+              <div class="arbitro-rating"><i class="bi bi-star-fill me-1"></i><span th:text="${#numbers.formatDecimal(arb.promedio, 1, 1)}">0.0</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
