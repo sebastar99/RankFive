@@ -7,7 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" th:href="@{/css/main.css}" />
-  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=16)}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=18)}" />
 </head>
 <body class="dashboard-page">
   <div class="pitch-bg"></div>
@@ -75,104 +75,130 @@
         </div>
       </div>
 
-      <div class="row g-4">
-        <div class="col-12 col-lg-4">
-          <div class="card-glass p-3 h-100">
-            <h2 class="h6 mb-3">Equipos inscriptos (<span th:text="${#lists.size(inscripciones)}">0</span>)</h2>
-            <ul class="list-group list-group-flush lista-inscriptos">
-              <li class="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center"
-                  th:each="insc : ${inscripciones}">
-                <span>
-                  <i class="bi bi-shield-fill me-2 text-primary"></i>
-                  <span th:text="${insc.equipo != null ? insc.equipo.nombre : (insc.nombreEquipo != null ? insc.nombreEquipo : insc.usuario.perfil.nombreUsuario)}">Equipo</span>
-                </span>
-                <span class="badge grupo-badge" th:if="${insc.grupo != null}" th:text="${'Grupo ' + insc.grupo}">Grupo A</span>
-              </li>
-              <li class="list-group-item bg-transparent text-light" th:if="${#lists.isEmpty(inscripciones)}">
-                No hay inscriptos aún.
-              </li>
-            </ul>
-            <div class="mt-3 d-flex flex-wrap gap-2">
-              <a th:href="@{/transferencias(tipo='torneo', id=${torneo.id})}" class="btn btn-sm btn-outline-light">
-                <i class="bi bi-arrow-left-right me-1"></i>Transferencias
-              </a>
-              <button type="button" class="btn btn-sm btn-outline-warning" disabled title="Próximamente: flyers y datos con IA">
-                <i class="bi bi-graph-up me-1"></i>Análisis de partido
-              </button>
+      <nav th:replace="~{fragments/competencia :: acciones('torneo', ${torneo.id})}"></nav>
+
+      <div class="tab-content">
+      <div class="tab-pane fade" id="tab-estadisticas" role="tabpanel">
+        <div class="row g-4">
+          <div class="col-12">
+            <div class="card-glass p-3">
+              <h2 class="h6 mb-1">Tabla de posiciones</h2>
+              <div class="text-muted small mb-3">Fase de grupos. Victoria 3 pts, empate 1. Clasifican los 2 mejores de cada grupo.</div>
+              <div th:if="${#maps.isEmpty(tablasGrupos)}" class="text-muted small">Aún no hay grupos armados.</div>
+              <div class="grupos-grid" th:unless="${#maps.isEmpty(tablasGrupos)}">
+                <div class="grupo-card" th:each="grupo : ${tablasGrupos}">
+                  <div class="grupo-titulo" th:text="${'Grupo ' + grupo.key}">Grupo A</div>
+                  <div th:replace="~{fragments/competencia :: tabla(${grupo.value}, 2)}"></div>
+                </div>
+              </div>
             </div>
-            <div class="small text-muted mt-2" th:if="${proximoEncuentro != null}">
-              Próximo partido:
-              <span class="text-light" th:text="${proximoEncuentro.participanteA != null ? proximoEncuentro.participanteA.nombreEquipo : ''}">A</span>
-              vs
-              <span class="text-light" th:text="${proximoEncuentro.participanteB != null ? proximoEncuentro.participanteB.nombreEquipo : ''}">B</span>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div th:replace="~{fragments/competencia :: golesEquipo(${golesPorEquipo})}"></div>
+          </div>
+          <div class="col-12 col-lg-6 d-flex flex-column gap-4">
+            <div th:replace="~{fragments/competencia :: tablaJugadores(${goleadores}, 'Tabla de goleadores', 'bi-dribbble', 'Goles', 'Aún no hay goles registrados por jugador.')}"></div>
+            <div th:replace="~{fragments/competencia :: tablaJugadores(${asistencias}, 'Tabla de asistencias', 'bi-hand-thumbs-up', 'Asist.', 'Aún no hay asistencias registradas.')}"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-arbitros" role="tabpanel">
+        <div th:replace="~{fragments/competencia :: panelArbitros}"></div>
+      </div>
+
+      <div class="tab-pane fade show active" id="tab-general" role="tabpanel">
+      <div class="row g-4">
+        <div class="col-12 col-lg-5">
+          <div class="card-glass p-3 h-100">
+            <h2 class="h6 mb-1">Tabla de posiciones</h2>
+            <div class="text-muted small mb-3">Formato Copa: grupos de 4 (solo ida). Clasifican los 2 mejores de cada grupo a eliminación directa.</div>
+            <div th:if="${#maps.isEmpty(tablasGrupos)}">
+              <div class="text-muted small mb-2">Equipos inscriptos (<span th:text="${#lists.size(inscripciones)}">0</span>)</div>
+              <ul class="list-group list-group-flush lista-inscriptos">
+                <li class="list-group-item bg-transparent text-light" th:each="insc : ${inscripciones}">
+                  <i class="bi bi-shield-fill me-2 text-primary"></i>
+                  <span th:text="${insc.nombreVisible != null ? insc.nombreVisible : insc.usuario.perfil.nombreUsuario}">Equipo</span>
+                </li>
+                <li class="list-group-item bg-transparent text-light" th:if="${#lists.isEmpty(inscripciones)}">
+                  No hay inscriptos aún.
+                </li>
+              </ul>
+            </div>
+            <div class="grupos-stack" th:unless="${#maps.isEmpty(tablasGrupos)}">
+              <div class="grupo-card" th:each="grupo : ${tablasGrupos}">
+                <div class="grupo-titulo" th:text="${'Grupo ' + grupo.key}">Grupo A</div>
+                <div th:replace="~{fragments/competencia :: tabla(${grupo.value}, 2)}"></div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="col-12 col-lg-8">
+        <div class="col-12 col-lg-7">
           <div class="card-glass p-3 h-100">
-            <h2 class="h6 mb-1">Fixture</h2>
-            <div class="text-muted small mb-3">Formato Copa: 8 grupos de 4 (solo ida). Clasifican los 2 mejores de cada grupo a eliminación directa.</div>
-            <div th:if="${#lists.isEmpty(fases)}" class="mb-3">
-              <div class="text-muted small">Aún no hay fixture generado.</div>
+            <h2 class="h6 mb-3">Fixture</h2>
+            <div th:if="${#lists.isEmpty(fases)}">
+              <div class="text-muted small">Aún no hay fixture generado. Hay <span th:text="${#lists.size(inscripciones)}">0</span> equipos inscriptos.</div>
               <form th:action="@{/torneos/generar-fixture}" method="post" class="mt-2">
                 <input type="hidden" name="id" th:value="${torneo.id}" />
                 <button type="submit" class="btn btn-sm btn-primary">
                   <i class="bi bi-diagram-3"></i> Generar fixture
                 </button>
               </form>
-              <div class="grupos-grid mt-3" th:unless="${#maps.isEmpty(tablasGrupos)}">
-                <div class="grupo-card" th:each="grupo : ${tablasGrupos}">
-                  <div class="grupo-titulo" th:text="${'Grupo ' + grupo.key}">Grupo A</div>
-                  <div th:replace="~{fragments/competencia :: tabla(${grupo.value}, 2)}"></div>
-                </div>
-              </div>
             </div>
-            <div th:each="fase : ${fases}" class="mb-4">
-              <div class="fase-titulo" th:text="${fase.nombre}">Fase</div>
-              <div th:if="${fase.esDeGrupos()}" class="grupos-grid">
-                <div class="grupo-card" th:each="grupo : ${tablasGrupos}">
-                  <div class="grupo-titulo" th:text="${'Grupo ' + grupo.key}">Grupo A</div>
-                  <div th:replace="~{fragments/competencia :: tabla(${grupo.value}, 2)}"></div>
-                  <div class="mt-2">
+            <div th:unless="${#lists.isEmpty(fases)}" class="fixture"
+                 th:with="esAdmin=${usuario != null and usuario.rol != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN')},
+                          compId=${torneo.id}, campoComp='torneoId', campoPartido='encuentroId',
+                          campoGL='golesA', campoGV='golesB',
+                          urlResultado='/torneos/encuentro/resultado', urlGol='/torneos/encuentro/gol',
+                          urlCalificar='/torneos/encuentro/calificar-arbitro'">
+              <div class="fixture-nav">
+                <button type="button" class="btn btn-sm btn-outline-light fixture-flecha" data-fixture-mover="-1" aria-label="Fase anterior">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
+                <div class="fecha-strip" role="tablist">
+                  <button type="button" class="fecha-pill" th:each="fase : ${fases}"
+                          th:attr="data-fecha=${fase.numero}"
+                          th:classappend="${(fase.numero == faseActual ? ' activa' : '') + (#lists.isEmpty(fase.encuentros.?[estado == 'PENDIENTE']) ? ' completa' : '')}"
+                          th:text="${fase.nombre}">Fase</button>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-light fixture-flecha" data-fixture-mover="1" aria-label="Fase siguiente">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
+              </div>
+
+              <div class="fecha-panel" th:each="fase : ${fases}"
+                   th:attr="data-fecha=${fase.numero}"
+                   th:classappend="${fase.numero == faseActual} ? ' activa' : ''">
+                <div class="fecha-panel-header">
+                  <span class="fw-bold" th:text="${fase.nombre}">Fase</span>
+                  <span class="text-muted small"
+                        th:text="${#lists.size(fase.encuentros.?[estado == 'JUGADO']) + '/' + #lists.size(fase.encuentros) + ' jugados'}">0/0 jugados</span>
+                </div>
+
+                <th:block th:if="${fase.esDeGrupos()}">
+                  <div th:each="grupo : ${tablasGrupos}" class="mb-3">
+                    <div class="grupo-subtitulo" th:text="${'Grupo ' + grupo.key}">Grupo A</div>
                     <th:block th:each="enc : ${fase.encuentros}" th:if="${enc.grupo == grupo.key}">
-                      <div th:replace="~{fragments/competencia :: encuentroTorneo(${enc}, ${torneo.id})}"></div>
+                      <th:block th:replace="~{fragments/competencia :: encuentroCard(${enc})}"></th:block>
                     </th:block>
                   </div>
-                </div>
-              </div>
-              <div th:unless="${fase.esDeGrupos()}" class="eliminatoria">
-                <th:block th:each="enc : ${fase.encuentros}">
-                  <div th:replace="~{fragments/competencia :: encuentroTorneo(${enc}, ${torneo.id})}"></div>
+                </th:block>
+                <th:block th:unless="${fase.esDeGrupos()}">
+                  <th:block th:each="enc : ${fase.encuentros}">
+                    <th:block th:replace="~{fragments/competencia :: encuentroCard(${enc})}"></th:block>
+                  </th:block>
                 </th:block>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <div class="row g-4 mt-1">
-        <div class="col-12">
-          <div class="card-glass p-3 h-100">
-            <h2 class="h6 mb-1">Árbitros designados</h2>
-            <div class="text-muted small mb-3">Se designan por calificación promedio y PL. Los jugadores califican al árbitro al finalizar cada partido.</div>
-            <div th:if="${#lists.isEmpty(arbitros)}" class="text-muted small">No hay árbitros cargados.</div>
-            <div class="arbitro-item" th:each="arb, st : ${arbitros}">
-              <div class="arbitro-avatar"><i class="bi bi-person-badge-fill"></i></div>
-              <div class="arbitro-info">
-                <div class="arbitro-nombre"><span th:text="${st.count + '. '}">1. </span><span th:text="${arb.nombre}">Árbitro</span></div>
-                <div class="arbitro-meta">
-                  <span th:text="${arb.pl}">0</span> PL ·
-                  <span th:text="${arb.cantidadCalificaciones}">0</span> calificaciones
-                </div>
-              </div>
-              <div class="arbitro-rating"><i class="bi bi-star-fill me-1"></i><span th:text="${#numbers.formatDecimal(arb.promedio, 1, 1)}">0.0</span></div>
-            </div>
-          </div>
-        </div>
+      </div>
       </div>
     </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:src="@{/js/fixture.js}"></script>
 </body>
 </html>

@@ -8,6 +8,7 @@ import com.tallerwebi.dominio.Partido;
 import com.tallerwebi.dominio.ResultadoInscripcion;
 import com.tallerwebi.dominio.ServicioArbitro;
 import com.tallerwebi.dominio.ServicioCompetencia;
+import com.tallerwebi.dominio.ServicioEstadisticasTorneo;
 import com.tallerwebi.dominio.ServicioLiga;
 import com.tallerwebi.dominio.ServicioPartido;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
@@ -33,11 +34,15 @@ public class ControladorSecciones extends ControladorBase {
   private final ServicioCompetencia servicioCompetencia;
   private final ServicioArbitro servicioArbitro;
   private final ServicioLiga servicioLiga;
+  private ServicioEstadisticasTorneo servicioEstadisticasTorneo;
 
   private static final String AVISO = "aviso";
   private static final String PARAM_AVISO = "&aviso=";
+  private static final String PARAM_TORNEO = "torneoId";
   private static final String REDIRECT_DETALLE = "redirect:/torneos/detalle?id=";
   private static final String ESTADO_PENDIENTE = "PENDIENTE";
+  private static final String ROLE_ADMIN = "ADMIN";
+  private static final String REDIRECT_TORNEOS = "redirect:/torneos";
 
   @Autowired
   public ControladorSecciones(
@@ -52,6 +57,11 @@ public class ControladorSecciones extends ControladorBase {
     this.servicioCompetencia = servicioCompetencia;
     this.servicioArbitro = servicioArbitro;
     this.servicioLiga = servicioLiga;
+  }
+
+  @Autowired(required = false)
+  public void setServicioEstadisticasTorneo(ServicioEstadisticasTorneo servicioEstadisticasTorneo) {
+    this.servicioEstadisticasTorneo = servicioEstadisticasTorneo;
   }
 
   @RequestMapping(path = "/torneos", method = RequestMethod.GET)
@@ -90,7 +100,7 @@ public class ControladorSecciones extends ControladorBase {
   @RequestMapping(path = "/torneos/inscribirse", method = RequestMethod.POST)
   public ModelAndView inscribirseTorneo(
     HttpServletRequest request,
-    @RequestParam("torneoId") Long torneoId
+    @RequestParam(PARAM_TORNEO) Long torneoId
   ) {
     Usuario usuario = usuarioDeSesion(request);
     if (usuario == null) {
@@ -115,7 +125,7 @@ public class ControladorSecciones extends ControladorBase {
     }
     Torneo torneo = servicioCompetencia.buscarTorneoPorId(torneoId);
     if (torneo == null) {
-      return new ModelAndView("redirect:/torneos");
+      return new ModelAndView(REDIRECT_TORNEOS);
     }
     List<FaseTorneo> fases = servicioCompetencia.obtenerFases(torneoId);
     Map<String, Object> modelo = new HashMap<>(modeloBase(usuario));
@@ -124,7 +134,13 @@ public class ControladorSecciones extends ControladorBase {
     modelo.put("fases", fases);
     modelo.put("tablasGrupos", servicioCompetencia.calcularTablasPorGrupo(torneoId));
     modelo.put("campeon", servicioCompetencia.obtenerCampeon(torneoId));
-    modelo.put("arbitros", servicioArbitro.listarRanking());
+    ModeloCompetencia.arbitraje(
+      modelo,
+      servicioArbitro.listarRanking(),
+      servicioArbitro.encuentrosCalificables(usuario, torneoId)
+    );
+    agregarEstadisticasTorneo(modelo, torneoId);
+    modelo.put("faseActual", faseActual(fases));
     modelo.put("proximoEncuentro", proximoEncuentro(fases));
     modelo.put("yaInscripto", servicioCompetencia.yaInscripto(usuario, torneoId));
     modelo.put("tieneEquipoActivo", servicioCompetencia.tieneEquipoActivo(usuario));
@@ -135,7 +151,7 @@ public class ControladorSecciones extends ControladorBase {
   @RequestMapping(path = "/torneos/encuentro/calificar-arbitro", method = RequestMethod.POST)
   public ModelAndView calificarArbitro(
     HttpServletRequest request,
-    @RequestParam("torneoId") Long torneoId,
+    @RequestParam(PARAM_TORNEO) Long torneoId,
     @RequestParam("encuentroId") Long encuentroId,
     @RequestParam("puntaje") Integer puntaje
   ) {
@@ -146,6 +162,58 @@ public class ControladorSecciones extends ControladorBase {
     boolean ok = servicioArbitro.calificar(usuario, encuentroId, puntaje);
     String codigo = ok ? Avisos.CALIFICADO : Avisos.CALIFICACION_INVALIDA;
     return new ModelAndView(REDIRECT_DETALLE + torneoId + PARAM_AVISO + codigo);
+  }
+
+  @RequestMapping(path = "/torneos/encuentro/gol", method = RequestMethod.POST)
+  public ModelAndView registrarGolEncuentro(
+    HttpServletRequest request,
+    @RequestParam(PARAM_TORNEO) Long torneoId,
+    @RequestParam("encuentroId") Long encuentroId,
+    @RequestParam("inscripcionId") Long inscripcionId,
+    @RequestParam("goleador") String goleador,
+    @RequestParam(name = "asistidor", required = false) String asistidor
+  ) {
+    Usuario usuario = usuarioDeSesion(request);
+    if (usuario == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+    boolean registrado =
+      ModeloCompetencia.esAdmin(usuario) &&
+      servicioEstadisticasTorneo != null &&
+      servicioEstadisticasTorneo.registrarGol(encuentroId, inscripcionId, goleador, asistidor);
+    return new ModelAndView(
+      REDIRECT_DETALLE +
+      torneoId +
+      PARAM_AVISO +
+      (registrado ? Avisos.GOL_REGISTRADO : Avisos.GOL_INVALIDO)
+    );
+  }
+
+  private void agregarEstadisticasTorneo(Map<String, Object> modelo, Long torneoId) {
+    if (servicioEstadisticasTorneo == null) {
+      ModeloCompetencia.sinEstadisticas(modelo);
+      modelo.put("golesPorEquipo", List.of());
+      return;
+    }
+    ModeloCompetencia.estadisticas(
+      modelo,
+      servicioEstadisticasTorneo.goleadores(torneoId),
+      servicioEstadisticasTorneo.asistencias(torneoId),
+      servicioEstadisticasTorneo.golesPorPartido(torneoId),
+      servicioEstadisticasTorneo.jugadoresPorInscripcion(torneoId)
+    );
+    modelo.put("golesPorEquipo", servicioEstadisticasTorneo.golesPorEquipo(torneoId));
+  }
+
+  static int faseActual(List<FaseTorneo> fases) {
+    int actual = 1;
+    for (FaseTorneo fase : fases) {
+      actual = fase.getNumero() == null ? actual : fase.getNumero();
+      if (fase.getEncuentros().stream().anyMatch(e -> ESTADO_PENDIENTE.equals(e.getEstado()))) {
+        return actual;
+      }
+    }
+    return actual;
   }
 
   private static EncuentroTorneo proximoEncuentro(List<FaseTorneo> fases) {
@@ -168,6 +236,9 @@ public class ControladorSecciones extends ControladorBase {
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
+    if (usuario.getRol() == null || !ROLE_ADMIN.equalsIgnoreCase(usuario.getRol())) {
+      return new ModelAndView(REDIRECT_DETALLE + torneoId + PARAM_AVISO + Avisos.FIXTURE_INVALIDO);
+    }
     boolean ok = servicioCompetencia.generarFixtureSiNoExiste(torneoId);
     String codigo = ok ? Avisos.FIXTURE_GENERADO : Avisos.FIXTURE_INVALIDO;
     return new ModelAndView(REDIRECT_DETALLE + torneoId + PARAM_AVISO + codigo);
@@ -178,6 +249,9 @@ public class ControladorSecciones extends ControladorBase {
     Usuario usuario = usuarioDeSesion(request);
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
+    }
+    if (usuario.getRol() == null || !ROLE_ADMIN.equalsIgnoreCase(usuario.getRol())) {
+      return new ModelAndView(REDIRECT_TORNEOS);
     }
     Map<String, Object> modelo = new HashMap<>(modeloBase(usuario));
     return new ModelAndView("torneoForm", modelo);
@@ -194,26 +268,23 @@ public class ControladorSecciones extends ControladorBase {
     @RequestParam("ubicacion") String ubicacion,
     @RequestParam(name = "inscripcionAbierta", defaultValue = "false") Boolean inscripcionAbierta
   ) {
-    Usuario usuario = usuarioDeSesion(request);
-    if (usuario == null) {
-      return new ModelAndView(REDIRECT_LOGIN);
-    }
-    com.tallerwebi.dominio.Torneo nuevo = new com.tallerwebi.dominio.Torneo();
-    nuevo.setNombre(nombre);
-    nuevo.setDescripcion(descripcion);
-    nuevo.setFormato(formato);
-    nuevo.setCupoEquipos(cupoEquipos);
-    nuevo.setFechaInicio(java.time.LocalDate.parse(fechaInicio));
-    nuevo.setUbicacion(ubicacion);
-    nuevo.setInscripcionAbierta(inscripcionAbierta);
-    servicioCompetencia.guardarTorneo(nuevo);
-    return new ModelAndView("redirect:/torneos");
+    return crearCompetencia(
+      request,
+      nombre,
+      descripcion,
+      formato,
+      cupoEquipos,
+      fechaInicio,
+      ubicacion,
+      inscripcionAbierta,
+      true
+    );
   }
 
   @RequestMapping(path = "/torneos/encuentro/resultado", method = RequestMethod.POST)
   public ModelAndView registrarResultadoEncuentro(
     HttpServletRequest request,
-    @RequestParam("torneoId") Long torneoId,
+    @RequestParam(PARAM_TORNEO) Long torneoId,
     @RequestParam("encuentroId") Long encuentroId,
     @RequestParam("golesA") Integer golesA,
     @RequestParam("golesB") Integer golesB
@@ -221,6 +292,11 @@ public class ControladorSecciones extends ControladorBase {
     Usuario usuario = usuarioDeSesion(request);
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
+    }
+    if (usuario.getRol() == null || !ROLE_ADMIN.equalsIgnoreCase(usuario.getRol())) {
+      return new ModelAndView(
+        REDIRECT_DETALLE + torneoId + PARAM_AVISO + Avisos.RESULTADO_INVALIDO
+      );
     }
     boolean ok = servicioCompetencia.registrarResultadoEncuentro(encuentroId, golesA, golesB);
     String codigo = ok ? Avisos.RESULTADO_GUARDADO : Avisos.RESULTADO_INVALIDO;
@@ -232,6 +308,9 @@ public class ControladorSecciones extends ControladorBase {
     Usuario usuario = usuarioDeSesion(request);
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
+    }
+    if (usuario.getRol() == null || !ROLE_ADMIN.equalsIgnoreCase(usuario.getRol())) {
+      return new ModelAndView(REDIRECT_TORNEOS);
     }
     Map<String, Object> modelo = new HashMap<>(modeloBase(usuario));
     return new ModelAndView("ligaForm", modelo);
@@ -248,19 +327,58 @@ public class ControladorSecciones extends ControladorBase {
     @RequestParam("ubicacion") String ubicacion,
     @RequestParam(name = "inscripcionAbierta", defaultValue = "false") Boolean inscripcionAbierta
   ) {
+    return crearCompetencia(
+      request,
+      nombre,
+      descripcion,
+      formato,
+      cupoEquipos,
+      fechaInicio,
+      ubicacion,
+      inscripcionAbierta,
+      false
+    );
+  }
+
+  private ModelAndView crearCompetencia(
+    HttpServletRequest request,
+    String nombre,
+    String descripcion,
+    Integer formato,
+    Integer cupoEquipos,
+    String fechaInicio,
+    String ubicacion,
+    Boolean inscripcionAbierta,
+    boolean esTorneo
+  ) {
     Usuario usuario = usuarioDeSesion(request);
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
-    com.tallerwebi.dominio.Liga nueva = new com.tallerwebi.dominio.Liga();
-    nueva.setNombre(nombre);
-    nueva.setDescripcion(descripcion);
-    nueva.setFormato(formato);
-    nueva.setCupoEquipos(cupoEquipos);
-    nueva.setFechaInicio(java.time.LocalDate.parse(fechaInicio));
-    nueva.setUbicacion(ubicacion);
-    nueva.setInscripcionAbierta(inscripcionAbierta);
-    servicioCompetencia.guardarLiga(nueva);
+    if (usuario.getRol() == null || !ROLE_ADMIN.equalsIgnoreCase(usuario.getRol())) {
+      return new ModelAndView(REDIRECT_TORNEOS);
+    }
+    if (esTorneo) {
+      Torneo nuevo = new Torneo();
+      nuevo.setNombre(nombre);
+      nuevo.setDescripcion(descripcion);
+      nuevo.setFormato(formato);
+      nuevo.setCupoEquipos(cupoEquipos);
+      nuevo.setFechaInicio(java.time.LocalDate.parse(fechaInicio));
+      nuevo.setUbicacion(ubicacion);
+      nuevo.setInscripcionAbierta(inscripcionAbierta);
+      servicioCompetencia.guardarTorneo(nuevo);
+    } else {
+      Liga nueva = new Liga();
+      nueva.setNombre(nombre);
+      nueva.setDescripcion(descripcion);
+      nueva.setFormato(formato);
+      nueva.setCupoEquipos(cupoEquipos);
+      nueva.setFechaInicio(java.time.LocalDate.parse(fechaInicio));
+      nueva.setUbicacion(ubicacion);
+      nueva.setInscripcionAbierta(inscripcionAbierta);
+      servicioCompetencia.guardarLiga(nueva);
+    }
     return new ModelAndView("redirect:/torneos");
   }
 

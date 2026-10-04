@@ -11,6 +11,8 @@ public final class Avisos {
   public static final String FIXTURE_INVALIDO = "FIXTURE_INVALIDO";
   public static final String RESULTADO_GUARDADO = "RESULTADO_GUARDADO";
   public static final String RESULTADO_INVALIDO = "RESULTADO_INVALIDO";
+  public static final String GOL_REGISTRADO = "GOL_REGISTRADO";
+  public static final String GOL_INVALIDO = "GOL_INVALIDO";
 
   private static final String AVISO = "aviso";
   private static final String AVISO_OK = "avisoOk";
@@ -21,7 +23,9 @@ public final class Avisos {
     FIXTURE_GENERADO,
     "Fixture generado correctamente",
     RESULTADO_GUARDADO,
-    "Resultado registrado"
+    "Resultado registrado",
+    GOL_REGISTRADO,
+    "Gol registrado"
   );
 
   private static final Map<String, String> ERROR = Map.of(
@@ -30,7 +34,9 @@ public final class Avisos {
     FIXTURE_INVALIDO,
     "No se pudo generar el fixture: se necesitan al menos 2 equipos inscriptos",
     RESULTADO_INVALIDO,
-    "Resultado inválido (en eliminación directa no puede haber empate)"
+    "Resultado inválido (en eliminación directa no puede haber empate)",
+    GOL_INVALIDO,
+    "No se pudo registrar el gol (revisá el marcador, el goleador y el asistidor)"
   );
 
   private Avisos() {}

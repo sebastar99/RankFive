@@ -7,7 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" th:href="@{/css/main.css}" />
-  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=16)}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=18)}" />
 </head>
 <body class="dashboard-page">
   <div class="pitch-bg"></div>
@@ -67,6 +67,36 @@
 
       <div th:replace="~{fragments/competencia :: aviso}"></div>
 
+      <nav th:replace="~{fragments/competencia :: acciones('liga', ${liga.id})}"></nav>
+
+      <div class="tab-content">
+      <div class="tab-pane fade" id="tab-estadisticas" role="tabpanel">
+        <div class="row g-4">
+          <div class="col-12">
+            <div class="card-glass p-3">
+              <h2 class="h6 mb-1">Tabla de posiciones</h2>
+              <div class="text-muted small mb-3">Victoria 3 pts, empate 1.</div>
+              <div th:if="${#lists.isEmpty(tabla)}" class="text-muted small">Aún no hay equipos inscriptos.</div>
+              <th:block th:unless="${#lists.isEmpty(tabla)}">
+                <div th:replace="~{fragments/competencia :: tabla(${tabla}, 1)}"></div>
+              </th:block>
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div th:replace="~{fragments/competencia :: golesEquipo(${tabla})}"></div>
+          </div>
+          <div class="col-12 col-lg-6 d-flex flex-column gap-4">
+            <div th:replace="~{fragments/competencia :: tablaJugadores(${goleadores}, 'Tabla de goleadores', 'bi-dribbble', 'Goles', 'Aún no hay goles registrados por jugador.')}"></div>
+            <div th:replace="~{fragments/competencia :: tablaJugadores(${asistencias}, 'Tabla de asistencias', 'bi-hand-thumbs-up', 'Asist.', 'Aún no hay asistencias registradas.')}"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-arbitros" role="tabpanel">
+        <div th:replace="~{fragments/competencia :: panelArbitros}"></div>
+      </div>
+
+      <div class="tab-pane fade show active" id="tab-general" role="tabpanel">
       <div class="row g-4">
         <div class="col-12 col-lg-5">
           <div class="card-glass p-3 h-100">
@@ -76,14 +106,6 @@
             <th:block th:unless="${#lists.isEmpty(tabla)}">
               <div th:replace="~{fragments/competencia :: tabla(${tabla}, 1)}"></div>
             </th:block>
-            <div class="mt-3 d-flex flex-wrap gap-2">
-              <a th:href="@{/transferencias(tipo='liga', id=${liga.id})}" class="btn btn-sm btn-outline-light">
-                <i class="bi bi-arrow-left-right me-1"></i>Transferencias
-              </a>
-              <button type="button" class="btn btn-sm btn-outline-warning" disabled title="Próximamente: flyers y datos con IA">
-                <i class="bi bi-graph-up me-1"></i>Análisis de partido
-              </button>
-            </div>
           </div>
         </div>
         <div class="col-12 col-lg-7">
@@ -98,37 +120,57 @@
                 </button>
               </form>
             </div>
-            <details class="fecha-item" th:each="fecha : ${fechas}" th:open="${fecha.key == 1}">
-              <summary>
-                <span th:text="${'Fecha ' + fecha.key}">Fecha 1</span>
-                <span class="text-muted small ms-2" th:text="${fecha.key <= #maps.size(fechas) / 2} ? '(ida)' : '(vuelta)'">(ida)</span>
-              </summary>
-              <div class="partido-item" th:each="p : ${fecha.value}">
-                <div class="partido-equipos">
-                  <span class="partido-equipo text-end" th:text="${p.local.nombreVisible}">Local</span>
-                  <span class="partido-marcador" th:if="${p.estaJugado()}" th:text="${p.golesLocal + ' - ' + p.golesVisitante}">0 - 0</span>
-                  <span class="partido-marcador pendiente" th:unless="${p.estaJugado()}">vs</span>
-                  <span class="partido-equipo" th:text="${p.visitante.nombreVisible}">Visitante</span>
+            <div th:unless="${#maps.isEmpty(fechas)}" class="fixture"
+                 th:with="esAdmin=${usuario != null and usuario.rol != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN')},
+                          compId=${liga.id}, campoComp='ligaId', campoPartido='partidoId',
+                          campoGL='golesLocal', campoGV='golesVisitante',
+                          urlResultado='/ligas/partido/resultado', urlGol='/ligas/partido/gol',
+                          urlCalificar='/ligas/partido/calificar-arbitro'">
+              <div class="fixture-nav">
+                <button type="button" class="btn btn-sm btn-outline-light fixture-flecha" data-fixture-mover="-1" aria-label="Fecha anterior">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
+                <div class="fecha-strip" role="tablist">
+                  <button type="button" class="fecha-pill" th:each="fecha : ${fechas}"
+                          th:attr="data-fecha=${fecha.key}"
+                          th:classappend="${(fecha.key == fechaActual ? ' activa' : '') + (#lists.isEmpty(fecha.value.?[estado == 'PENDIENTE']) ? ' completa' : '')}"
+                          th:text="${fecha.key}">1</button>
                 </div>
-                <div class="partido-extra">
-                  <span th:if="${p.arbitro != null}"><i class="bi bi-person-badge me-1"></i><span th:text="${p.arbitro.nombre}">Árbitro</span></span>
-                  <form th:unless="${p.estaJugado()}" th:action="@{/ligas/partido/resultado}" method="post" class="d-flex align-items-center gap-1">
-                    <input type="hidden" name="ligaId" th:value="${liga.id}" />
-                    <input type="hidden" name="partidoId" th:value="${p.id}" />
-                    <input type="number" name="golesLocal" class="form-control form-control-sm goles-input" min="0" required>
-                    <span class="text-muted">-</span>
-                    <input type="number" name="golesVisitante" class="form-control form-control-sm goles-input" min="0" required>
-                    <button type="submit" class="btn btn-sm btn-primary">Guardar</button>
-                  </form>
-                </div>
+                <button type="button" class="btn btn-sm btn-outline-light fixture-flecha" data-fixture-mover="1" aria-label="Fecha siguiente">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
               </div>
-            </details>
+
+              <div class="fecha-panel" th:each="fecha : ${fechas}"
+                   th:attr="data-fecha=${fecha.key}"
+                   th:classappend="${fecha.key == fechaActual} ? ' activa' : ''">
+                <div class="fecha-panel-header">
+                  <div>
+                    <span class="fw-bold" th:text="${'Fecha ' + fecha.key}">Fecha 1</span>
+                    <span class="text-muted small ms-1" th:text="${fecha.key <= #maps.size(fechas) / 2} ? '(ida)' : '(vuelta)'">(ida)</span>
+                  </div>
+                  <span class="text-muted small"
+                        th:text="${#lists.size(fecha.value.?[estado == 'JUGADO']) + '/' + #lists.size(fecha.value) + ' jugados'}">0/0 jugados</span>
+                </div>
+
+                <th:block th:each="p : ${fecha.value}"
+                          th:with="pId=${p.id}, nLocal=${p.local.nombreVisible}, nVisitante=${p.visitante.nombreVisible},
+                                   idLocal=${p.local.id}, idVisitante=${p.visitante.id},
+                                   gLocal=${p.golesLocal}, gVisitante=${p.golesVisitante},
+                                   jugado=${p.estaJugado()}, libre=${false}, arbitro=${p.arbitro}">
+                  <div th:replace="~{fragments/competencia :: partidoCard}"></div>
+                </th:block>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+      </div>
       </div>
     </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:src="@{/js/fixture.js}"></script>
 </body>
 </html>

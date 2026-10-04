@@ -31,9 +31,13 @@ public class CalificacionArbitro {
   @JoinColumn(name = "usuario_id")
   private Usuario usuario;
 
-  @ManyToOne(optional = false, fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "encuentro_id")
   private EncuentroTorneo encuentro;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "partido_liga_id")
+  private PartidoLiga partidoLiga;
 
   @Column(nullable = false)
   private Integer puntaje;

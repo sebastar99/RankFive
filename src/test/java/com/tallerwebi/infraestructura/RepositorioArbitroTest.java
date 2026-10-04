@@ -11,6 +11,9 @@ import com.tallerwebi.dominio.Arbitro;
 import com.tallerwebi.dominio.CalificacionArbitro;
 import com.tallerwebi.dominio.EncuentroTorneo;
 import com.tallerwebi.dominio.FaseTorneo;
+import com.tallerwebi.dominio.InscripcionLiga;
+import com.tallerwebi.dominio.Liga;
+import com.tallerwebi.dominio.PartidoLiga;
 import com.tallerwebi.dominio.RepositorioArbitro;
 import com.tallerwebi.dominio.Torneo;
 import com.tallerwebi.dominio.Usuario;
@@ -162,5 +165,77 @@ public class RepositorioArbitroTest {
       repositorioArbitro.existeCalificacion(usuario.getId(), otroEncuentro.getId()),
       is(false)
     );
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void calificacionesDeLigaSeConsultanPorUsuarioYPartido() {
+    Arbitro arbitro = guardarArbitro("Pitana");
+    Usuario usuario = guardarUsuario("liga@test.com");
+    PartidoLiga partido = guardarPartidoLiga(arbitro, usuario);
+    EncuentroTorneo encuentro = guardarEncuentro(arbitro);
+
+    CalificacionArbitro deLiga = new CalificacionArbitro();
+    deLiga.setArbitro(arbitro);
+    deLiga.setUsuario(usuario);
+    deLiga.setPartidoLiga(partido);
+    deLiga.setPuntaje(3);
+    repositorioArbitro.guardarCalificacion(deLiga);
+    CalificacionArbitro deTorneo = new CalificacionArbitro();
+    deTorneo.setArbitro(arbitro);
+    deTorneo.setUsuario(usuario);
+    deTorneo.setEncuentro(encuentro);
+    deTorneo.setPuntaje(5);
+    repositorioArbitro.guardarCalificacion(deTorneo);
+    sessionFactory.getCurrentSession().flush();
+
+    assertThat(
+      repositorioArbitro.existeCalificacionLiga(usuario.getId(), partido.getId()),
+      is(true)
+    );
+    assertThat(repositorioArbitro.existeCalificacionLiga(usuario.getId(), 999L), is(false));
+    assertThat(
+      repositorioArbitro.partidosLigaCalificadosPor(usuario.getId()),
+      contains(partido.getId())
+    );
+    assertThat(
+      repositorioArbitro.encuentrosCalificadosPor(usuario.getId()),
+      contains(encuentro.getId())
+    );
+  }
+
+  private PartidoLiga guardarPartidoLiga(Arbitro arbitro, Usuario usuario) {
+    Liga liga = new Liga();
+    liga.setNombre("Liga Test");
+    liga.setFormato(5);
+    liga.setCupoEquipos(10);
+    liga.setFechaInicio(LocalDate.now());
+    liga.setUbicacion("CABA");
+    sessionFactory.getCurrentSession().persist(liga);
+    InscripcionLiga local = inscripcionLiga(liga, usuario, "Local");
+    InscripcionLiga visitante = inscripcionLiga(
+      liga,
+      guardarUsuario("rival@test.com"),
+      "Visitante"
+    );
+    PartidoLiga partido = new PartidoLiga();
+    partido.setLiga(liga);
+    partido.setFecha(1);
+    partido.setLocal(local);
+    partido.setVisitante(visitante);
+    partido.setEstado(PartidoLiga.JUGADO);
+    partido.setArbitro(arbitro);
+    sessionFactory.getCurrentSession().persist(partido);
+    return partido;
+  }
+
+  private InscripcionLiga inscripcionLiga(Liga liga, Usuario usuario, String nombre) {
+    InscripcionLiga insc = new InscripcionLiga();
+    insc.setLiga(liga);
+    insc.setUsuario(usuario);
+    insc.setNombreEquipo(nombre);
+    sessionFactory.getCurrentSession().persist(insc);
+    return insc;
   }
 }
