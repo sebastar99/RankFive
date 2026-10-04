@@ -14,4 +14,10 @@ public interface RepositorioArbitro {
   void guardarCalificacion(CalificacionArbitro calificacion);
 
   boolean existeCalificacion(Long usuarioId, Long encuentroId);
+
+  boolean existeCalificacionLiga(Long usuarioId, Long partidoLigaId);
+
+  List<Long> encuentrosCalificadosPor(Long usuarioId);
+
+  List<Long> partidosLigaCalificadosPor(Long usuarioId);
 }

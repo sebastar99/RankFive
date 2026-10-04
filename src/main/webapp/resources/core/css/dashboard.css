@@ -687,6 +687,103 @@
 }
 .fecha-item[open] summary { border-bottom: 1px solid var(--rf-surface-border); }
 
+/* Fixture con slider de fechas */
+.fixture-nav { display: flex; align-items: center; gap: .5rem; margin-bottom: .9rem; }
+.fixture-flecha { flex-shrink: 0; width: 34px; height: 34px; padding: 0; display: grid; place-items: center; }
+.fixture-flecha:disabled { opacity: .35; }
+.fecha-strip {
+  display: flex;
+  gap: .35rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  padding: .2rem .1rem .4rem;
+  flex: 1;
+  min-width: 0;
+}
+.fecha-pill {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  min-width: 36px;
+  height: 32px;
+  padding: 0 .55rem;
+  border-radius: .55rem;
+  border: 1px solid var(--rf-surface-border);
+  background: rgba(255,255,255,.04);
+  color: var(--rf-text-muted);
+  font-weight: 700;
+  font-size: .82rem;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.fecha-pill:hover { background: rgba(255,255,255,.09); color: var(--rf-text); }
+.fecha-pill.completa { border-color: rgba(0,224,123,.35); color: var(--rf-primary); }
+.fecha-pill.activa { background: var(--rf-primary); border-color: var(--rf-primary); color: #04140c; }
+.fecha-panel { display: none; }
+.fecha-panel.activa { display: block; animation: fechaFade .2s ease; }
+@keyframes fechaFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.fecha-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  color: var(--rf-text);
+  margin-bottom: .6rem;
+}
+.partido-card {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  padding: .65rem .75rem;
+  margin-bottom: .5rem;
+  border: 1px solid var(--rf-surface-border);
+  border-radius: .7rem;
+  background: rgba(255,255,255,0.03);
+}
+.partido-card:last-child { margin-bottom: 0; }
+.partido-goles {
+  display: grid;
+  grid-template-columns: 1fr 56px 1fr;
+  gap: .6rem;
+  font-size: .76rem;
+  color: var(--rf-text-muted);
+}
+.goles-lista { list-style: none; margin: 0; padding: 0; min-width: 0; }
+.goles-lista li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.goles-lista i { color: var(--rf-primary); }
+.gol-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: .4rem;
+}
+@media (max-width: 575.98px) {
+  .gol-form { grid-template-columns: 1fr 1fr; }
+}
+.arbitro-mini { color: #ffd700; font-weight: 700; margin-left: .35rem; }
+.calificar-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem;
+  padding-top: .45rem;
+  border-top: 1px dashed rgba(255,255,255,.08);
+}
+.estrellas { display: inline-flex; flex-direction: row-reverse; gap: .1rem; }
+.estrellas input { position: absolute; opacity: 0; pointer-events: none; }
+.estrellas label { cursor: pointer; color: rgba(255,255,255,.2); font-size: 1.05rem; transition: color .1s ease, transform .1s ease; }
+.estrellas label:hover,
+.estrellas label:hover ~ label,
+.estrellas input:checked ~ label { color: #ffd700; }
+.estrellas label:hover { transform: scale(1.15); }
+.estrellas input:focus-visible + label { outline: 2px solid #ffd700; outline-offset: 2px; border-radius: .25rem; }
+.grupo-subtitulo {
+  font-size: .78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--rf-primary);
+  margin: .2rem 0 .4rem;
+}
+.grupos-stack { display: flex; flex-direction: column; gap: .75rem; max-height: 640px; overflow-y: auto; scrollbar-width: thin; }
+
 .transfer-equipos { display: flex; flex-direction: column; gap: .5rem; max-height: 620px; overflow-y: auto; scrollbar-width: thin; }
 .transfer-equipo {
   display: flex;

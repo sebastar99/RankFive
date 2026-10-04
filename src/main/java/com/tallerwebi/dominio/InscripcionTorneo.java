@@ -41,4 +41,11 @@ public class InscripcionTorneo {
   private String grupo;
 
   private LocalDateTime fechaInscripcion = LocalDateTime.now();
+
+  public String getNombreVisible() {
+    if (equipo != null) {
+      return equipo.getNombre();
+    }
+    return nombreEquipo;
+  }
 }

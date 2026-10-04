@@ -40,7 +40,8 @@
           <h1 class="h5 m-0">Torneos disponibles</h1>
           <p class="text-muted small m-0 mt-1">Inscribí a tu equipo y competí por puntos de ranking.</p>
         </div>
-        <a th:href="@{/torneos/nuevo}" class="btn btn-primary btn-action"><i class="bi bi-plus-circle me-2"></i>Crear torneo</a>
+        <a th:if="${usuario != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN')}"
+           th:href="@{/torneos/nuevo}" class="btn btn-primary btn-action"><i class="bi bi-plus-circle me-2"></i>Crear torneo</a>
       </div>
 
       <div th:if="${aviso != null}"
@@ -51,7 +52,8 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
       </div>
 
-      <div th:if="${!tieneEquipoActivo}" class="alert alert-info d-flex align-items-center gap-2 py-2" role="alert">
+      <div th:if="${!tieneEquipoActivo and !(usuario != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN'))}"
+           class="alert alert-info d-flex align-items-center gap-2 py-2" role="alert">
         <i class="bi bi-info-circle-fill"></i>
         <span>Necesitás un equipo activo para inscribirte en un torneo.</span>
       </div>
@@ -78,27 +80,29 @@
             <a th:href="@{/torneos/detalle(id=${t.id})}" class="btn btn-outline-light">
               <i class="bi bi-info-circle"></i>Ver Información
             </a>
-            <button th:if="${inscripto}" type="button" class="btn btn-outline-success" disabled>
-              <i class="bi bi-check2-circle"></i>Ya inscripto
-            </button>
-            <form th:if="${!inscripto and t.inscripcionAbierta and tieneEquipoActivo}"
-                  th:action="@{/torneos/inscribirse}" method="post">
-              <input type="hidden" name="torneoId" th:value="${t.id}">
-              <button type="submit" class="btn btn-primary">
-                <i class="bi bi-pencil-square"></i>Inscribirse
+            <div th:if="${!(usuario != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN'))}">
+              <button th:if="${inscripto}" type="button" class="btn btn-outline-success" disabled>
+                <i class="bi bi-check2-circle"></i>Ya inscripto
               </button>
-            </form>
-            <button th:if="${!inscripto and t.inscripcionAbierta and !tieneEquipoActivo}"
-                    type="button" class="btn btn-primary" disabled
-                    title="Necesitás un equipo activo para inscribirte">
-              <i class="bi bi-lock-fill"></i>Inscribirse
-            </button>
-            <span th:if="${!inscripto and t.inscripcionAbierta and !tieneEquipoActivo}" class="torneo-hint">
-              Necesitás un equipo activo para inscribirte
-            </span>
-            <button th:if="${!inscripto and !t.inscripcionAbierta}" type="button" class="btn btn-outline-light" disabled>
-              <i class="bi bi-bell"></i>Próximamente
-            </button>
+              <form th:if="${!inscripto and t.inscripcionAbierta and tieneEquipoActivo}"
+                    th:action="@{/torneos/inscribirse}" method="post">
+                <input type="hidden" name="torneoId" th:value="${t.id}">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-pencil-square"></i>Inscribirse
+                </button>
+              </form>
+              <button th:if="${!inscripto and t.inscripcionAbierta and !tieneEquipoActivo}"
+                      type="button" class="btn btn-primary" disabled
+                      title="Necesitás un equipo activo para inscribirte">
+                <i class="bi bi-lock-fill"></i>Inscribirse
+              </button>
+              <span th:if="${!inscripto and t.inscripcionAbierta and !tieneEquipoActivo}" class="torneo-hint">
+                Necesitás un equipo activo para inscribirte
+              </span>
+              <button th:if="${!inscripto and !t.inscripcionAbierta}" type="button" class="btn btn-outline-light" disabled>
+                <i class="bi bi-bell"></i>Próximamente
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -127,24 +131,26 @@
             <a th:href="@{/ligas/detalle(id=${l.id})}" class="btn btn-outline-light">
               <i class="bi bi-info-circle"></i>Ver Información
             </a>
-            <button th:if="${inscripta}" type="button" class="btn btn-outline-success" disabled>
-              <i class="bi bi-check2-circle"></i>Ya inscripto
-            </button>
-            <form th:if="${!inscripta and l.inscripcionAbierta and tieneEquipoActivo}"
-                  th:action="@{/ligas/inscribirse}" method="post">
-              <input type="hidden" name="ligaId" th:value="${l.id}">
-              <button type="submit" class="btn btn-primary">
-                <i class="bi bi-pencil-square"></i>Inscribirse
+            <div th:if="${!(usuario != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN'))}">
+              <button th:if="${inscripta}" type="button" class="btn btn-outline-success" disabled>
+                <i class="bi bi-check2-circle"></i>Ya inscripto
               </button>
-            </form>
-            <button th:if="${!inscripta and l.inscripcionAbierta and !tieneEquipoActivo}"
-                    type="button" class="btn btn-primary" disabled
-                    title="Necesitás un equipo activo para inscribirte">
-              <i class="bi bi-lock-fill"></i>Inscribirse
-            </button>
-            <button th:if="${!inscripta and !l.inscripcionAbierta}" type="button" class="btn btn-outline-light" disabled>
-              <i class="bi bi-bell"></i>Próximamente
-            </button>
+              <form th:if="${!inscripta and l.inscripcionAbierta and tieneEquipoActivo}"
+                    th:action="@{/ligas/inscribirse}" method="post">
+                <input type="hidden" name="ligaId" th:value="${l.id}">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-pencil-square"></i>Inscribirse
+                </button>
+              </form>
+              <button th:if="${!inscripta and l.inscripcionAbierta and !tieneEquipoActivo}"
+                      type="button" class="btn btn-primary" disabled
+                      title="Necesitás un equipo activo para inscribirte">
+                <i class="bi bi-lock-fill"></i>Inscribirse
+              </button>
+              <button th:if="${!inscripta and !l.inscripcionAbierta}" type="button" class="btn btn-outline-light" disabled>
+                <i class="bi bi-bell"></i>Próximamente
+              </button>
+            </div>
           </div>
         </div>
       </div>
