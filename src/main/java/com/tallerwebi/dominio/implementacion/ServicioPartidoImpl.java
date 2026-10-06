@@ -1,7 +1,9 @@
 package com.tallerwebi.dominio.implementacion;
 
+import com.tallerwebi.dominio.NotificacionPartido;
 import com.tallerwebi.dominio.NotificacionPl;
 import com.tallerwebi.dominio.Partido;
+import com.tallerwebi.dominio.RepositorioNotificacionPartido;
 import com.tallerwebi.dominio.RepositorioNotificacionPl;
 import com.tallerwebi.dominio.RepositorioPartido;
 import com.tallerwebi.dominio.RepositorioUsuario;
@@ -25,16 +27,27 @@ public class ServicioPartidoImpl implements ServicioPartido {
   private final RepositorioPartido repositorioPartido;
   private final RepositorioUsuario repositorioUsuario;
   private final RepositorioNotificacionPl repositorioNotificacionPl;
+  private final RepositorioNotificacionPartido repositorioNotificacionPartido;
 
   @Autowired
   public ServicioPartidoImpl(
     RepositorioPartido repositorioPartido,
     RepositorioUsuario repositorioUsuario,
-    RepositorioNotificacionPl repositorioNotificacionPl
+    RepositorioNotificacionPl repositorioNotificacionPl,
+    RepositorioNotificacionPartido repositorioNotificacionPartido
   ) {
     this.repositorioPartido = repositorioPartido;
     this.repositorioUsuario = repositorioUsuario;
     this.repositorioNotificacionPl = repositorioNotificacionPl;
+    this.repositorioNotificacionPartido = repositorioNotificacionPartido;
+  }
+
+  public ServicioPartidoImpl(
+    RepositorioPartido repositorioPartido,
+    RepositorioUsuario repositorioUsuario,
+    RepositorioNotificacionPl repositorioNotificacionPl
+  ) {
+    this(repositorioPartido, repositorioUsuario, repositorioNotificacionPl, null);
   }
 
   @Override
@@ -46,6 +59,7 @@ public class ServicioPartidoImpl implements ServicioPartido {
     partido.setEquipoA(new HashSet<>(equipoA));
     partido.setEquipoB(new HashSet<>(equipoB));
     repositorioPartido.guardar(partido);
+    notificarParticipantes(partido);
     return partido;
   }
 
@@ -87,11 +101,20 @@ public class ServicioPartidoImpl implements ServicioPartido {
   }
 
   @Override
+  public List<NotificacionPartido> listarNotificacionesPartidoNoLeidas(Usuario usuario) {
+    if (usuario == null || usuario.getId() == null) {
+      return Collections.emptyList();
+    }
+    return repositorioNotificacionPartido.listarNoLeidasDe(usuario.getId());
+  }
+
+  @Override
   public void marcarNotificacionesLeidas(Usuario usuario) {
     if (usuario == null || usuario.getId() == null) {
       return;
     }
     repositorioNotificacionPl.marcarLeidasDe(usuario.getId());
+    repositorioNotificacionPartido.marcarLeidasDe(usuario.getId());
   }
 
   @Override
@@ -172,6 +195,20 @@ public class ServicioPartidoImpl implements ServicioPartido {
       notificacion.setPartido(partido);
       notificacion.setDelta(delta);
       repositorioNotificacionPl.guardar(notificacion);
+    }
+  }
+
+  private void notificarParticipantes(Partido partido) {
+    if (repositorioNotificacionPartido == null) {
+      return;
+    }
+    Set<Usuario> participantes = new HashSet<>(partido.getEquipoA());
+    participantes.addAll(partido.getEquipoB());
+    for (Usuario jugador : participantes) {
+      NotificacionPartido notificacion = new NotificacionPartido();
+      notificacion.setUsuario(jugador);
+      notificacion.setPartido(partido);
+      repositorioNotificacionPartido.guardar(notificacion);
     }
   }
 }

@@ -13,6 +13,8 @@ public interface ServicioPartido {
 
   List<NotificacionPl> listarNotificacionesNoLeidas(Usuario usuario);
 
+  List<NotificacionPartido> listarNotificacionesPartidoNoLeidas(Usuario usuario);
+
   void marcarNotificacionesLeidas(Usuario usuario);
 
   List<NotificacionPl> listarNotificacionesDe(Usuario usuario);

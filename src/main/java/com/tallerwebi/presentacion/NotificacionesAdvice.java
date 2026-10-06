@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.InvitacionEquipo;
+import com.tallerwebi.dominio.NotificacionPartido;
 import com.tallerwebi.dominio.NotificacionPl;
 import com.tallerwebi.dominio.ServicioEquipo;
 import com.tallerwebi.dominio.ServicioPartido;
@@ -34,6 +35,15 @@ public class NotificacionesAdvice {
       return Collections.emptyList();
     }
     return servicioPartido.listarNotificacionesNoLeidas(usuario);
+  }
+
+  @ModelAttribute("avisosPartido")
+  public List<NotificacionPartido> avisosPartido(HttpServletRequest request) {
+    Usuario usuario = usuarioDe(request);
+    if (usuario == null) {
+      return Collections.emptyList();
+    }
+    return servicioPartido.listarNotificacionesPartidoNoLeidas(usuario);
   }
 
   @ModelAttribute("invitacionesEquipo")
