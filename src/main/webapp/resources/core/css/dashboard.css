@@ -5,6 +5,10 @@
   padding-top: 84px; /* header height */
 }
 
+/* Roster: mantener visible pero sin sticky para evitar recortes por overflow */
+.partidos-page .team-rosters { padding-top: .25rem; margin-bottom: .5rem; border-bottom: 1px dashed var(--rf-surface-border); flex: none; position: relative; z-index: 1; }
+.partidos-page .roster-title { position: relative; }
+
 .pitch-bg {
   position: fixed;
   inset: 0;
@@ -877,6 +881,7 @@
 .result-d { color: #e5484d; background: rgba(229,72,77,.12); border: 1px solid rgba(229,72,77,.35); }
 .history-info { flex: 1; min-width: 0; }
 .history-teams { font-weight: 700; color: var(--rf-text); }
+.history-team { display: block; white-space: normal; overflow: visible; text-overflow: clip; word-break: break-word; }
 .history-meta { color: var(--rf-text-muted); font-size: .82rem; }
 .history-pl { font-weight: 800; white-space: nowrap; }
 .history-pl.up { color: var(--rf-primary); }
@@ -1067,9 +1072,28 @@
 .team-rosters { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 .roster-box { border: 1px dashed var(--rf-surface-border); border-radius: .5rem; padding: .5rem .6rem; background: rgba(255,255,255,.02); }
 .roster-title { font-size: .82rem; color: var(--rf-text-muted); margin-bottom: .35rem; }
-.roster-list { display: flex; gap: .35rem; flex-wrap: wrap; min-height: 28px; }
+.roster-list {
+  display: flex;
+  gap: .35rem;
+  flex-wrap: wrap;
+  min-height: 28px;
+  max-height: 132px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+@media (min-width: 992px) {
+  .roster-list { max-height: none; overflow: visible; }
+}
 .player-chip { background: rgba(255,255,255,.06); border: 1px solid var(--rf-surface-border); color: var(--rf-text); border-radius: 999px; padding: .15rem .6rem; font-size: .78rem; }
 .player-chip.self { background: rgba(0,224,123,.12); border-color: rgba(0,224,123,.35); color: var(--rf-primary); font-weight: 700; }
+
+/* Partidos: asegurar que el selector no se achique y que la tarjeta izquierda estire */
+.partidos-page .card-glass { display: flex; flex-direction: column; }
+.partidos-page #crearPartidoForm { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.partidos-page .player-picker { flex: 1; min-height: 300px; max-height: none; }
+.partidos-page .team-rosters { margin-bottom: .5rem; }
+.partidos-page .roster-list { min-height: 32px; }
 
 .player-row {
   display: flex;
@@ -1149,11 +1173,17 @@
   color: #00a4ff;
 }
 
+/* Goles y asistencias (opcional) */
+.goles-detalle summary { cursor: pointer; color: var(--rf-text-muted); }
+.gol-rows { display: grid; gap: .5rem; }
+.gol-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: .5rem; }
+.gol-row .form-select-sm { min-width: 0; }
+
 /* Partidos: pagina sin scroll general (scroll solo dentro de las listas) */
 @media (min-width: 992px) {
   .partidos-page {
     height: 100dvh;
-    overflow: hidden;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
   }
@@ -1181,7 +1211,12 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    /* permitir que el contenido interno administre su propio scroll */
+    overflow: visible;
+  }
+  .partidos-page .db-content > .row > .col-lg-5 > .card-glass {
+    min-height: 640px;
+    height: calc(100dvh - 120px);
   }
   .partidos-page #crearPartidoForm {
     flex: 1;
@@ -1193,8 +1228,8 @@
     flex: none;
   }
   .partidos-page .player-picker {
-    flex: 1;
-    min-height: 0;
+    flex: 1 1 auto;
+    min-height: 360px;
     max-height: none;
     overflow-y: auto;
   }
