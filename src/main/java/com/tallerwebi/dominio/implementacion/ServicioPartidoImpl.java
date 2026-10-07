@@ -57,7 +57,14 @@ public class ServicioPartidoImpl implements ServicioPartido {
     RepositorioUsuario repositorioUsuario,
     RepositorioNotificacionPl repositorioNotificacionPl
   ) {
-    this(repositorioPartido, repositorioUsuario, repositorioNotificacionPl, null, null, null);
+    this(
+      repositorioPartido,
+      repositorioUsuario,
+      repositorioNotificacionPl,
+      null,
+      null,
+      new SoportePartido()
+    );
   }
 
   @Override
@@ -122,7 +129,7 @@ public class ServicioPartidoImpl implements ServicioPartido {
 
   @Override
   public List<NotificacionPartido> listarNotificacionesPartidoNoLeidas(Usuario usuario) {
-    if (usuario == null || usuario.getId() == null) {
+    if (usuario == null || usuario.getId() == null || repositorioNotificacionPartido == null) {
       return Collections.emptyList();
     }
     return repositorioNotificacionPartido.listarNoLeidasDe(usuario.getId());
@@ -134,7 +141,9 @@ public class ServicioPartidoImpl implements ServicioPartido {
       return;
     }
     repositorioNotificacionPl.marcarLeidasDe(usuario.getId());
-    repositorioNotificacionPartido.marcarLeidasDe(usuario.getId());
+    if (repositorioNotificacionPartido != null) {
+      repositorioNotificacionPartido.marcarLeidasDe(usuario.getId());
+    }
   }
 
   @Override
