@@ -4,6 +4,7 @@
 
 <div class="d-flex align-items-center gap-2" th:fragment="campana"
      th:with="cantidadAvisosPl=${avisosPl != null ? #lists.size(avisosPl) : 0},
+              cantidadAvisosPartido=${avisosPartido != null ? #lists.size(avisosPartido) : 0},
               cantidadInvitaciones=${invitacionesEquipo != null ? #lists.size(invitacionesEquipo) : 0},
               cantidadSolicitudesAmistad=${cantidadSolicitudes != null ? cantidadSolicitudes : 0},
               totalSolicitudes=${(cantidadSolicitudes != null ? cantidadSolicitudes : 0) + (invitacionesEquipo != null ? #lists.size(invitacionesEquipo) : 0)}">
@@ -13,20 +14,33 @@
     <button class="notif-btn" type="button" id="notifPartidosDropdown" data-bs-toggle="dropdown"
             data-bs-auto-close="outside" aria-expanded="false"
             th:attr="data-leidas-url=@{/partidos/notificaciones/leidas}"
-            th:title="${cantidadAvisosPl} + ' notificaciones de partidos'">
+            th:title="${cantidadAvisosPl + cantidadAvisosPartido} + ' notificaciones de partidos'">
       <i class="bi bi-bell-fill"></i>
-      <span class="notif-badge" id="notifPartidosBadge" th:if="${cantidadAvisosPl > 0}" th:text="${cantidadAvisosPl}">0</span>
+      <span class="notif-badge" id="notifPartidosBadge" th:if="${cantidadAvisosPl + cantidadAvisosPartido > 0}" th:text="${cantidadAvisosPl + cantidadAvisosPartido}">0</span>
     </button>
 
     <div class="dropdown-menu dropdown-menu-end notif-menu" aria-labelledby="notifPartidosDropdown">
       <div class="notif-header">
         <span><i class="bi bi-dribbble me-2"></i>Partidos</span>
-        <span class="notif-count" th:text="${cantidadAvisosPl}">0</span>
+        <span class="notif-count" th:text="${cantidadAvisosPl + cantidadAvisosPartido}">0</span>
       </div>
 
-      <div class="notif-empty" th:if="${cantidadAvisosPl == 0}">
+      <div class="notif-empty" th:if="${cantidadAvisosPl + cantidadAvisosPartido == 0}">
         <i class="bi bi-inbox"></i>
         <span>No tenés notificaciones de partidos</span>
+      </div>
+
+      <div class="notif-item" th:each="notificacion : ${avisosPartido}">
+        <div class="notif-avatar"><i class="bi bi-calendar-event-fill"></i></div>
+        <div class="notif-info">
+          <div class="notif-name">Tenés un partido por jugar</div>
+          <div class="notif-user">Equipo A vs Equipo B</div>
+        </div>
+        <div class="notif-actions">
+          <a class="btn btn-sm btn-outline-light" th:href="@{/partidos/{id}/previa(id=${notificacion.partido.id})}">
+            Ver previa
+          </a>
+        </div>
       </div>
 
       <div class="notif-item" th:each="notificacion : ${avisosPl}">

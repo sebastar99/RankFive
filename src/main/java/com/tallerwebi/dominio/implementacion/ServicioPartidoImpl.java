@@ -1,12 +1,18 @@
 package com.tallerwebi.dominio.implementacion;
 
+import com.tallerwebi.dominio.GolPartido;
+import com.tallerwebi.dominio.NotificacionPartido;
 import com.tallerwebi.dominio.NotificacionPl;
 import com.tallerwebi.dominio.Partido;
+import com.tallerwebi.dominio.RepositorioGolPartido;
+import com.tallerwebi.dominio.RepositorioNotificacionPartido;
 import com.tallerwebi.dominio.RepositorioNotificacionPl;
 import com.tallerwebi.dominio.RepositorioPartido;
 import com.tallerwebi.dominio.RepositorioUsuario;
 import com.tallerwebi.dominio.ServicioPartido;
+import com.tallerwebi.dominio.SoportePartido;
 import com.tallerwebi.dominio.Usuario;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -25,16 +31,40 @@ public class ServicioPartidoImpl implements ServicioPartido {
   private final RepositorioPartido repositorioPartido;
   private final RepositorioUsuario repositorioUsuario;
   private final RepositorioNotificacionPl repositorioNotificacionPl;
+  private final RepositorioNotificacionPartido repositorioNotificacionPartido;
+  private final RepositorioGolPartido repositorioGolPartido;
+  private final SoportePartido soportePartido;
 
   @Autowired
   public ServicioPartidoImpl(
     RepositorioPartido repositorioPartido,
     RepositorioUsuario repositorioUsuario,
-    RepositorioNotificacionPl repositorioNotificacionPl
+    RepositorioNotificacionPl repositorioNotificacionPl,
+    RepositorioNotificacionPartido repositorioNotificacionPartido,
+    RepositorioGolPartido repositorioGolPartido,
+    SoportePartido soportePartido
   ) {
     this.repositorioPartido = repositorioPartido;
     this.repositorioUsuario = repositorioUsuario;
     this.repositorioNotificacionPl = repositorioNotificacionPl;
+    this.repositorioNotificacionPartido = repositorioNotificacionPartido;
+    this.repositorioGolPartido = repositorioGolPartido;
+    this.soportePartido = soportePartido;
+  }
+
+  public ServicioPartidoImpl(
+    RepositorioPartido repositorioPartido,
+    RepositorioUsuario repositorioUsuario,
+    RepositorioNotificacionPl repositorioNotificacionPl
+  ) {
+    this(
+      repositorioPartido,
+      repositorioUsuario,
+      repositorioNotificacionPl,
+      null,
+      null,
+      new SoportePartido()
+    );
   }
 
   @Override
@@ -46,6 +76,17 @@ public class ServicioPartidoImpl implements ServicioPartido {
     partido.setEquipoA(new HashSet<>(equipoA));
     partido.setEquipoB(new HashSet<>(equipoB));
     repositorioPartido.guardar(partido);
+    notificarParticipantes(partido);
+    return partido;
+  }
+
+  @Override
+  public Partido crearPartido(List<Usuario> equipoA, List<Usuario> equipoB, LocalDateTime fecha) {
+    Partido partido = crearPartido(equipoA, equipoB);
+    if (partido != null && fecha != null) {
+      partido.setFecha(fecha);
+      repositorioPartido.actualizar(partido);
+    }
     return partido;
   }
 
@@ -87,11 +128,22 @@ public class ServicioPartidoImpl implements ServicioPartido {
   }
 
   @Override
+  public List<NotificacionPartido> listarNotificacionesPartidoNoLeidas(Usuario usuario) {
+    if (usuario == null || usuario.getId() == null || repositorioNotificacionPartido == null) {
+      return Collections.emptyList();
+    }
+    return repositorioNotificacionPartido.listarNoLeidasDe(usuario.getId());
+  }
+
+  @Override
   public void marcarNotificacionesLeidas(Usuario usuario) {
     if (usuario == null || usuario.getId() == null) {
       return;
     }
     repositorioNotificacionPl.marcarLeidasDe(usuario.getId());
+    if (repositorioNotificacionPartido != null) {
+      repositorioNotificacionPartido.marcarLeidasDe(usuario.getId());
+    }
   }
 
   @Override
@@ -102,65 +154,60 @@ public class ServicioPartidoImpl implements ServicioPartido {
     return repositorioNotificacionPl.listarDe(usuario.getId());
   }
 
-  private boolean sonEquiposValidos(List<Usuario> equipoA, List<Usuario> equipoB) {
-    if (equipoA == null || equipoB == null || equipoA.isEmpty() || equipoB.isEmpty()) {
-      return false;
+  @Override
+  public boolean registrarDetalles(
+    Long partidoId,
+    List<Long> golesAIds,
+    List<Long> asistenciasAIds,
+    List<Long> golesBIds,
+    List<Long> asistenciasBIds
+  ) {
+    if (partidoId == null || repositorioGolPartido == null) return false;
+    Partido partido = repositorioPartido.buscarPorId(partidoId);
+    if (partido == null) return false;
+    repositorioGolPartido.borrarPorPartido(partidoId);
+    if (soportePartido == null) {
+      // Sin soporte, no registramos filas para evitar duplicar lógica compleja
+      return true;
     }
-    Set<Long> idsEquipoA = new HashSet<>();
-    for (Usuario jugador : equipoA) {
-      idsEquipoA.add(jugador.getId());
-    }
-    for (Usuario jugador : equipoB) {
-      if (idsEquipoA.contains(jugador.getId())) {
-        return false;
-      }
+    List<GolPartido> goles = soportePartido.construirGoles(
+      partido,
+      golesAIds,
+      asistenciasAIds,
+      golesBIds,
+      asistenciasBIds
+    );
+    for (GolPartido gol : goles) {
+      repositorioGolPartido.guardar(gol);
     }
     return true;
   }
 
+  private boolean sonEquiposValidos(List<Usuario> equipoA, List<Usuario> equipoB) {
+    return soportePartido == null
+      ? (equipoA != null &&
+        equipoB != null &&
+        !equipoA.isEmpty() &&
+        !equipoB.isEmpty() &&
+        java.util.Collections.disjoint(
+          equipoA.stream().map(Usuario::getId).toList(),
+          equipoB.stream().map(Usuario::getId).toList()
+        ))
+      : soportePartido.equiposSinSolapamiento(equipoA, equipoB);
+  }
+
   private void ajustarPl(Partido partido, int golesEquipoA, int golesEquipoB) {
-    double promedioA = promedioPl(partido.getEquipoA());
-    double promedioB = promedioPl(partido.getEquipoB());
-    double esperadoA = probabilidadEsperada(promedioA, promedioB);
-    double esperadoB = probabilidadEsperada(promedioB, promedioA);
-    double resultadoA = resultadoDe(golesEquipoA, golesEquipoB);
-    double resultadoB = 1.0 - resultadoA;
-
-    int deltaA = (int) Math.round(FACTOR_K * (resultadoA - esperadoA));
-    int deltaB = (int) Math.round(FACTOR_K * (resultadoB - esperadoB));
-
-    // Asegurar que en resultados decisivos (no empate) haya al menos un ajuste mínimo
-    // para evitar que diferencias extremas de PL generen delta 0 por redondeo
-    if (golesEquipoA != golesEquipoB && deltaA == 0 && deltaB == 0) {
-      if (golesEquipoA > golesEquipoB) {
-        deltaA = 1;
-        deltaB = -1;
-      } else {
-        deltaA = -1;
-        deltaB = 1;
-      }
-    }
-
-    aplicarDelta(partido, partido.getEquipoA(), deltaA);
-    aplicarDelta(partido, partido.getEquipoB(), deltaB);
-  }
-
-  private double promedioPl(Collection<Usuario> equipo) {
-    return equipo.stream().mapToInt(jugador -> jugador.getPerfil().getPl()).average().orElse(0);
-  }
-
-  private double probabilidadEsperada(double promedioPropio, double promedioRival) {
-    return 1.0 / (1.0 + Math.pow(10, (promedioRival - promedioPropio) / 400.0));
-  }
-
-  private double resultadoDe(int golesEquipoA, int golesEquipoB) {
-    if (golesEquipoA > golesEquipoB) {
-      return 1.0;
-    }
-    if (golesEquipoA < golesEquipoB) {
-      return 0.0;
-    }
-    return 0.5;
+    int[] deltas = soportePartido == null
+      ? new int[] { 0, 0 }
+      : soportePartido.calcularDeltasElo(
+        partido.getEquipoA(),
+        partido.getEquipoB(),
+        golesEquipoA,
+        golesEquipoB,
+        FACTOR_K
+      );
+    aplicarDelta(partido, partido.getEquipoA(), deltas[0]);
+    aplicarDelta(partido, partido.getEquipoB(), deltas[1]);
   }
 
   private void aplicarDelta(Partido partido, Collection<Usuario> equipo, int delta) {
@@ -172,6 +219,20 @@ public class ServicioPartidoImpl implements ServicioPartido {
       notificacion.setPartido(partido);
       notificacion.setDelta(delta);
       repositorioNotificacionPl.guardar(notificacion);
+    }
+  }
+
+  private void notificarParticipantes(Partido partido) {
+    if (repositorioNotificacionPartido == null) {
+      return;
+    }
+    Set<Usuario> participantes = new HashSet<>(partido.getEquipoA());
+    participantes.addAll(partido.getEquipoB());
+    for (Usuario jugador : participantes) {
+      NotificacionPartido notificacion = new NotificacionPartido();
+      notificacion.setUsuario(jugador);
+      notificacion.setPartido(partido);
+      repositorioNotificacionPartido.guardar(notificacion);
     }
   }
 }

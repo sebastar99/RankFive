@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -73,6 +75,7 @@ public class ControladorPartido {
     HttpServletRequest request,
     @RequestParam("miEquipo") String miEquipo,
     @RequestParam("formato") Integer formato,
+    @RequestParam("fecha") String fecha,
     @RequestParam(name = "equipoAIds", required = false) List<Long> equipoAIds,
     @RequestParam(name = "equipoBIds", required = false) List<Long> equipoBIds
   ) {
@@ -90,26 +93,61 @@ public class ControladorPartido {
       equipoB.add(usuarioActual);
     }
 
-    // Validacion de formato minimo por equipo
-    int requeridoEquipo = (formato != null && List.of(5, 7, 8, 9, 11).contains(formato))
-      ? formato
-      : 5;
-    // tamaños reales ya incluyen al usuario (agregado arriba)
-    int tamAConUsuario = equipoA.size();
-    int tamBConUsuario = equipoB.size();
-    if (tamAConUsuario > requeridoEquipo || tamBConUsuario > requeridoEquipo) {
+    int requeridoEquipo = formatoRequerido(formato);
+    String errorMaximo = validarMaximos(requeridoEquipo, equipoA.size(), equipoB.size());
+    if (errorMaximo != null) {
       Map<String, Object> modelo = modeloBase(usuarioActual);
-      modelo.put("error", "Un equipo supera el máximo de " + requeridoEquipo + " jugadores");
+      modelo.put("error", errorMaximo);
       return new ModelAndView(VISTA_PARTIDOS, modelo);
     }
 
-    Partido partido = servicioPartido.crearPartido(equipoA, equipoB);
+    LocalDateTime fechaPartido = parsearFecha(fecha);
+
+    Partido partido = fechaPartido == null
+      ? servicioPartido.crearPartido(equipoA, equipoB)
+      : servicioPartido.crearPartido(equipoA, equipoB, fechaPartido);
     if (partido == null) {
       Map<String, Object> modelo = modeloBase(usuarioActual);
       modelo.put("error", ERROR_CREACION);
       return new ModelAndView(VISTA_PARTIDOS, modelo);
     }
     return redirigirAPartidos("Partido creado correctamente");
+  }
+
+  // Overload para mantener compatibilidad con tests que invocan el método directamente sin la fecha
+  public ModelAndView crearPartido(
+    HttpServletRequest request,
+    String miEquipo,
+    Integer formato,
+    List<Long> equipoAIds,
+    List<Long> equipoBIds
+  ) {
+    return crearPartido(request, miEquipo, formato, null, equipoAIds, equipoBIds);
+  }
+
+  @RequestMapping(path = "/partidos/registrar-detalles", method = RequestMethod.POST)
+  public ModelAndView registrarDetalles(
+    HttpServletRequest request,
+    @RequestParam("partidoId") Long partidoId,
+    @RequestParam(name = "golesAIds", required = false) List<Long> golesAIds,
+    @RequestParam(name = "asistenciasAIds", required = false) List<Long> asistenciasAIds,
+    @RequestParam(name = "golesBIds", required = false) List<Long> golesBIds,
+    @RequestParam(name = "asistenciasBIds", required = false) List<Long> asistenciasBIds
+  ) {
+    Usuario usuarioActual = usuarioDeSesion(request);
+    if (usuarioActual == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+    boolean ok = servicioPartido.registrarDetalles(
+      partidoId,
+      golesAIds,
+      asistenciasAIds,
+      golesBIds,
+      asistenciasBIds
+    );
+    return redirigirAPartidos(
+      ok ? "Detalles de goles/asistencias guardados" : "No se pudieron guardar los detalles"
+    );
   }
 
   @RequestMapping(path = "/partidos/registrar-resultado", method = RequestMethod.POST)
@@ -178,5 +216,25 @@ public class ControladorPartido {
   private ModelAndView redirigirAPartidos(String aviso) {
     String avisoCodificado = URLEncoder.encode(aviso, StandardCharsets.UTF_8);
     return new ModelAndView("redirect:/partidos?aviso=" + avisoCodificado);
+  }
+
+  private static int formatoRequerido(Integer formato) {
+    return (formato != null && List.of(5, 7, 8, 9, 11).contains(formato)) ? formato : 5;
+  }
+
+  private static String validarMaximos(int requerido, int tamA, int tamB) {
+    if (tamA > requerido || tamB > requerido) {
+      return "Un equipo supera el máximo de " + requerido + " jugadores";
+    }
+    return null;
+  }
+
+  private static LocalDateTime parsearFecha(String fechaStr) {
+    try {
+      if (fechaStr != null && !fechaStr.isBlank()) {
+        return LocalDateTime.parse(fechaStr, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+      }
+    } catch (Exception ignored) {}
+    return null;
   }
 }
