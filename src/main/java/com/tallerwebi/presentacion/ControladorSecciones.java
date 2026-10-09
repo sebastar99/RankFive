@@ -450,8 +450,17 @@ public class ControladorSecciones extends ControladorBase {
   }
 
   private boolean ganoUsuario(Partido partido, Usuario usuario) {
-    boolean soyA = partido.getEquipoA().contains(usuario);
-    boolean soyB = !soyA && partido.getEquipoB().contains(usuario);
+    boolean soyA = partido
+      .getEquipoA()
+      .stream()
+      .anyMatch(u -> u != null && u.getId() != null && u.getId().equals(usuario.getId()));
+ 
+    boolean soyB =
+      !soyA &&
+      partido
+        .getEquipoB()
+        .stream()
+        .anyMatch(u -> u != null && u.getId() != null && u.getId().equals(usuario.getId()));
     int ga = partido.getGolesEquipoA() == null ? 0 : partido.getGolesEquipoA();
     int gb = partido.getGolesEquipoB() == null ? 0 : partido.getGolesEquipoB();
     return (soyA && ga > gb) || (soyB && gb > ga);
