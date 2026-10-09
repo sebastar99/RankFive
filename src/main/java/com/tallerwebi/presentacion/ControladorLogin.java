@@ -35,12 +35,12 @@ public class ControladorLogin {
     this.servicioLogin = servicioLogin;
   }
 
-  @Autowired(required = false)
+  @Autowired
   public void setServicioRelacionAmistad(ServicioRelacionAmistad servicioRelacionAmistad) {
     this.servicioRelacionAmistad = servicioRelacionAmistad;
   }
 
-  @Autowired(required = false)
+  @Autowired
   public void setServicioEquipo(ServicioEquipo servicioEquipo) {
     this.servicioEquipo = servicioEquipo;
   }
