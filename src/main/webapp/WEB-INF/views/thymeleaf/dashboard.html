@@ -31,6 +31,7 @@
         </div>
         <div class="db-right d-flex align-items-center gap-4">
           <div th:replace="~{fragments/notificaciones :: campana}"></div>
+          <a th:href="@{/estadisticas}" class="db-link"><i class="bi bi-bar-chart-line"></i> Estadísticas</a>
           <span class="db-divider"></span>
           <a href="#" class="db-link"><i class="bi bi-gear"></i> Configuración</a>
           <a th:href="@{/logout}" class="db-link text-danger"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a>

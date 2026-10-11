@@ -8,6 +8,7 @@ import com.tallerwebi.dominio.Partido;
 import com.tallerwebi.dominio.ResultadoInscripcion;
 import com.tallerwebi.dominio.ServicioArbitro;
 import com.tallerwebi.dominio.ServicioCompetencia;
+import com.tallerwebi.dominio.ServicioEstadisticasJugador;
 import com.tallerwebi.dominio.ServicioEstadisticasTorneo;
 import com.tallerwebi.dominio.ServicioLiga;
 import com.tallerwebi.dominio.ServicioPartido;
@@ -35,6 +36,7 @@ public class ControladorSecciones extends ControladorBase {
   private final ServicioArbitro servicioArbitro;
   private final ServicioLiga servicioLiga;
   private ServicioEstadisticasTorneo servicioEstadisticasTorneo;
+  private final ServicioEstadisticasJugador servicioEstadisticasJugador;
 
   private static final String AVISO = "aviso";
   private static final String PARAM_AVISO = "&aviso=";
@@ -50,13 +52,15 @@ public class ControladorSecciones extends ControladorBase {
     ServicioPartido servicioPartido,
     ServicioCompetencia servicioCompetencia,
     ServicioArbitro servicioArbitro,
-    ServicioLiga servicioLiga
+    ServicioLiga servicioLiga,
+    ServicioEstadisticasJugador servicioEstadisticasJugador
   ) {
     super(servicioRelacionAmistad);
     this.servicioPartido = servicioPartido;
     this.servicioCompetencia = servicioCompetencia;
     this.servicioArbitro = servicioArbitro;
     this.servicioLiga = servicioLiga;
+    this.servicioEstadisticasJugador = servicioEstadisticasJugador;
   }
 
   @Autowired(required = false)
@@ -95,6 +99,20 @@ public class ControladorSecciones extends ControladorBase {
     modelo.put("tieneEquipoActivo", servicioCompetencia.tieneEquipoActivo(usuario));
     Avisos.agregar(modelo, aviso);
     return new ModelAndView("ligaTorneos", modelo);
+  }
+
+  @RequestMapping(path = "/estadisticas", method = RequestMethod.GET)
+  public ModelAndView estadisticas(HttpServletRequest request) {
+    Usuario usuario = usuarioDeSesion(request);
+    if (usuario == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+    Map<String, Object> modelo = new HashMap<>(modeloBase(usuario));
+    modelo.put(
+      "estadisticas",
+      servicioEstadisticasJugador.obtenerEstadisticasDelUsuario(usuario.getId())
+    );
+    return new ModelAndView("estadisticas", modelo);
   }
 
   @RequestMapping(path = "/torneos/inscribirse", method = RequestMethod.POST)
@@ -454,7 +472,7 @@ public class ControladorSecciones extends ControladorBase {
       .getEquipoA()
       .stream()
       .anyMatch(u -> u != null && u.getId() != null && u.getId().equals(usuario.getId()));
- 
+
     boolean soyB =
       !soyA &&
       partido

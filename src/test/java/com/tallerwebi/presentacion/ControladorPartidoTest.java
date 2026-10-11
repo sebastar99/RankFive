@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -216,5 +217,68 @@ public class ControladorPartidoTest {
     ModelAndView modelAndView = controladorPartido.registrarResultado(requestMock, 1L, 2, 1);
 
     assertThat(modelAndView.getViewName(), startsWith("redirect:/partidos"));
+  }
+
+  @Test
+  public void registrarResultadoConGolesDeberiaGuardarLosDetalles() {
+    conSesionActiva();
+    when(servicioPartidoMock.registrarResultado(1L, 2, 1)).thenReturn(true);
+    List<Long> golesA = List.of(2L, 1L);
+    List<Long> asistenciasA = List.of(3L, 3L);
+    List<Long> golesB = List.of(4L);
+    List<Long> asistenciasB = List.of(5L);
+
+    controladorPartido.registrarResultado(
+      requestMock,
+      1L,
+      2,
+      1,
+      golesA,
+      asistenciasA,
+      golesB,
+      asistenciasB
+    );
+
+    verify(servicioPartidoMock).registrarDetalles(1L, golesA, asistenciasA, golesB, asistenciasB);
+  }
+
+  @Test
+  public void registrarResultadoFallidoNoDeberiaGuardarDetalles() {
+    conSesionActiva();
+    when(servicioPartidoMock.registrarResultado(1L, 2, 1)).thenReturn(false);
+
+    controladorPartido.registrarResultado(
+      requestMock,
+      1L,
+      2,
+      1,
+      List.of(2L),
+      List.of(),
+      List.of(),
+      List.of()
+    );
+
+    verify(servicioPartidoMock, never())
+      .registrarDetalles(anyLong(), anyList(), anyList(), anyList(), anyList());
+  }
+
+  @Test
+  public void registrarResultadoSinDetallesDeberiaSeguirFuncionando() {
+    conSesionActiva();
+    when(servicioPartidoMock.registrarResultado(1L, 0, 0)).thenReturn(true);
+
+    ModelAndView modelAndView = controladorPartido.registrarResultado(
+      requestMock,
+      1L,
+      0,
+      0,
+      null,
+      null,
+      null,
+      null
+    );
+
+    assertThat(modelAndView.getViewName(), startsWith("redirect:/partidos"));
+    verify(servicioPartidoMock).registrarDetalles(1L, null, null, null, null);
   }
 }

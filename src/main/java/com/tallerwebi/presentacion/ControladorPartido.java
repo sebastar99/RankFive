@@ -155,7 +155,11 @@ public class ControladorPartido {
     HttpServletRequest request,
     @RequestParam("partidoId") Long partidoId,
     @RequestParam("golesEquipoA") int golesEquipoA,
-    @RequestParam("golesEquipoB") int golesEquipoB
+    @RequestParam("golesEquipoB") int golesEquipoB,
+    @RequestParam(name = "golesAIds", required = false) List<Long> golesAIds,
+    @RequestParam(name = "asistenciasAIds", required = false) List<Long> asistenciasAIds,
+    @RequestParam(name = "golesBIds", required = false) List<Long> golesBIds,
+    @RequestParam(name = "asistenciasBIds", required = false) List<Long> asistenciasBIds
   ) {
     Usuario usuarioActual = usuarioDeSesion(request);
     if (usuarioActual == null) {
@@ -164,10 +168,36 @@ public class ControladorPartido {
 
     boolean registrado = servicioPartido.registrarResultado(partidoId, golesEquipoA, golesEquipoB);
     if (registrado) {
+      servicioPartido.registrarDetalles(
+        partidoId,
+        golesAIds,
+        asistenciasAIds,
+        golesBIds,
+        asistenciasBIds
+      );
       actualizarUsuarioEnSesion(request, usuarioActual);
     }
     return redirigirAPartidos(
       registrado ? "Resultado registrado, PL actualizado" : "No se pudo registrar el resultado"
+    );
+  }
+
+  // Overload para mantener compatibilidad con tests que invocan el método sin detalles de goles
+  public ModelAndView registrarResultado(
+    HttpServletRequest request,
+    Long partidoId,
+    int golesEquipoA,
+    int golesEquipoB
+  ) {
+    return registrarResultado(
+      request,
+      partidoId,
+      golesEquipoA,
+      golesEquipoB,
+      null,
+      null,
+      null,
+      null
     );
   }
 

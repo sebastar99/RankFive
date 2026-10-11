@@ -1175,9 +1175,131 @@
 
 /* Goles y asistencias (opcional) */
 .goles-detalle summary { cursor: pointer; color: var(--rf-text-muted); }
+.goles-detalle summary:hover { color: var(--rf-primary); }
+.goles-detalle[open] summary { color: var(--rf-text); margin-bottom: .25rem; }
+.goles-detalle summary i { color: var(--rf-primary); }
+
+.resultado-form .resultado-fila {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+.marcador-inputs { display: flex; align-items: center; gap: .5rem; }
+.marcador-inputs .form-control { width: 4.5rem; text-align: center; font-weight: 700; }
+.marcador-sep { color: var(--rf-text-muted); font-weight: 700; }
+
+.gol-editor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+}
+.gol-team {
+  border: 1px solid var(--rf-surface-border);
+  border-radius: .6rem;
+  padding: .65rem;
+  background: rgba(255,255,255,.02);
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.gol-team-title {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--rf-primary);
+}
+.gol-team-title-b { color: #7cbcff; }
+.gol-section { display: flex; flex-direction: column; gap: .5rem; }
+.gol-section-cards { border-top: 1px dashed var(--rf-surface-border); padding-top: .6rem; }
+.gol-cards-title {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--rf-text-muted);
+}
+.card-chip {
+  display: inline-block;
+  width: 11px;
+  height: 15px;
+  border-radius: 2px;
+  transform: rotate(-8deg);
+  flex-shrink: 0;
+}
+.card-chip-yellow { background: #f6d36b; }
+.card-chip-red { background: #ff8f9b; margin-left: -6px; }
+.gol-cards-badge {
+  margin-left: auto;
+  border: 1px solid rgba(246,211,107,.25);
+  background: rgba(246,211,107,.08);
+  color: #f6d36b;
+  border-radius: 999px;
+  padding: .1rem .5rem;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+}
 .gol-rows { display: grid; gap: .5rem; }
-.gol-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: .5rem; }
+.gol-row {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr auto;
+  gap: .4rem;
+  align-items: center;
+}
 .gol-row .form-select-sm { min-width: 0; }
+.gol-num {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--rf-surface-border);
+  color: var(--rf-text-muted);
+  font-size: .7rem;
+  font-weight: 700;
+}
+.gol-remove {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: .4rem;
+  border: 1px solid var(--rf-surface-border);
+  background: rgba(255,255,255,.03);
+  color: var(--rf-text-muted);
+  font-size: .75rem;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.gol-remove:hover { color: #ff8f9b; border-color: rgba(255,143,155,.4); background: rgba(255,143,155,.08); }
+.gol-add {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  border: 1px dashed var(--rf-surface-border);
+  border-radius: .5rem;
+  background: transparent;
+  color: var(--rf-text-muted);
+  font-size: .78rem;
+  padding: .35rem .7rem;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.gol-add:hover { color: var(--rf-primary); border-color: rgba(0,224,123,.4); background: rgba(0,224,123,.06); }
+
+@media (max-width: 575px) {
+  .gol-editor { grid-template-columns: 1fr; }
+  .resultado-form .resultado-fila { justify-content: flex-start; }
+}
 
 /* Partidos: pagina sin scroll general (scroll solo dentro de las listas) */
 @media (min-width: 992px) {

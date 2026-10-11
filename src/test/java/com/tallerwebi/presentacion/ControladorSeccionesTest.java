@@ -2,14 +2,19 @@ package com.tallerwebi.presentacion;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.EncuentroTorneo;
+import com.tallerwebi.dominio.EstadisticasJugador;
 import com.tallerwebi.dominio.FaseTorneo;
 import com.tallerwebi.dominio.Liga;
 import com.tallerwebi.dominio.ResultadoInscripcion;
 import com.tallerwebi.dominio.ServicioArbitro;
 import com.tallerwebi.dominio.ServicioCompetencia;
+import com.tallerwebi.dominio.ServicioEstadisticasJugador;
 import com.tallerwebi.dominio.ServicioEstadisticasTorneo;
 import com.tallerwebi.dominio.ServicioLiga;
 import com.tallerwebi.dominio.ServicioPartido;
@@ -32,6 +37,7 @@ public class ControladorSeccionesTest {
   private ServicioCompetencia servicioCompetencia;
   private ServicioArbitro servicioArbitro;
   private ServicioLiga servicioLiga;
+  private ServicioEstadisticasJugador servicioEstadisticasJugador;
   private ControladorSecciones controlador;
   private HttpServletRequest request;
   private HttpSession session;
@@ -43,13 +49,15 @@ public class ControladorSeccionesTest {
     servicioCompetencia = mock(ServicioCompetencia.class);
     servicioArbitro = mock(ServicioArbitro.class);
     servicioLiga = mock(ServicioLiga.class);
+    servicioEstadisticasJugador = mock(ServicioEstadisticasJugador.class);
     controlador =
       new ControladorSecciones(
         mock(ServicioRelacionAmistad.class),
         servicioPartido,
         servicioCompetencia,
         servicioArbitro,
-        servicioLiga
+        servicioLiga,
+        servicioEstadisticasJugador
       );
     request = mock(HttpServletRequest.class);
     session = mock(HttpSession.class);
@@ -347,5 +355,34 @@ public class ControladorSeccionesTest {
     encuentro.setEstado(estado);
     fase.getEncuentros().add(encuentro);
     return fase;
+  }
+
+  @Test
+  public void estadisticasSinSesionRedirigeALogin() {
+    when(request.getSession(false)).thenReturn(null);
+
+    assertThat(controlador.estadisticas(request).getViewName(), equalTo("redirect:/login"));
+  }
+
+  @Test
+  public void estadisticasConSesionMuestraVista() {
+    when(request.getSession(false)).thenReturn(session);
+    when(session.getAttribute("usuario")).thenReturn(usuario);
+
+    assertThat(controlador.estadisticas(request).getViewName(), equalTo("estadisticas"));
+  }
+
+  @Test
+  public void deberiaPonerLasEstadisticasDelUsuarioEnElModelo() {
+    when(request.getSession(false)).thenReturn(session);
+    when(session.getAttribute("usuario")).thenReturn(usuario);
+    EstadisticasJugador estadisticasEsperadas = new EstadisticasJugador();
+    when(servicioEstadisticasJugador.obtenerEstadisticasDelUsuario(usuario.getId()))
+      .thenReturn(estadisticasEsperadas);
+
+    ModelAndView modelAndView = controlador.estadisticas(request);
+    assertThat(modelAndView.getModel().get("estadisticas"), sameInstance(estadisticasEsperadas));
+
+    verify(servicioEstadisticasJugador).obtenerEstadisticasDelUsuario(usuario.getId());
   }
 }
