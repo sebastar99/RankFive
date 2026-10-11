@@ -56,4 +56,116 @@ public class SoportePartidoTest {
     b.add(u(1L, 1000)); // mismo id en ambos equipos -> invalido
     assertFalse(sp.equiposSinSolapamiento(a, b));
   }
+
+  @Test
+  public void seAsociaElGolAlUsuarioGoleador() {
+    SoportePartido soportePartido = new SoportePartido();
+    Usuario usuario = u(1L, 1000);
+    usuario.getPerfil().setNombreUsuario("Seba");
+    Partido partido = new Partido();
+    partido.getEquipoA().add(usuario);
+
+    List<GolPartido> goles = soportePartido.construirGoles(
+      partido,
+      List.of(usuario.getId()),
+      List.of(),
+      List.of(),
+      List.of()
+    );
+
+    assertEquals(1, goles.size());
+    assertSame(usuario, goles.get(0).getUsuarioGoleador());
+  }
+
+  @Test
+  public void seAsociaLaAsistenciaAlUsuarioAsistente() {
+    SoportePartido soportePartido = new SoportePartido();
+    Usuario usuario = u(1L, 1000);
+    usuario.getPerfil().setNombreUsuario("Seba");
+    Usuario asistente = u(2L, 1000);
+    asistente.getPerfil().setNombreUsuario("Asistente");
+    Partido partido = new Partido();
+    partido.getEquipoA().add(usuario);
+    partido.getEquipoA().add(asistente);
+
+    List<GolPartido> goles = soportePartido.construirGoles(
+      partido,
+      List.of(usuario.getId()),
+      List.of(asistente.getId()),
+      List.of(),
+      List.of()
+    );
+
+    assertEquals(1, goles.size());
+    assertSame(asistente, goles.get(0).getUsuarioAsistente());
+  }
+
+  @Test
+  public void seAsociaElGolYLaAsistenciaAlUsuarioGoleadorYAsistente() {
+    SoportePartido soportePartido = new SoportePartido();
+    Usuario usuario = u(1L, 1000);
+    usuario.getPerfil().setNombreUsuario("Seba");
+    Usuario asistente = u(2L, 1000);
+    asistente.getPerfil().setNombreUsuario("Asistente");
+    Partido partido = new Partido();
+    partido.getEquipoA().add(usuario);
+    partido.getEquipoA().add(asistente);
+
+    List<GolPartido> goles = soportePartido.construirGoles(
+      partido,
+      List.of(usuario.getId()),
+      List.of(asistente.getId()),
+      List.of(),
+      List.of()
+    );
+
+    assertEquals(1, goles.size());
+    assertSame(usuario, goles.get(0).getUsuarioGoleador());
+    assertSame(asistente, goles.get(0).getUsuarioAsistente());
+  }
+
+  @Test
+  public void sePermiteUnGolSinAsistencia() {
+    SoportePartido soportePartido = new SoportePartido();
+    Usuario usuario = u(1L, 1000);
+    usuario.getPerfil().setNombreUsuario("Seba");
+    Partido partido = new Partido();
+    partido.getEquipoA().add(usuario);
+
+    List<GolPartido> goles = soportePartido.construirGoles(
+      partido,
+      List.of(usuario.getId()),
+      List.of(),
+      List.of(),
+      List.of()
+    );
+
+    assertEquals(1, goles.size());
+    assertSame(usuario, goles.get(0).getUsuarioGoleador());
+    assertNull(goles.get(0).getUsuarioAsistente());
+  }
+
+  @Test
+  public void seDebeIdentificarAlGoleadorPorIdAunqueDosUsuariosTenganElMismoNombre() {
+    SoportePartido soportePartido = new SoportePartido();
+    Usuario usuario1 = u(1L, 1000);
+    usuario1.getPerfil().setNombreUsuario("Seba");
+    Usuario usuario2 = u(2L, 1000);
+    usuario2.getPerfil().setNombreUsuario("Seba");
+    Partido partido = new Partido();
+    partido.getEquipoA().add(usuario1);
+    partido.getEquipoA().add(usuario2);
+
+    List<GolPartido> goles = soportePartido.construirGoles(
+      partido,
+      List.of(usuario1.getId()),
+      List.of(),
+      List.of(),
+      List.of()
+    );
+
+    assertEquals(1, goles.size());
+    assertSame(usuario1, goles.get(0).getUsuarioGoleador());
+    assertNull(goles.get(0).getUsuarioAsistente());
+  }
 }

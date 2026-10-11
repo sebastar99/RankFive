@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+  <!-- Editor de goles, asistencias y tarjetas por equipo. Espera un Partido con equipoA/equipoB.
+       Las tarjetas son solo visuales: el backend aún no las persiste. -->
+  <div class="gol-editor" th:fragment="editorGoles(partido)">
+    <div class="gol-team">
+      <div class="gol-section">
+        <div class="gol-team-title"><i class="bi bi-circle-half"></i>Equipo A</div>
+        <div class="gol-rows">
+          <div class="gol-row">
+            <span class="gol-num" aria-hidden="true">1</span>
+            <select class="form-select form-select-sm" name="golesAIds" aria-label="Goleador equipo A">
+              <option value="" selected>Goleador</option>
+              <option th:each="jug : ${partido.equipoA}" th:value="${jug.id}"
+                      th:text="${jug.perfil.nombreUsuario} ?: ${jug.email}">jugador</option>
+            </select>
+            <select class="form-select form-select-sm" name="asistenciasAIds" aria-label="Asistencia equipo A">
+              <option value="" selected>Asistencia (opcional)</option>
+              <option th:each="jug : ${partido.equipoA}" th:value="${jug.id}"
+                      th:text="${jug.perfil.nombreUsuario} ?: ${jug.email}">jugador</option>
+            </select>
+            <button type="button" class="gol-remove" data-gol-remove title="Quitar gol"
+                    aria-label="Quitar gol"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+        <button type="button" class="gol-add" data-gol-add>
+          <i class="bi bi-plus-lg"></i>Agregar gol
+        </button>
+      </div>
+
+      <div class="gol-section gol-section-cards">
+        <div class="gol-cards-title">
+          <span class="card-chip card-chip-yellow" aria-hidden="true"></span>
+          <span class="card-chip card-chip-red" aria-hidden="true"></span>
+          Tarjetas
+        </div>
+        <div class="gol-rows">
+          <div class="gol-row">
+            <span class="gol-num" aria-hidden="true">1</span>
+            <select class="form-select form-select-sm" name="tiposTarjetasA" aria-label="Tipo de tarjeta equipo A">
+              <option value="AMARILLA" selected>Amarilla</option>
+              <option value="ROJA">Roja</option>
+            </select>
+            <select class="form-select form-select-sm" name="tarjetasAIds" aria-label="Jugador amonestado equipo A">
+              <option value="" selected>Jugador</option>
+              <option th:each="jug : ${partido.equipoA}" th:value="${jug.id}"
+                      th:text="${jug.perfil.nombreUsuario} ?: ${jug.email}">jugador</option>
+            </select>
+            <button type="button" class="gol-remove" data-gol-remove title="Quitar tarjeta"
+                    aria-label="Quitar tarjeta"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+        <button type="button" class="gol-add" data-gol-add>
+          <i class="bi bi-plus-lg"></i>Agregar tarjeta
+        </button>
+      </div>
+    </div>
+
+    <div class="gol-team">
+      <div class="gol-section">
+        <div class="gol-team-title gol-team-title-b"><i class="bi bi-circle-half"></i>Equipo B</div>
+        <div class="gol-rows">
+          <div class="gol-row">
+            <span class="gol-num" aria-hidden="true">1</span>
+            <select class="form-select form-select-sm" name="golesBIds" aria-label="Goleador equipo B">
+              <option value="" selected>Goleador</option>
+              <option th:each="jug : ${partido.equipoB}" th:value="${jug.id}"
+                      th:text="${jug.perfil.nombreUsuario} ?: ${jug.email}">jugador</option>
+            </select>
+            <select class="form-select form-select-sm" name="asistenciasBIds" aria-label="Asistencia equipo B">
+              <option value="" selected>Asistencia (opcional)</option>
+              <option th:each="jug : ${partido.equipoB}" th:value="${jug.id}"
+                      th:text="${jug.perfil.nombreUsuario} ?: ${jug.email}">jugador</option>
+            </select>
+            <button type="button" class="gol-remove" data-gol-remove title="Quitar gol"
+                    aria-label="Quitar gol"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+        <button type="button" class="gol-add" data-gol-add>
+          <i class="bi bi-plus-lg"></i>Agregar gol
+        </button>
+      </div>
+
+      <div class="gol-section gol-section-cards">
+        <div class="gol-cards-title">
+          <span class="card-chip card-chip-yellow" aria-hidden="true"></span>
+          <span class="card-chip card-chip-red" aria-hidden="true"></span>
+          Tarjetas
+        </div>
+        <div class="gol-rows">
+          <div class="gol-row">
+            <span class="gol-num" aria-hidden="true">1</span>
+            <select class="form-select form-select-sm" name="tiposTarjetasB" aria-label="Tipo de tarjeta equipo B">
+              <option value="AMARILLA" selected>Amarilla</option>
+              <option value="ROJA">Roja</option>
+            </select>
+            <select class="form-select form-select-sm" name="tarjetasBIds" aria-label="Jugador amonestado equipo B">
+              <option value="" selected>Jugador</option>
+              <option th:each="jug : ${partido.equipoB}" th:value="${jug.id}"
+                      th:text="${jug.perfil.nombreUsuario} ?: ${jug.email}">jugador</option>
+            </select>
+            <button type="button" class="gol-remove" data-gol-remove title="Quitar tarjeta"
+                    aria-label="Quitar tarjeta"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+        <button type="button" class="gol-add" data-gol-add>
+          <i class="bi bi-plus-lg"></i>Agregar tarjeta
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

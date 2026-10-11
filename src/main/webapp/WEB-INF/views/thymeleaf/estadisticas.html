@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Estadísticas | Rank5</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=14)}">
+  <style>
+    .stats-page { --stats-blue: #7cbcff; --stats-red: #ff8f9b; --stats-yellow: #f6d36b; }
+    .stats-page a:focus-visible, .stats-page [tabindex]:focus-visible { outline: 2px solid var(--rf-primary); outline-offset: 5px; }
+    .stats-page .db-content { max-width: 1180px; padding-top: 2rem; }
+    .stats-page .db-header .db-header-content { grid-template-columns: 1fr auto 1fr; }
+    .stats-page .db-left { justify-self: start; }
+    .stats-page .db-right { justify-self: end; }
+    .stats-page .db-center { justify-self: center; }
+    .stats-breadcrumb { display: flex; align-items: center; gap: .65rem; color: var(--rf-text-muted); font-size: .8rem; margin-bottom: 1.5rem; }
+    .stats-breadcrumb a { color: var(--rf-text-muted); text-decoration: none; }
+    .stats-breadcrumb a:hover { color: var(--rf-primary); }
+    .stats-hero { position: relative; overflow: hidden; padding: clamp(1.5rem, 4vw, 2.5rem); margin-bottom: 1.5rem; box-shadow: var(--rf-shadow); }
+    .stats-hero::before { content: ''; position: absolute; inset: 0 0 auto; height: 4px; background: linear-gradient(90deg, var(--rf-primary), #59d6f0); }
+    .stats-hero::after { content: ''; position: absolute; width: 320px; height: 320px; right: -120px; top: -175px; border: 1px solid rgba(0, 224, 123, .2); border-radius: 50%; box-shadow: 0 0 0 45px rgba(0, 224, 123, .025), 0 0 0 90px rgba(0, 224, 123, .025); pointer-events: none; }
+    .stats-hero-inner { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 2rem; }
+    .stats-eyebrow { display: flex; align-items: center; gap: .5rem; font-size: .72rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; color: var(--rf-primary); margin-bottom: .85rem; }
+    .stats-title { font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -.05em; font-weight: 900; line-height: 1.12; margin: 0 0 .8rem; }
+    .stats-title span { color: var(--rf-primary); }
+    .stats-description { color: var(--rf-text-muted); font-size: .92rem; line-height: 1.7; max-width: 490px; margin: 0; }
+    .stats-player { display: flex; align-items: center; gap: .85rem; padding: 1rem 1.25rem; border: 1px solid var(--rf-surface-border); border-radius: 1rem; background: rgba(5, 8, 15, .3); min-width: 0; max-width: 320px; }
+    .stats-player .db-avatar { flex-shrink: 0; width: 48px; height: 48px; background: rgba(0, 224, 123, .08); color: var(--rf-primary); }
+    .stats-player-info { min-width: 0; }
+    .stats-player-name { display: block; font-size: 1rem; font-weight: 800; overflow-wrap: anywhere; }
+    .stats-player-caption { color: var(--rf-text-muted); font-size: .78rem; }
+    .stats-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
+    .stats-section-label { margin: 0; color: var(--rf-text-muted); font-weight: 700; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; }
+    .stats-scope { display: inline-flex; align-items: center; gap: .5rem; color: var(--rf-text-muted); font-size: .78rem; }
+    .stats-scope i { color: var(--rf-primary); }
+    .stats-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 0 0 1.5rem; }
+    .stats-metric { padding: 1.4rem 1.5rem; position: relative; min-width: 0; transition: border-color .2s ease, transform .2s ease; }
+    .stats-metric:hover { transform: translateY(-3px); border-color: rgba(0, 224, 123, .35); }
+    .stats-metric dt { display: flex; align-items: center; gap: .65rem; color: var(--rf-text-muted); font-size: .85rem; font-weight: 600; }
+    .stats-icon { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: .65rem; color: var(--rf-primary); background: rgba(0, 224, 123, .1); flex-shrink: 0; }
+    .stats-icon-blue { color: var(--stats-blue); background: rgba(124, 188, 255, .1); }
+    .stats-icon-yellow { color: var(--stats-yellow); background: rgba(246, 211, 107, .1); }
+    .stats-number { font-size: clamp(2.5rem, 5vw, 3.25rem); letter-spacing: -.06em; font-weight: 900; line-height: 1.2; margin: .7rem 0 .35rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .stats-metric-note { display: block; color: var(--rf-text-muted); font-size: .75rem; margin: 0; }
+    .stats-columns { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .stats-panel { padding: 1.5rem; min-width: 0; }
+    .stats-panel-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.5rem; }
+    .stats-panel-title { display: flex; align-items: center; gap: .6rem; font-size: 1.05rem; font-weight: 800; margin: 0; letter-spacing: -.02em; }
+    .stats-panel-title i { color: var(--rf-primary); }
+    .stats-panel-subtitle { color: var(--rf-text-muted); font-size: .8rem; line-height: 1.6; margin: .45rem 0 0; }
+    .stats-results { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin: 0; }
+    .stats-result { padding: 1.25rem .5rem; text-align: center; border-radius: .8rem; border: 1px solid var(--rf-surface-border); background: rgba(255, 255, 255, .025); min-width: 0; }
+    .stats-result dt { font-size: .75rem; font-weight: 600; color: var(--rf-text-muted); }
+    .stats-result dd { margin: .55rem 0 0; font-size: 2rem; font-weight: 900; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .stats-result-icon { display: block; font-size: 1.05rem; margin-bottom: .65rem; }
+    .stats-win dd, .stats-win .stats-result-icon { color: var(--rf-primary); }
+    .stats-draw dd, .stats-draw .stats-result-icon { color: var(--stats-blue); }
+    .stats-loss dd, .stats-loss .stats-result-icon { color: var(--stats-red); }
+    .stats-results-footer { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 1.3rem; padding-top: 1rem; border-top: 1px solid var(--rf-surface-border); }
+    .stats-results-footer span { color: var(--rf-text-muted); font-size: .75rem; }
+    .stats-history-link { display: inline-flex; align-items: center; gap: .5rem; color: var(--rf-primary); font-weight: 700; font-size: .8rem; text-decoration: none; }
+    .stats-history-link:hover { color: var(--rf-text); }
+    .stats-averages { margin: 0; }
+    .stats-average { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 1rem; padding: 1rem 0; }
+    .stats-average + .stats-average { border-top: 1px solid var(--rf-surface-border); }
+    .stats-average dt { font-size: .85rem; font-weight: 600; }
+    .stats-average dt small { display: block; margin-top: .35rem; font-size: .73rem; font-weight: 400; color: var(--rf-text-muted); }
+    .stats-average dd { margin: 0; font-weight: 900; color: var(--rf-primary); font-size: 2rem; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+    .stats-average + .stats-average dd { color: var(--stats-blue); }
+    .stats-empty { display: flex; gap: .85rem; align-items: flex-start; padding: 1rem 1.25rem; margin-bottom: 1.5rem; border: 1px solid rgba(0, 224, 123, .2); border-radius: .8rem; background: rgba(0, 224, 123, .06); }
+    .stats-empty > i { color: var(--rf-primary); font-size: 1.25rem; }
+    .stats-empty strong { font-size: .9rem; }
+    .stats-empty p { margin: .25rem 0 0; color: var(--rf-text-muted); font-size: .82rem; line-height: 1.6; }
+    .stats-pending { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid rgba(246, 211, 107, .22); background: rgba(246, 211, 107, .07); color: var(--stats-yellow); border-radius: 2rem; padding: .35rem .75rem; font-size: .7rem; font-weight: 700; white-space: nowrap; }
+    .stats-table-wrap { overflow-x: auto; border: 1px solid var(--rf-surface-border); border-radius: .8rem; }
+    .stats-table { width: 100%; min-width: 360px; border-collapse: collapse; font-size: .85rem; }
+    .stats-table thead { background: rgba(255, 255, 255, .025); }
+    .stats-table th, .stats-table td { padding: 1rem 1.25rem; }
+    .stats-table thead th { color: var(--rf-text-muted); font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+    .stats-table tbody th { font-weight: 600; }
+    .stats-table tbody tr { border-top: 1px solid var(--rf-surface-border); }
+    .stats-table tbody tr:hover { background: rgba(255, 255, 255, .02); }
+    .stats-table th:nth-child(2), .stats-table td:nth-child(2) { text-align: center; }
+    .stats-table td:last-child { color: var(--rf-text-muted); font-size: .78rem; }
+    .stats-card-type { display: inline-flex; align-items: center; gap: .75rem; }
+    .stats-card-symbol { display: inline-block; width: 16px; height: 23px; border-radius: 3px; transform: rotate(-10deg); background: var(--stats-yellow); flex-shrink: 0; }
+    .stats-card-symbol-red { background: var(--stats-red); }
+    .stats-unavailable { color: var(--rf-text-muted); font-size: .8rem; white-space: nowrap; }
+    .stats-disclaimer { display: flex; align-items: flex-start; gap: .5rem; margin: 1rem 0 0; font-size: .75rem; line-height: 1.7; color: var(--rf-text-muted); }
+    .stats-disclaimer i { flex-shrink: 0; }
+    .stats-footer { display: flex; align-items: center; justify-content: center; gap: .5rem; flex-wrap: wrap; color: var(--rf-text-muted); font-size: .73rem; margin-top: 1.5rem; text-align: center; }
+    @media (max-width: 991px) {
+      .stats-page .db-header .db-header-content { grid-template-columns: 1fr auto; }
+      .stats-page .db-center { display: none; }
+      .stats-columns { grid-template-columns: 1fr; }
+      .stats-hero-inner { gap: 1.5rem; }
+      .stats-player { max-width: 250px; }
+    }
+    @media (max-width: 575px) {
+      .stats-page .db-content { padding-top: 1rem; }
+      .stats-page .db-right { gap: .8rem !important; }
+      .stats-back-label { display: none; }
+      .stats-hero-inner { flex-direction: column; align-items: flex-start; }
+      .stats-player { width: 100%; max-width: none; }
+      .stats-metrics { grid-template-columns: 1fr; gap: .75rem; }
+      .stats-metric { display: grid; grid-template-columns: 1fr auto; column-gap: 1rem; padding: 1rem 1.25rem; }
+      .stats-number { grid-column: 2; grid-row: 1 / 3; align-self: center; font-size: 2.5rem; margin: 0; }
+      .stats-metric-note { margin-top: .4rem; }
+      .stats-panel { padding: 1.25rem; }
+      .stats-results { gap: .5rem; }
+      .stats-table th, .stats-table td { padding: .9rem .8rem; }
+      .stats-average dd { font-size: 1.7rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .stats-metric { transition: none; }
+      .stats-metric:hover { transform: none; }
+    }
+  </style>
+</head>
+<body class="dashboard-page stats-page">
+  <div class="pitch-bg" aria-hidden="true"></div>
+
+  <header class="db-header fixed-top">
+    <div class="container">
+      <div class="db-header-content">
+        <div class="db-left">
+          <a th:href="@{/dashboard}" class="db-brand" aria-label="Rank5, ir al dashboard">
+            <span class="db-brand-logo"><i class="bi bi-trophy-fill" aria-hidden="true"></i></span>
+            <span class="db-brand-text">Rank<span class="db-brand-accent">5</span></span>
+          </a>
+        </div>
+        <div class="db-center">
+          <span class="db-page-title"><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Estadísticas</span>
+        </div>
+        <div class="db-right d-flex align-items-center gap-4">
+          <div th:replace="~{fragments/notificaciones :: campana}"></div>
+          <span class="db-divider" aria-hidden="true"></span>
+          <a th:href="@{/dashboard}" class="db-link" aria-label="Volver al dashboard">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i> <span class="stats-back-label">Dashboard</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container db-content">
+    <nav class="stats-breadcrumb" aria-label="Ubicación actual">
+      <a th:href="@{/dashboard}">Dashboard</a>
+      <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      <span aria-current="page">Mis estadísticas</span>
+    </nav>
+
+    <section class="stats-hero card-glass" aria-labelledby="stats-title">
+      <div class="stats-hero-inner">
+        <div>
+          <div class="stats-eyebrow"><i class="bi bi-activity" aria-hidden="true"></i> Informe del jugador</div>
+          <h1 id="stats-title" class="stats-title">Tu juego, <span>en números.</span></h1>
+          <p class="stats-description">Cada partido suma a tu historia. Consultá tus resultados, tus aportes al equipo y tus promedios en un solo lugar.</p>
+        </div>
+        <div class="stats-player">
+          <div class="db-avatar" aria-hidden="true"><i class="bi bi-person-circle"></i></div>
+          <div class="stats-player-info">
+            <span class="stats-player-name" th:text="${usuario.perfil.nombreUsuario} ?: 'Jugador'">Jugador</span>
+            <span class="stats-player-caption">Tu informe personal</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="stats-toolbar">
+      <h2 id="stats-summary-title" class="stats-section-label">Tu recorrido en la cancha</h2>
+      <span class="stats-scope"><i class="bi bi-calendar-check" aria-hidden="true"></i> Partidos libres · Solo jugados</span>
+    </div>
+    <dl class="stats-metrics" aria-labelledby="stats-summary-title">
+      <div class="stats-metric card-glass" role="group" th:attr="aria-label=|Partidos jugados: ${estadisticas.partidosJugados}|">
+        <dt><span class="stats-icon"><i class="bi bi-controller" aria-hidden="true"></i></span> Partidos jugados</dt>
+        <dd class="stats-number" th:text="${estadisticas.partidosJugados}">0</dd>
+        <dd class="stats-metric-note">Encuentros con resultado registrado</dd>
+      </div>
+      <div class="stats-metric card-glass" role="group" th:attr="aria-label=|Goles: ${estadisticas.goles}|">
+        <dt><span class="stats-icon stats-icon-yellow"><i class="bi bi-dribbble" aria-hidden="true"></i></span> Goles</dt>
+        <dd class="stats-number" th:text="${estadisticas.goles}">0</dd>
+        <dd class="stats-metric-note">Tus goles en partidos jugados</dd>
+      </div>
+      <div class="stats-metric card-glass" role="group" th:attr="aria-label=|Asistencias: ${estadisticas.asistencias}|">
+        <dt><span class="stats-icon stats-icon-blue"><i class="bi bi-people-fill" aria-hidden="true"></i></span> Asistencias</dt>
+        <dd class="stats-number" th:text="${estadisticas.asistencias}">0</dd>
+        <dd class="stats-metric-note">Pases que terminaron en gol</dd>
+      </div>
+    </dl>
+
+    <aside class="stats-empty" th:if="${estadisticas.partidosJugados == 0}" aria-label="Sin partidos jugados">
+      <i class="bi bi-flag" aria-hidden="true"></i>
+      <div>
+        <strong>Tu historia en la cancha recién empieza.</strong>
+        <p>Todavía no tenés partidos jugados. Cuando se registren los resultados y tus aportes, los vas a encontrar acá.</p>
+      </div>
+    </aside>
+
+    <div class="stats-columns">
+      <section class="stats-panel card-glass" aria-labelledby="stats-results-title">
+        <div class="stats-panel-heading">
+          <div>
+            <h2 id="stats-results-title" class="stats-panel-title"><i class="bi bi-trophy" aria-hidden="true"></i> Balance de resultados</h2>
+            <p class="stats-panel-subtitle">El resultado de tu equipo en cada encuentro.</p>
+          </div>
+        </div>
+        <dl class="stats-results">
+          <div class="stats-result stats-win">
+            <dt><i class="bi bi-check-circle stats-result-icon" aria-hidden="true"></i>Ganados</dt>
+            <dd th:text="${estadisticas.partidosGanados}">0</dd>
+          </div>
+          <div class="stats-result stats-draw">
+            <dt><i class="bi bi-dash-circle stats-result-icon" aria-hidden="true"></i>Empatados</dt>
+            <dd th:text="${estadisticas.partidosEmpatados}">0</dd>
+          </div>
+          <div class="stats-result stats-loss">
+            <dt><i class="bi bi-x-circle stats-result-icon" aria-hidden="true"></i>Perdidos</dt>
+            <dd th:text="${estadisticas.partidosPerdidos}">0</dd>
+          </div>
+        </dl>
+        <div class="stats-results-footer">
+          <span>Los partidos pendientes no se incluyen.</span>
+          <a th:href="@{/historial}" class="stats-history-link">Ver historial <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+        </div>
+      </section>
+
+      <section class="stats-panel card-glass" aria-labelledby="stats-averages-title">
+        <div class="stats-panel-heading">
+          <div>
+            <h2 id="stats-averages-title" class="stats-panel-title"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i> Promedios por partido</h2>
+            <p class="stats-panel-subtitle">Tus aportes divididos por tus partidos jugados.</p>
+          </div>
+        </div>
+        <dl class="stats-averages">
+          <div class="stats-average" role="group" th:attr="aria-label=|Promedio de Goles: ${#numbers.formatDecimal(estadisticas.promedioGolesPorPartido, 1, 2, 'COMMA')}|">
+            <dt>Promedio de goles<small>Goles / partidos jugados</small></dt>
+            <dd th:text="${#numbers.formatDecimal(estadisticas.promedioGolesPorPartido, 1, 2, 'COMMA')}">0,00</dd>
+          </div>
+          <div class="stats-average" role="group" th:attr="aria-label=|Promedio de Asistencias: ${#numbers.formatDecimal(estadisticas.promedioAsistenciasPorPartido, 1, 2, 'COMMA')}|">
+            <dt>Promedio de asistencias<small>Asistencias / partidos jugados</small></dt>
+            <dd th:text="${#numbers.formatDecimal(estadisticas.promedioAsistenciasPorPartido, 1, 2, 'COMMA')}">0,00</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
+
+    <section class="stats-panel card-glass" aria-labelledby="stats-discipline-title">
+      <div class="stats-panel-heading">
+        <div>
+          <h2 id="stats-discipline-title" class="stats-panel-title"><i class="bi bi-shield-check" aria-hidden="true"></i> Disciplina</h2>
+          <p class="stats-panel-subtitle">Tarjetas amarillas y rojas.</p>
+        </div>
+        <span class="stats-pending"><i class="bi bi-clock" aria-hidden="true"></i> Próximamente</span>
+      </div>
+      <div class="stats-table-wrap" role="region" aria-label="Tabla de tarjetas" tabindex="0">
+        <table class="stats-table" aria-describedby="stats-discipline-note">
+          <caption class="visually-hidden">Registro de tarjetas del jugador, todavía no disponible.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Tipo de tarjeta</th>
+              <th scope="col">Total</th>
+              <th scope="col">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><span class="stats-card-type"><span class="stats-card-symbol" aria-hidden="true"></span>Amarillas</span></th>
+              <td><span class="stats-unavailable">Sin datos</span></td>
+              <td>Registro pendiente</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="stats-card-type"><span class="stats-card-symbol stats-card-symbol-red" aria-hidden="true"></span>Rojas</span></th>
+              <td><span class="stats-unavailable">Sin datos</span></td>
+              <td>Registro pendiente</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="stats-discipline-note" class="stats-disclaimer"><i class="bi bi-info-circle" aria-hidden="true"></i>El registro de tarjetas todavía no está disponible. “Sin datos” no significa que no hayas recibido tarjetas.</p>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

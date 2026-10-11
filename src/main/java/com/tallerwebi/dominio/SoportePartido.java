@@ -76,8 +76,10 @@ public class SoportePartido {
     GolPartido gol = new GolPartido();
     gol.setPartido(partido);
     gol.setGoleador(nombre.apply(goleador));
+    gol.setUsuarioGoleador(goleador);
     if (asistidor != null) {
       gol.setAsistidor(nombre.apply(asistidor));
+      gol.setUsuarioAsistente(asistidor);
     }
     out.add(gol);
   }

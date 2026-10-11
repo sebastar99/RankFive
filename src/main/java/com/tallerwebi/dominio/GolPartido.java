@@ -32,4 +32,12 @@ public class GolPartido extends GolBase {
   public String getEquipoNombre() {
     return null;
   }
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "usuario_goleador_id")
+  private Usuario usuarioGoleador;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "usuario_asistente_id")
+  private Usuario usuarioAsistente;
 }
