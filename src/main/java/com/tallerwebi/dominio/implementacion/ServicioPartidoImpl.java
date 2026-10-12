@@ -8,9 +8,11 @@ import com.tallerwebi.dominio.RepositorioGolPartido;
 import com.tallerwebi.dominio.RepositorioNotificacionPartido;
 import com.tallerwebi.dominio.RepositorioNotificacionPl;
 import com.tallerwebi.dominio.RepositorioPartido;
+import com.tallerwebi.dominio.RepositorioTarjetaPartido;
 import com.tallerwebi.dominio.RepositorioUsuario;
 import com.tallerwebi.dominio.ServicioPartido;
 import com.tallerwebi.dominio.SoportePartido;
+import com.tallerwebi.dominio.TarjetaPartido;
 import com.tallerwebi.dominio.Usuario;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -33,6 +35,7 @@ public class ServicioPartidoImpl implements ServicioPartido {
   private final RepositorioNotificacionPl repositorioNotificacionPl;
   private final RepositorioNotificacionPartido repositorioNotificacionPartido;
   private final RepositorioGolPartido repositorioGolPartido;
+  private final RepositorioTarjetaPartido repositorioTarjetaPartido;
   private final SoportePartido soportePartido;
 
   @Autowired
@@ -42,6 +45,7 @@ public class ServicioPartidoImpl implements ServicioPartido {
     RepositorioNotificacionPl repositorioNotificacionPl,
     RepositorioNotificacionPartido repositorioNotificacionPartido,
     RepositorioGolPartido repositorioGolPartido,
+    RepositorioTarjetaPartido repositorioTarjetaPartido,
     SoportePartido soportePartido
   ) {
     this.repositorioPartido = repositorioPartido;
@@ -49,6 +53,7 @@ public class ServicioPartidoImpl implements ServicioPartido {
     this.repositorioNotificacionPl = repositorioNotificacionPl;
     this.repositorioNotificacionPartido = repositorioNotificacionPartido;
     this.repositorioGolPartido = repositorioGolPartido;
+    this.repositorioTarjetaPartido = repositorioTarjetaPartido;
     this.soportePartido = soportePartido;
   }
 
@@ -61,6 +66,7 @@ public class ServicioPartidoImpl implements ServicioPartido {
       repositorioPartido,
       repositorioUsuario,
       repositorioNotificacionPl,
+      null,
       null,
       null,
       new SoportePartido()
@@ -234,5 +240,30 @@ public class ServicioPartidoImpl implements ServicioPartido {
       notificacion.setPartido(partido);
       repositorioNotificacionPartido.guardar(notificacion);
     }
+  }
+
+  @Override
+  public boolean registrarTarjetas(
+    Long partidoId,
+    List<String> tiposA,
+    List<Long> tarjetasAIds,
+    List<String> tiposB,
+    List<Long> tarjetasBIds
+  ) {
+    if (partidoId == null || repositorioTarjetaPartido == null) return false;
+    Partido partido = repositorioPartido.buscarPorId(partidoId);
+    if (partido == null) return false;
+    repositorioTarjetaPartido.borrarPorPartido(partidoId);
+    List<TarjetaPartido> tarjetas = soportePartido.construirTarjetas(
+      partido,
+      tiposA,
+      tarjetasAIds,
+      tiposB,
+      tarjetasBIds
+    );
+    for (TarjetaPartido tarjeta : tarjetas) {
+      repositorioTarjetaPartido.guardar(tarjeta);
+    }
+    return true;
   }
 }

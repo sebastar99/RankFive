@@ -28,4 +28,12 @@ public interface ServicioPartido {
     List<Long> golesBIds,
     List<Long> asistenciasBIds
   );
+
+  boolean registrarTarjetas(
+    Long partidoId,
+    List<String> tiposA,
+    List<Long> tarjetasAIds,
+    List<String> tiposB,
+    List<Long> tarjetasBIds
+  );
 }

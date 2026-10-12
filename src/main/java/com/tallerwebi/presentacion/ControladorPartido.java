@@ -132,18 +132,26 @@ public class ControladorPartido {
     @RequestParam(name = "golesAIds", required = false) List<Long> golesAIds,
     @RequestParam(name = "asistenciasAIds", required = false) List<Long> asistenciasAIds,
     @RequestParam(name = "golesBIds", required = false) List<Long> golesBIds,
-    @RequestParam(name = "asistenciasBIds", required = false) List<Long> asistenciasBIds
+    @RequestParam(name = "asistenciasBIds", required = false) List<Long> asistenciasBIds,
+    @RequestParam(name = "tiposTarjetasA", required = false) List<String> tiposTarjetasA,
+    @RequestParam(name = "tarjetasAIds", required = false) List<Long> tarjetasAIds,
+    @RequestParam(name = "tiposTarjetasB", required = false) List<String> tiposTarjetasB,
+    @RequestParam(name = "tarjetasBIds", required = false) List<Long> tarjetasBIds
   ) {
     Usuario usuarioActual = usuarioDeSesion(request);
     if (usuarioActual == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
-    boolean ok = servicioPartido.registrarDetalles(
+    boolean ok = guardarDetallesYTarjetas(
       partidoId,
       golesAIds,
       asistenciasAIds,
       golesBIds,
-      asistenciasBIds
+      asistenciasBIds,
+      tiposTarjetasA,
+      tarjetasAIds,
+      tiposTarjetasB,
+      tarjetasBIds
     );
     return redirigirAPartidos(
       ok ? "Detalles de goles/asistencias guardados" : "No se pudieron guardar los detalles"
@@ -156,10 +164,16 @@ public class ControladorPartido {
     @RequestParam("partidoId") Long partidoId,
     @RequestParam("golesEquipoA") int golesEquipoA,
     @RequestParam("golesEquipoB") int golesEquipoB,
+    // CPD-OFF
     @RequestParam(name = "golesAIds", required = false) List<Long> golesAIds,
     @RequestParam(name = "asistenciasAIds", required = false) List<Long> asistenciasAIds,
     @RequestParam(name = "golesBIds", required = false) List<Long> golesBIds,
-    @RequestParam(name = "asistenciasBIds", required = false) List<Long> asistenciasBIds
+    @RequestParam(name = "asistenciasBIds", required = false) List<Long> asistenciasBIds,
+    @RequestParam(name = "tiposTarjetasA", required = false) List<String> tiposTarjetasA,
+    @RequestParam(name = "tarjetasAIds", required = false) List<Long> tarjetasAIds,
+    @RequestParam(name = "tiposTarjetasB", required = false) List<String> tiposTarjetasB,
+    @RequestParam(name = "tarjetasBIds", required = false) List<Long> tarjetasBIds
+    // CPD-ON
   ) {
     Usuario usuarioActual = usuarioDeSesion(request);
     if (usuarioActual == null) {
@@ -168,12 +182,16 @@ public class ControladorPartido {
 
     boolean registrado = servicioPartido.registrarResultado(partidoId, golesEquipoA, golesEquipoB);
     if (registrado) {
-      servicioPartido.registrarDetalles(
+      guardarDetallesYTarjetas(
         partidoId,
         golesAIds,
         asistenciasAIds,
         golesBIds,
-        asistenciasBIds
+        asistenciasBIds,
+        tiposTarjetasA,
+        tarjetasAIds,
+        tiposTarjetasB,
+        tarjetasBIds
       );
       actualizarUsuarioEnSesion(request, usuarioActual);
     }
@@ -194,6 +212,10 @@ public class ControladorPartido {
       partidoId,
       golesEquipoA,
       golesEquipoB,
+      null,
+      null,
+      null,
+      null,
       null,
       null,
       null,
@@ -266,5 +288,35 @@ public class ControladorPartido {
       }
     } catch (Exception ignored) {}
     return null;
+  }
+
+  private boolean guardarDetallesYTarjetas(
+    Long partidoId,
+    List<Long> golesAIds,
+    List<Long> asistenciasAIds,
+    List<Long> golesBIds,
+    List<Long> asistenciasBIds,
+    List<String> tiposTarjetasA,
+    List<Long> tarjetasAIds,
+    List<String> tiposTarjetasB,
+    List<Long> tarjetasBIds
+  ) {
+    boolean ok = servicioPartido.registrarDetalles(
+      partidoId,
+      golesAIds,
+      asistenciasAIds,
+      golesBIds,
+      asistenciasBIds
+    );
+    if (ok) {
+      servicioPartido.registrarTarjetas(
+        partidoId,
+        tiposTarjetasA,
+        tarjetasAIds,
+        tiposTarjetasB,
+        tarjetasBIds
+      );
+    }
+    return ok;
   }
 }

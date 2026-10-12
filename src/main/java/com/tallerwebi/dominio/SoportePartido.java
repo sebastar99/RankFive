@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio;
 
+import com.tallerwebi.dominio.enums.TipoTarjeta;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,21 +18,8 @@ public class SoportePartido {
     List<Long> golesBIds,
     List<Long> asistenciasBIds
   ) {
-    Map<Long, Usuario> mapa = new HashMap<>();
-    for (Usuario u : partido.getEquipoA()) mapa.put(u.getId(), u);
-    for (Usuario u : partido.getEquipoB()) mapa.put(u.getId(), u);
-
-    Function<Usuario, String> nombre = u -> {
-      if (u == null) return null;
-      if (
-        u.getPerfil() != null &&
-        u.getPerfil().getNombreUsuario() != null &&
-        !u.getPerfil().getNombreUsuario().isBlank()
-      ) {
-        return u.getPerfil().getNombreUsuario();
-      }
-      return u.getEmail();
-    };
+    Map<Long, Usuario> mapa = mapaPorId(partido);
+    Function<Usuario, String> nombre = nombreVisible();
 
     List<GolPartido> out = new ArrayList<>();
     agregarGolesDeEquipo(out, partido, mapa, nombre, golesAIds, asistenciasAIds);
@@ -144,5 +132,87 @@ public class SoportePartido {
     if (golesA > golesB) return 1.0;
     if (golesA < golesB) return 0.0;
     return 0.5;
+  }
+
+  public List<TarjetaPartido> construirTarjetas(
+    Partido partido,
+    List<String> tiposTarjetasA,
+    List<Long> tarjetasAIds,
+    List<String> tiposTarjetasB,
+    List<Long> tarjetasBIds
+  ) {
+    Map<Long, Usuario> mapa = mapaPorId(partido);
+    Function<Usuario, String> nombre = nombreVisible();
+
+    List<TarjetaPartido> out = new ArrayList<>();
+    agregarTarjetasDeEquipo(out, partido, mapa, nombre, tiposTarjetasA, tarjetasAIds);
+    agregarTarjetasDeEquipo(out, partido, mapa, nombre, tiposTarjetasB, tarjetasBIds);
+    return out;
+  }
+
+  private static void agregarTarjetasDeEquipo(
+    List<TarjetaPartido> out,
+    Partido partido,
+    Map<Long, Usuario> mapa,
+    Function<Usuario, String> nombre,
+    List<String> tipos,
+    List<Long> tarjetasIds
+  ) {
+    int tiposCount = tipos == null ? 0 : tipos.size();
+    int tarjetasCount = tarjetasIds == null ? 0 : tarjetasIds.size();
+    int filas = Math.max(tiposCount, tarjetasCount);
+    for (int i = 0; i < filas; i++) {
+      String tipo = i < tiposCount ? tipos.get(i) : null;
+      Long idJugador = i < tarjetasCount ? tarjetasIds.get(i) : null;
+      agregarFilaTarjeta(out, partido, mapa, nombre, tipo, idJugador);
+    }
+  }
+
+  private static void agregarFilaTarjeta(
+    List<TarjetaPartido> out,
+    Partido partido,
+    Map<Long, Usuario> mapa,
+    Function<Usuario, String> nombre,
+    String tipoStr,
+    Long idJugador
+  ) {
+    if (idJugador == null) {
+      return;
+    }
+    Usuario amonestado = mapa.get(idJugador);
+    if (amonestado == null) {
+      return;
+    }
+    TarjetaPartido tarjeta = new TarjetaPartido();
+    tarjeta.setPartido(partido);
+    tarjeta.setUsuarioAmonestado(amonestado);
+    tarjeta.setJugador(nombre.apply(amonestado));
+    tarjeta.setTipo(parsearTipo(tipoStr));
+    out.add(tarjeta);
+  }
+
+  private static TipoTarjeta parsearTipo(String tipo) {
+    return TipoTarjeta.ROJA.name().equalsIgnoreCase(tipo) ? TipoTarjeta.ROJA : TipoTarjeta.AMARILLA;
+  }
+
+  private static Map<Long, Usuario> mapaPorId(Partido partido) {
+    Map<Long, Usuario> mapa = new HashMap<>();
+    for (Usuario u : partido.getEquipoA()) mapa.put(u.getId(), u);
+    for (Usuario u : partido.getEquipoB()) mapa.put(u.getId(), u);
+    return mapa;
+  }
+
+  private static Function<Usuario, String> nombreVisible() {
+    return u -> {
+      if (u == null) return null;
+      if (
+        u.getPerfil() != null &&
+        u.getPerfil().getNombreUsuario() != null &&
+        !u.getPerfil().getNombreUsuario().isBlank()
+      ) {
+        return u.getPerfil().getNombreUsuario();
+      }
+      return u.getEmail();
+    };
   }
 }

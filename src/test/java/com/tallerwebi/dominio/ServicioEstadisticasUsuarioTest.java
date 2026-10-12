@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.tallerwebi.dominio.enums.TipoTarjeta;
 import com.tallerwebi.dominio.implementacion.ServicioEstadisticasJugadorImpl;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,8 @@ public class ServicioEstadisticasUsuarioTest {
     RepositorioGolPartido repositorioGolPartido = mock(RepositorioGolPartido.class);
     ServicioEstadisticasJugador servicio = new ServicioEstadisticasJugadorImpl(
       repositorioPartido,
-      repositorioGolPartido
+      repositorioGolPartido,
+      mock(RepositorioTarjetaPartido.class)
     );
 
     Partido partidoJugado = new Partido();
@@ -46,7 +48,8 @@ public class ServicioEstadisticasUsuarioTest {
     RepositorioGolPartido repositorioGolPartido = mock(RepositorioGolPartido.class);
     ServicioEstadisticasJugador servicio = new ServicioEstadisticasJugadorImpl(
       repositorioPartido,
-      repositorioGolPartido
+      repositorioGolPartido,
+      mock(RepositorioTarjetaPartido.class)
     );
 
     Partido partidoEmpatado = new Partido();
@@ -67,7 +70,8 @@ public class ServicioEstadisticasUsuarioTest {
     RepositorioGolPartido repositorioGolPartido = mock(RepositorioGolPartido.class);
     ServicioEstadisticasJugador servicio = new ServicioEstadisticasJugadorImpl(
       repositorioPartido,
-      repositorioGolPartido
+      repositorioGolPartido,
+      mock(RepositorioTarjetaPartido.class)
     );
 
     Partido partidoPendiente = new Partido();
@@ -87,7 +91,8 @@ public class ServicioEstadisticasUsuarioTest {
     RepositorioGolPartido repositorioGolPartido = mock(RepositorioGolPartido.class);
     ServicioEstadisticasJugador servicio = new ServicioEstadisticasJugadorImpl(
       repositorioPartido,
-      repositorioGolPartido
+      repositorioGolPartido,
+      mock(RepositorioTarjetaPartido.class)
     );
 
     when(repositorioPartido.listarPartidosDe(usuario)).thenReturn(List.of());
@@ -105,7 +110,8 @@ public class ServicioEstadisticasUsuarioTest {
     RepositorioGolPartido repositorioGolPartido = mock(RepositorioGolPartido.class);
     ServicioEstadisticasJugador servicio = new ServicioEstadisticasJugadorImpl(
       repositorioPartido,
-      repositorioGolPartido
+      repositorioGolPartido,
+      mock(RepositorioTarjetaPartido.class)
     );
 
     Partido partidoEmpatado = new Partido();
@@ -128,7 +134,8 @@ public class ServicioEstadisticasUsuarioTest {
     RepositorioGolPartido repositorioGolPartido = mock(RepositorioGolPartido.class);
     ServicioEstadisticasJugador servicio = new ServicioEstadisticasJugadorImpl(
       repositorioPartido,
-      repositorioGolPartido
+      repositorioGolPartido,
+      mock(RepositorioTarjetaPartido.class)
     );
 
     Usuario usuario = new Usuario();
@@ -168,7 +175,8 @@ public class ServicioEstadisticasUsuarioTest {
     RepositorioGolPartido repositorioGolPartido = mock(RepositorioGolPartido.class);
     ServicioEstadisticasJugador servicio = new ServicioEstadisticasJugadorImpl(
       repositorioPartido,
-      repositorioGolPartido
+      repositorioGolPartido,
+      mock(RepositorioTarjetaPartido.class)
     );
 
     Usuario usuario = new Usuario();
@@ -204,7 +212,8 @@ public class ServicioEstadisticasUsuarioTest {
     RepositorioGolPartido repositorioGolPartido = mock(RepositorioGolPartido.class);
     ServicioEstadisticasJugador servicio = new ServicioEstadisticasJugadorImpl(
       repositorioPartido,
-      repositorioGolPartido
+      repositorioGolPartido,
+      mock(RepositorioTarjetaPartido.class)
     );
 
     Usuario usuario = new Usuario();
@@ -240,7 +249,8 @@ public class ServicioEstadisticasUsuarioTest {
     RepositorioGolPartido repositorioGolPartido = mock(RepositorioGolPartido.class);
     ServicioEstadisticasJugador servicio = new ServicioEstadisticasJugadorImpl(
       repositorioPartido,
-      repositorioGolPartido
+      repositorioGolPartido,
+      mock(RepositorioTarjetaPartido.class)
     );
 
     Usuario usuario = new Usuario();
@@ -281,7 +291,8 @@ public class ServicioEstadisticasUsuarioTest {
     RepositorioGolPartido repositorioGolPartido = mock(RepositorioGolPartido.class);
     ServicioEstadisticasJugador servicio = new ServicioEstadisticasJugadorImpl(
       repositorioPartido,
-      repositorioGolPartido
+      repositorioGolPartido,
+      mock(RepositorioTarjetaPartido.class)
     );
 
     Usuario usuario = new Usuario();
@@ -339,7 +350,8 @@ public class ServicioEstadisticasUsuarioTest {
     RepositorioGolPartido repositorioGolPartido = mock(RepositorioGolPartido.class);
     ServicioEstadisticasJugador servicio = new ServicioEstadisticasJugadorImpl(
       repositorioPartido,
-      repositorioGolPartido
+      repositorioGolPartido,
+      mock(RepositorioTarjetaPartido.class)
     );
 
     Usuario usuario = new Usuario();
@@ -374,5 +386,51 @@ public class ServicioEstadisticasUsuarioTest {
     assertEquals(2, estadisticas.getPartidosGanados().intValue());
     assertEquals(1, estadisticas.getPartidosEmpatados().intValue());
     assertEquals(0, estadisticas.getPartidosPerdidos().intValue());
+  }
+
+  @Test
+  public void seDebenContarLasTarjetasAmarillasYRojasDelUsuario() {
+    RepositorioPartido repositorioPartido = mock(RepositorioPartido.class);
+    RepositorioGolPartido repositorioGolPartido = mock(RepositorioGolPartido.class);
+    RepositorioTarjetaPartido repositorioTarjetaPartido = mock(RepositorioTarjetaPartido.class);
+    ServicioEstadisticasJugador servicio = new ServicioEstadisticasJugadorImpl(
+      repositorioPartido,
+      repositorioGolPartido,
+      repositorioTarjetaPartido
+    );
+
+    Usuario usuario = new Usuario();
+    usuario.setId(1L);
+    Usuario usuario2 = new Usuario();
+    usuario2.setId(2L);
+
+    Partido partido = new Partido();
+    partido.setId(10L);
+    partido.registrarResultado(2, 1);
+
+    TarjetaPartido amarilla = new TarjetaPartido();
+    amarilla.setPartido(partido);
+    amarilla.setUsuarioAmonestado(usuario);
+    amarilla.setTipo(TipoTarjeta.AMARILLA);
+
+    TarjetaPartido roja = new TarjetaPartido();
+    roja.setPartido(partido);
+    roja.setUsuarioAmonestado(usuario);
+    roja.setTipo(TipoTarjeta.ROJA);
+
+    TarjetaPartido deOtro = new TarjetaPartido();
+    deOtro.setPartido(partido);
+    deOtro.setUsuarioAmonestado(usuario2);
+    deOtro.setTipo(TipoTarjeta.AMARILLA);
+
+    when(repositorioPartido.listarPartidosDe(1L)).thenReturn(List.of(partido));
+    when(repositorioTarjetaPartido.listarTarjetasPorPartido(10L))
+      .thenReturn(List.of(amarilla, roja, deOtro));
+
+    EstadisticasJugador estadisticas = servicio.obtenerEstadisticasDelUsuario(1L);
+
+    assertEquals(1, estadisticas.getTarjetasAmarillas().intValue());
+    assertEquals(1, estadisticas.getTarjetasRojas().intValue());
+    verify(repositorioTarjetaPartido).listarTarjetasPorPartido(10L);
   }
 }

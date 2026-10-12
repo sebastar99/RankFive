@@ -2,6 +2,7 @@ package com.tallerwebi.dominio;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.tallerwebi.dominio.enums.TipoTarjeta;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -167,5 +168,116 @@ public class SoportePartidoTest {
     assertEquals(1, goles.size());
     assertSame(usuario1, goles.get(0).getUsuarioGoleador());
     assertNull(goles.get(0).getUsuarioAsistente());
+  }
+
+  @Test
+  public void construirTarjetasDeberiaCrearUnaTarjetaPorJugador() {
+    SoportePartido soporte = new SoportePartido();
+    Partido partido = new Partido();
+    Usuario usuario = u(1L, 1000);
+    usuario.getPerfil().setNombreUsuario("Seba");
+    partido.getEquipoA().add(usuario);
+
+    List<TarjetaPartido> tarjetas = soporte.construirTarjetas(
+      partido,
+      List.of("AMARILLA"), // tiposTarjetasA
+      List.of(1L), // tarjetasAIds
+      List.of(), // tiposTarjetasB
+      List.of() // tarjetasBIds
+    );
+
+    assertEquals(1, tarjetas.size());
+    assertSame(usuario, tarjetas.get(0).getUsuarioAmonestado());
+    assertEquals("Seba", tarjetas.get(0).getJugador());
+    assertEquals(TipoTarjeta.AMARILLA, tarjetas.get(0).getTipo());
+  }
+
+  @Test
+  public void construirTarjetasDeberiaAsignarElTipoCorrecto() {
+    SoportePartido soporte = new SoportePartido();
+    Partido partido = new Partido();
+    Usuario usuario = u(1L, 1000);
+    usuario.getPerfil().setNombreUsuario("Seba");
+    partido.getEquipoA().add(usuario);
+    Usuario usuarioB = u(2L, 1000);
+    usuarioB.getPerfil().setNombreUsuario("Otro");
+    partido.getEquipoB().add(usuarioB);
+
+    List<TarjetaPartido> tarjetas = soporte.construirTarjetas(
+      partido,
+      List.of("ROJA"), // tiposTarjetasA
+      List.of(1L), // tarjetasAIds
+      List.of("AMARILLA"), // tiposTarjetasB
+      List.of(2L) // tarjetasBIds
+    );
+
+    assertEquals(2, tarjetas.size());
+    assertSame(usuario, tarjetas.get(0).getUsuarioAmonestado());
+    assertEquals("Seba", tarjetas.get(0).getJugador());
+    assertEquals(TipoTarjeta.ROJA, tarjetas.get(0).getTipo());
+    assertEquals(TipoTarjeta.AMARILLA, tarjetas.get(1).getTipo());
+  }
+
+  @Test
+  public void construirTarjetasDeberiaIgnorarJugadoresQueNoSonDelPartido() {
+    SoportePartido soporte = new SoportePartido();
+    Partido partido = new Partido();
+    Usuario usuario = u(1L, 1000);
+    usuario.getPerfil().setNombreUsuario("Seba");
+    partido.getEquipoA().add(usuario);
+    Usuario usuarioB = u(2L, 1000);
+    usuarioB.getPerfil().setNombreUsuario("Otro");
+    partido.getEquipoB().add(usuarioB);
+
+    List<TarjetaPartido> tarjetas = soporte.construirTarjetas(
+      partido,
+      List.of("ROJA"), // tiposTarjetasA
+      List.of(1L), // tarjetasAIds
+      List.of("AMARILLA"), // tiposTarjetasB
+      List.of(3L) // tarjetasBIds
+    );
+
+    assertEquals(1, tarjetas.size());
+    assertSame(usuario, tarjetas.get(0).getUsuarioAmonestado());
+    assertEquals("Seba", tarjetas.get(0).getJugador());
+    assertEquals(TipoTarjeta.ROJA, tarjetas.get(0).getTipo());
+  }
+
+  @Test
+  public void construirTarjetasDeberiaIgnorarFilasSinJugador() {
+    Partido partido = new Partido();
+    SoportePartido soporte = new SoportePartido();
+
+    List<TarjetaPartido> tarjetas = soporte.construirTarjetas(
+      partido,
+      List.of("ROJA"), // tiposTarjetasA
+      List.of(), // tarjetasAIds
+      List.of("AMARILLA"), // tiposTarjetasB
+      List.of() // tarjetasBIds
+    );
+
+    assertEquals(0, tarjetas.size());
+  }
+
+  @Test
+  public void construirTarjetasDeberiaFuncionarParaAmbosEquipos() {
+    SoportePartido soporte = new SoportePartido();
+    Partido partido = new Partido();
+    Usuario usuarioA = u(1L, 1000);
+    usuarioA.getPerfil().setNombreUsuario("Seba");
+    partido.getEquipoA().add(usuarioA);
+    Usuario usuarioB = u(2L, 1000);
+    usuarioB.getPerfil().setNombreUsuario("Otro");
+    partido.getEquipoB().add(usuarioB);
+
+    List<TarjetaPartido> tarjetas = soporte.construirTarjetas(
+      partido,
+      List.of("ROJA"), // tiposTarjetasA
+      List.of(1L), // tarjetasAIds
+      List.of("AMARILLA"), // tiposTarjetasB
+      List.of(2L) // tarjetasBIds
+    );
+
+    assertEquals(2, tarjetas.size());
   }
 }
