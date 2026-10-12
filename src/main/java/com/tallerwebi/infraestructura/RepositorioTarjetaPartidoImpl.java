@@ -2,11 +2,10 @@ package com.tallerwebi.infraestructura;
 
 import com.tallerwebi.dominio.RepositorioTarjetaPartido;
 import com.tallerwebi.dominio.TarjetaPartido;
+import java.util.List;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository("repositorioTarjetaPartido")
 public class RepositorioTarjetaPartidoImpl implements RepositorioTarjetaPartido {

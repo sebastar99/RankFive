@@ -5,7 +5,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -316,5 +318,56 @@ public class ServicioPartidoTest {
     List<Partido> partidos = servicioPartido.listarPartidosDe(usuario);
 
     assertThat(partidos, equalTo(List.of(partido)));
+  }
+
+  @Test
+  public void registrarTarjetasDeberiaBorrarLasAnterioresYGuardarLasNuevas() {
+    Usuario usuario = usuarioConPl(1L, 1000);
+    Partido partido = partidoConEquipos(5L, List.of(usuario), List.of(usuarioConPl(2L, 1000)));
+    when(repositorioPartidoMock.buscarPorId(5L)).thenReturn(partido);
+
+    RepositorioTarjetaPartido repoTarjetas = mock(RepositorioTarjetaPartido.class);
+    ServicioPartidoImpl servicio = new ServicioPartidoImpl(
+      repositorioPartidoMock,
+      repositorioUsuarioMock,
+      repositorioNotificacionPlMock,
+      mock(RepositorioNotificacionPartido.class),
+      mock(RepositorioGolPartido.class),
+      repoTarjetas,
+      new SoportePartido()
+    );
+
+    boolean ok = servicio.registrarTarjetas(
+      5L,
+      List.of("AMARILLA"), // tipos A
+      List.of(1L), // tarjetasAIds
+      List.of(), // tipos B
+      List.of() // tarjetasBIds
+    );
+
+    assertThat(ok, is(true));
+    verify(repoTarjetas).borrarPorPartido(5L);
+    verify(repoTarjetas, times(1)).guardar(any(TarjetaPartido.class));
+  }
+
+  @Test
+  public void registrarTarjetasConPartidoInexistenteDeberiaRetornarFalse() {
+    when(repositorioPartidoMock.buscarPorId(99L)).thenReturn(null);
+    RepositorioTarjetaPartido repoTarjetas = mock(RepositorioTarjetaPartido.class);
+    ServicioPartidoImpl servicio = new ServicioPartidoImpl(
+      repositorioPartidoMock,
+      repositorioUsuarioMock,
+      repositorioNotificacionPlMock,
+      mock(RepositorioNotificacionPartido.class),
+      mock(RepositorioGolPartido.class),
+      repoTarjetas,
+      new SoportePartido()
+    );
+
+    boolean ok = servicio.registrarTarjetas(99L, List.of(), List.of(), List.of(), List.of());
+
+    assertThat(ok, is(false));
+    verify(repoTarjetas, never()).borrarPorPartido(anyLong());
+    verify(repoTarjetas, never()).guardar(any(TarjetaPartido.class));
   }
 }

@@ -5,8 +5,11 @@ import com.tallerwebi.dominio.GolPartido;
 import com.tallerwebi.dominio.Partido;
 import com.tallerwebi.dominio.RepositorioGolPartido;
 import com.tallerwebi.dominio.RepositorioPartido;
+import com.tallerwebi.dominio.RepositorioTarjetaPartido;
 import com.tallerwebi.dominio.ServicioEstadisticasJugador;
+import com.tallerwebi.dominio.TarjetaPartido;
 import com.tallerwebi.dominio.Usuario;
+import com.tallerwebi.dominio.enums.TipoTarjeta;
 import java.util.List;
 import java.util.Set;
 import org.springframework.stereotype.Service;
@@ -18,13 +21,16 @@ public class ServicioEstadisticasJugadorImpl implements ServicioEstadisticasJuga
 
   private final RepositorioPartido repositorioPartido;
   private final RepositorioGolPartido repositorioGolPartido;
+  private final RepositorioTarjetaPartido repositorioTarjetaPartido;
 
   public ServicioEstadisticasJugadorImpl(
     RepositorioPartido repositorioPartido,
-    RepositorioGolPartido repositorioGolPartido
+    RepositorioGolPartido repositorioGolPartido,
+    RepositorioTarjetaPartido repositorioTarjetaPartido
   ) {
     this.repositorioPartido = repositorioPartido;
     this.repositorioGolPartido = repositorioGolPartido;
+    this.repositorioTarjetaPartido = repositorioTarjetaPartido;
   }
 
   @Override
@@ -33,6 +39,8 @@ public class ServicioEstadisticasJugadorImpl implements ServicioEstadisticasJuga
     int partidosJugados = 0;
     int golesDelUsuario = 0;
     int asistenciasDelUsuario = 0;
+    int tarjetasAmarillas = 0;
+    int tarjetasRojas = 0;
     int partidosGanados = 0;
     int partidosPerdidos = 0;
     int partidosEmpatados = 0;
@@ -41,16 +49,12 @@ public class ServicioEstadisticasJugadorImpl implements ServicioEstadisticasJuga
       if (partido.fueJugado()) {
         partidosJugados++;
         List<GolPartido> golesDelPartido = repositorioGolPartido.listarPorPartido(partido.getId());
-        for (GolPartido gol : golesDelPartido) {
-          Usuario goleador = gol.getUsuarioGoleador();
-          if (goleador != null && goleador.getId().equals(usuarioId)) {
-            golesDelUsuario++;
-          }
-          Usuario asistente = gol.getUsuarioAsistente();
-          if (asistente != null && asistente.getId().equals(usuarioId)) {
-            asistenciasDelUsuario++;
-          }
-        }
+        golesDelUsuario += contarGolesDe(golesDelPartido, usuarioId);
+        asistenciasDelUsuario += contarAsistenciasDe(golesDelPartido, usuarioId);
+        List<TarjetaPartido> tarjetasDelPartido =
+          repositorioTarjetaPartido.listarTarjetasPorPartido(partido.getId());
+        tarjetasAmarillas += contarTarjetasDe(tarjetasDelPartido, usuarioId, TipoTarjeta.AMARILLA);
+        tarjetasRojas += contarTarjetasDe(tarjetasDelPartido, usuarioId, TipoTarjeta.ROJA);
       }
     }
 
@@ -64,7 +68,42 @@ public class ServicioEstadisticasJugadorImpl implements ServicioEstadisticasJuga
     estadisticas.setPartidosGanados(partidosGanados);
     estadisticas.setPartidosPerdidos(partidosPerdidos);
     estadisticas.setPartidosEmpatados(partidosEmpatados);
+    estadisticas.setTarjetasAmarillas(tarjetasAmarillas);
+    estadisticas.setTarjetasRojas(tarjetasRojas);
     return estadisticas;
+  }
+
+  private int contarGolesDe(List<GolPartido> goles, Long usuarioId) {
+    int total = 0;
+    for (GolPartido gol : goles) {
+      Usuario goleador = gol.getUsuarioGoleador();
+      if (goleador != null && goleador.getId().equals(usuarioId)) {
+        total++;
+      }
+    }
+    return total;
+  }
+
+  private int contarAsistenciasDe(List<GolPartido> goles, Long usuarioId) {
+    int total = 0;
+    for (GolPartido gol : goles) {
+      Usuario asistente = gol.getUsuarioAsistente();
+      if (asistente != null && asistente.getId().equals(usuarioId)) {
+        total++;
+      }
+    }
+    return total;
+  }
+
+  private int contarTarjetasDe(List<TarjetaPartido> tarjetas, Long usuarioId, TipoTarjeta tipo) {
+    int total = 0;
+    for (TarjetaPartido tarjeta : tarjetas) {
+      Usuario amonestado = tarjeta.getUsuarioAmonestado();
+      if (amonestado != null && amonestado.getId().equals(usuarioId) && tarjeta.getTipo() == tipo) {
+        total++;
+      }
+    }
+    return total;
   }
 
   private boolean perteneceAEquipo(Set<Usuario> equipo, Long usuarioId) {

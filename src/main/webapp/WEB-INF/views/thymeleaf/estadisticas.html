@@ -253,35 +253,30 @@
       <div class="stats-panel-heading">
         <div>
           <h2 id="stats-discipline-title" class="stats-panel-title"><i class="bi bi-shield-check" aria-hidden="true"></i> Disciplina</h2>
-          <p class="stats-panel-subtitle">Tarjetas amarillas y rojas.</p>
+          <p class="stats-panel-subtitle">Tarjetas amarillas y rojas recibidas.</p>
         </div>
-        <span class="stats-pending"><i class="bi bi-clock" aria-hidden="true"></i> Próximamente</span>
       </div>
       <div class="stats-table-wrap" role="region" aria-label="Tabla de tarjetas" tabindex="0">
-        <table class="stats-table" aria-describedby="stats-discipline-note">
-          <caption class="visually-hidden">Registro de tarjetas del jugador, todavía no disponible.</caption>
+        <table class="stats-table">
+          <caption class="visually-hidden">Registro de tarjetas del jugador.</caption>
           <thead>
             <tr>
               <th scope="col">Tipo de tarjeta</th>
               <th scope="col">Total</th>
-              <th scope="col">Estado</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <th scope="row"><span class="stats-card-type"><span class="stats-card-symbol" aria-hidden="true"></span>Amarillas</span></th>
-              <td><span class="stats-unavailable">Sin datos</span></td>
-              <td>Registro pendiente</td>
+              <td th:text="${estadisticas.tarjetasAmarillas}">0</td>
             </tr>
             <tr>
               <th scope="row"><span class="stats-card-type"><span class="stats-card-symbol stats-card-symbol-red" aria-hidden="true"></span>Rojas</span></th>
-              <td><span class="stats-unavailable">Sin datos</span></td>
-              <td>Registro pendiente</td>
+              <td th:text="${estadisticas.tarjetasRojas}">0</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <p id="stats-discipline-note" class="stats-disclaimer"><i class="bi bi-info-circle" aria-hidden="true"></i>El registro de tarjetas todavía no está disponible. “Sin datos” no significa que no hayas recibido tarjetas.</p>
     </section>
   </main>
 

@@ -236,6 +236,10 @@ public class ControladorPartidoTest {
       golesA,
       asistenciasA,
       golesB,
+      asistenciasB,
+      null,
+      asistenciasB,
+      null,
       asistenciasB
     );
 
@@ -255,7 +259,11 @@ public class ControladorPartidoTest {
       List.of(2L),
       List.of(),
       List.of(),
-      List.of()
+      List.of(),
+      null,
+      null,
+      null,
+      null
     );
 
     verify(servicioPartidoMock, never())
@@ -275,10 +283,93 @@ public class ControladorPartidoTest {
       null,
       null,
       null,
+      null,
+      null,
+      null,
+      null,
       null
     );
 
     assertThat(modelAndView.getViewName(), startsWith("redirect:/partidos"));
     verify(servicioPartidoMock).registrarDetalles(1L, null, null, null, null);
+  }
+
+  @Test
+  public void registrarResultadoConTarjetasDeberiaGuardarLasTarjetas() {
+    conSesionActiva();
+    when(servicioPartidoMock.registrarResultado(1L, 2, 1)).thenReturn(true);
+    when(servicioPartidoMock.registrarDetalles(eq(1L), any(), any(), any(), any()))
+      .thenReturn(true);
+    List<String> tiposA = List.of("AMARILLA");
+    List<Long> tarjetasA = List.of(1L);
+    List<String> tiposB = List.of("ROJA");
+    List<Long> tarjetasB = List.of(2L);
+
+    controladorPartido.registrarResultado(
+      requestMock,
+      1L,
+      2,
+      1,
+      null,
+      null,
+      null,
+      null, // goles/asistencias como ya están
+      tiposA,
+      tarjetasA,
+      tiposB,
+      tarjetasB
+    );
+
+    verify(servicioPartidoMock).registrarTarjetas(1L, tiposA, tarjetasA, tiposB, tarjetasB);
+  }
+
+  @Test
+  public void registrarResultadoFallidoNoDeberiaGuardarTarjetas() {
+    conSesionActiva();
+    when(servicioPartidoMock.registrarResultado(1L, 2, 1)).thenReturn(false);
+
+    controladorPartido.registrarResultado(
+      requestMock,
+      1L,
+      2,
+      1,
+      null,
+      null,
+      null,
+      null,
+      List.of("AMARILLA"),
+      List.of(1L),
+      List.of(),
+      List.of()
+    );
+
+    verify(servicioPartidoMock, never())
+      .registrarTarjetas(anyLong(), anyList(), anyList(), anyList(), anyList());
+  }
+
+  @Test
+  public void registrarDetallesConTarjetasDeberiaGuardarLasTarjetas() {
+    conSesionActiva();
+    when(servicioPartidoMock.registrarDetalles(eq(1L), anyList(), anyList(), anyList(), anyList()))
+      .thenReturn(true);
+    List<String> tiposA = List.of("AMARILLA");
+    List<Long> tarjetasA = List.of(1L);
+    List<String> tiposB = List.of("ROJA");
+    List<Long> tarjetasB = List.of(2L);
+
+    controladorPartido.registrarDetalles(
+      requestMock,
+      1L,
+      List.of(),
+      List.of(),
+      List.of(),
+      List.of(),
+      tiposA,
+      tarjetasA,
+      tiposB,
+      tarjetasB
+    );
+
+    verify(servicioPartidoMock).registrarTarjetas(1L, tiposA, tarjetasA, tiposB, tarjetasB);
   }
 }

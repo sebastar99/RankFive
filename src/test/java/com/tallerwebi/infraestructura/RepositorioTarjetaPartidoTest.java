@@ -1,16 +1,6 @@
 package com.tallerwebi.infraestructura;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.List;
-import org.hibernate.SessionFactory;
 
 import com.tallerwebi.dominio.Partido;
 import com.tallerwebi.dominio.RepositorioTarjetaPartido;
@@ -18,7 +8,14 @@ import com.tallerwebi.dominio.TarjetaPartido;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.enums.TipoTarjeta;
 import com.tallerwebi.infraestructura.config.HibernateInfraestructuraTestConfig;
-
+import java.util.List;
+import org.hibernate.SessionFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 @ExtendWith(SpringExtension.class)
@@ -56,17 +53,16 @@ public class RepositorioTarjetaPartidoTest {
     return sessionFactory.getCurrentSession();
   }
 
-
-    @Test
-    @Transactional 
-    public void deberiaGuardarUnaTarjetaAmarilla() {
+  @Test
+  @Transactional
+  public void deberiaGuardarUnaTarjetaAmarilla() {
     Usuario amonestado = guardarUsuario("amonestado@test.com");
     Partido partido = guardarPartido(amonestado);
 
     TarjetaPartido tarjeta = new TarjetaPartido();
     tarjeta.setPartido(partido);
     tarjeta.setUsuarioAmonestado(amonestado);
-    tarjeta.setJugador("amonestado@test.com");  
+    tarjeta.setJugador("amonestado@test.com");
     tarjeta.setTipo(TipoTarjeta.AMARILLA);
 
     repositorio.guardar(tarjeta);
@@ -84,8 +80,8 @@ public class RepositorioTarjetaPartidoTest {
     assertEquals(TipoTarjeta.AMARILLA, recuperada.getTipo());
   }
 
-  @Test 
-  @Transactional 
+  @Test
+  @Transactional
   public void deberiaGuardarUnaTarjetaRoja() {
     Usuario amonestado = guardarUsuario("amonestado@test.com");
     Partido partido = guardarPartido(amonestado);
@@ -93,7 +89,7 @@ public class RepositorioTarjetaPartidoTest {
     TarjetaPartido tarjeta = new TarjetaPartido();
     tarjeta.setPartido(partido);
     tarjeta.setUsuarioAmonestado(amonestado);
-    tarjeta.setJugador("amonestado@test.com");  
+    tarjeta.setJugador("amonestado@test.com");
     tarjeta.setTipo(TipoTarjeta.ROJA);
 
     repositorio.guardar(tarjeta);
@@ -110,9 +106,9 @@ public class RepositorioTarjetaPartidoTest {
     assertEquals(amonestado.getId(), recuperada.getUsuarioAmonestado().getId());
     assertEquals(TipoTarjeta.ROJA, recuperada.getTipo());
   }
-    
-  @Test 
-  @Transactional 
+
+  @Test
+  @Transactional
   public void deberiaBorrarLasTarjetasDeUnPartido() {
     Usuario amonestado = guardarUsuario("amonestado@test.com");
     Partido partido = guardarPartido(amonestado);
@@ -120,7 +116,7 @@ public class RepositorioTarjetaPartidoTest {
     TarjetaPartido tarjeta = new TarjetaPartido();
     tarjeta.setPartido(partido);
     tarjeta.setUsuarioAmonestado(amonestado);
-    tarjeta.setJugador("amonestado@test.com");  
+    tarjeta.setJugador("amonestado@test.com");
     tarjeta.setTipo(TipoTarjeta.ROJA);
 
     repositorio.guardar(tarjeta);
@@ -138,9 +134,9 @@ public class RepositorioTarjetaPartidoTest {
     List<TarjetaPartido> tarjetas = repositorio.listarTarjetasPorPartido(partido.getId());
     assertEquals(0, tarjetas.size());
   }
-    
-  @Test 
-  @Transactional 
+
+  @Test
+  @Transactional
   public void deberiaBorrarLasTarjetasDeUnPartidoYGuardarOtras() {
     Usuario amonestado = guardarUsuario("amonestado@test.com");
     Partido partido = guardarPartido(amonestado);
@@ -148,7 +144,7 @@ public class RepositorioTarjetaPartidoTest {
     TarjetaPartido tarjeta = new TarjetaPartido();
     tarjeta.setPartido(partido);
     tarjeta.setUsuarioAmonestado(amonestado);
-    tarjeta.setJugador("amonestado@test.com");  
+    tarjeta.setJugador("amonestado@test.com");
     tarjeta.setTipo(TipoTarjeta.ROJA);
 
     repositorio.guardar(tarjeta);
@@ -165,12 +161,12 @@ public class RepositorioTarjetaPartidoTest {
     // Verificación
     List<TarjetaPartido> tarjetas = repositorio.listarTarjetasPorPartido(partido.getId());
     assertEquals(0, tarjetas.size());
-    
+
     // Acción
     TarjetaPartido tarjeta2 = new TarjetaPartido();
     tarjeta2.setPartido(partido);
     tarjeta2.setUsuarioAmonestado(amonestado);
-    tarjeta2.setJugador("amonestado@test.com");  
+    tarjeta2.setJugador("amonestado@test.com");
     tarjeta2.setTipo(TipoTarjeta.AMARILLA);
 
     repositorio.guardar(tarjeta2);
@@ -186,55 +182,8 @@ public class RepositorioTarjetaPartidoTest {
     assertEquals(TipoTarjeta.AMARILLA, recuperada2.getTipo());
   }
 
-  @Test 
-  @Transactional 
-  public void deberiaBorrarLasTarjetasDeUnPartidoYGuardarOtrasConDistintoTipo() {
-    Usuario amonestado = guardarUsuario("amonestado@test.com");
-    Partido partido = guardarPartido(amonestado);
-
-    TarjetaPartido tarjeta = new TarjetaPartido();
-    tarjeta.setPartido(partido);
-    tarjeta.setUsuarioAmonestado(amonestado);
-    tarjeta.setJugador("amonestado@test.com");  
-    tarjeta.setTipo(TipoTarjeta.ROJA);
-
-    repositorio.guardar(tarjeta);
-
-    sesion().flush();
-    sesion().clear();
-
-    // Acción
-    repositorio.borrarPorPartido(partido.getId());
-
-    sesion().flush();
-    sesion().clear();
-
-    // Verificación
-    List<TarjetaPartido> tarjetas = repositorio.listarTarjetasPorPartido(partido.getId());
-    assertEquals(0, tarjetas.size());
-    
-    // Acción
-    TarjetaPartido tarjeta2 = new TarjetaPartido();
-    tarjeta2.setPartido(partido);
-    tarjeta2.setUsuarioAmonestado(amonestado);
-    tarjeta2.setJugador("amonestado@test.com");  
-    tarjeta2.setTipo(TipoTarjeta.AMARILLA);
-
-    repositorio.guardar(tarjeta2);
-
-    sesion().flush();
-    sesion().clear();
-
-    // Verificación
-    List<TarjetaPartido> tarjetas2 = repositorio.listarTarjetasPorPartido(partido.getId());
-    assertEquals(1, tarjetas2.size());
-    TarjetaPartido recuperada2 = tarjetas2.get(0);
-    assertEquals(amonestado.getId(), recuperada2.getUsuarioAmonestado().getId());
-    assertEquals(TipoTarjeta.AMARILLA, recuperada2.getTipo());
-  }
-
-  @Test 
-  @Transactional 
+  @Test
+  @Transactional
   public void deberiaBorrarLasTarjetasDeUnPartidoYGuardarOtrasConDistintoJugador() {
     Usuario amonestado = guardarUsuario("amonestado@test.com");
     Usuario amonestado2 = guardarUsuario("amonestado2@test.com");
@@ -243,7 +192,7 @@ public class RepositorioTarjetaPartidoTest {
     TarjetaPartido tarjeta = new TarjetaPartido();
     tarjeta.setPartido(partido);
     tarjeta.setUsuarioAmonestado(amonestado);
-    tarjeta.setJugador("amonestado@test.com");  
+    tarjeta.setJugador("amonestado@test.com");
     tarjeta.setTipo(TipoTarjeta.ROJA);
 
     repositorio.guardar(tarjeta);
@@ -260,12 +209,12 @@ public class RepositorioTarjetaPartidoTest {
     // Verificación
     List<TarjetaPartido> tarjetas = repositorio.listarTarjetasPorPartido(partido.getId());
     assertEquals(0, tarjetas.size());
-    
+
     // Acción
     TarjetaPartido tarjeta2 = new TarjetaPartido();
     tarjeta2.setPartido(partido);
     tarjeta2.setUsuarioAmonestado(amonestado2);
-    tarjeta2.setJugador("amonestado2@test.com");  
+    tarjeta2.setJugador("amonestado2@test.com");
     tarjeta2.setTipo(TipoTarjeta.AMARILLA);
 
     repositorio.guardar(tarjeta2);
@@ -281,8 +230,8 @@ public class RepositorioTarjetaPartidoTest {
     assertEquals(TipoTarjeta.AMARILLA, recuperada2.getTipo());
   }
 
-  @Test 
-  @Transactional 
+  @Test
+  @Transactional
   public void listarTarjetasPorPartidoDeberiaDevolverSoloLasTarjetasDeEsePartido() {
     Usuario amonestado = guardarUsuario("amonestado@test.com");
     Partido partido = guardarPartido(amonestado);
@@ -291,7 +240,7 @@ public class RepositorioTarjetaPartidoTest {
     TarjetaPartido tarjeta = new TarjetaPartido();
     tarjeta.setPartido(partido);
     tarjeta.setUsuarioAmonestado(amonestado);
-    tarjeta.setJugador("amonestado@test.com");  
+    tarjeta.setJugador("amonestado@test.com");
     tarjeta.setTipo(TipoTarjeta.ROJA);
 
     repositorio.guardar(tarjeta);
@@ -299,21 +248,21 @@ public class RepositorioTarjetaPartidoTest {
     TarjetaPartido tarjeta2 = new TarjetaPartido();
     tarjeta2.setPartido(partido2);
     tarjeta2.setUsuarioAmonestado(amonestado);
-    tarjeta2.setJugador("amonestado@test.com");  
+    tarjeta2.setJugador("amonestado@test.com");
     tarjeta2.setTipo(TipoTarjeta.AMARILLA);
 
     repositorio.guardar(tarjeta2);
 
     sesion().flush();
     sesion().clear();
-    
+
     // Verificación
     List<TarjetaPartido> tarjetas = repositorio.listarTarjetasPorPartido(partido.getId());
     assertEquals(1, tarjetas.size());
     TarjetaPartido recuperada = tarjetas.get(0);
     assertEquals(amonestado.getId(), recuperada.getUsuarioAmonestado().getId());
     assertEquals(TipoTarjeta.ROJA, recuperada.getTipo());
-    
+
     List<TarjetaPartido> tarjetas2 = repositorio.listarTarjetasPorPartido(partido2.getId());
     assertEquals(1, tarjetas2.size());
     TarjetaPartido recuperada2 = tarjetas2.get(0);
@@ -323,61 +272,73 @@ public class RepositorioTarjetaPartidoTest {
 
   @Test
   @Transactional
-  public void borrarPorPartidoNoDeberiaEliminarTarjetasDeOtrosPartidos () {
-    Usuario amonestado = guardarUsuario("amonestado@test.com");
-    Partido partido = guardarPartido(amonestado);
-    Partido partido2 = guardarPartido(amonestado);
-
-    TarjetaPartido tarjeta = new TarjetaPartido();
-    tarjeta.setPartido(partido);
-    tarjeta.setUsuarioAmonestado(amonestado);
-    tarjeta.setJugador("amonestado@test.com");  
-    tarjeta.setTipo(TipoTarjeta.ROJA);
-
-    repositorio.guardar(tarjeta);
-
-    TarjetaPartido tarjeta2 = new TarjetaPartido();
-    tarjeta2.setPartido(partido2);
-    tarjeta2.setUsuarioAmonestado(amonestado);
-    tarjeta2.setJugador("amonestado@test.com");  
-    tarjeta2.setTipo(TipoTarjeta.AMARILLA);
-
-    repositorio.guardar(tarjeta2);
-    repositorio.borrarPorPartido(partido.getId());
-    sesion().flush();
-    sesion().clear();
-        // Verificación
-    List<TarjetaPartido> tarjetas = repositorio.listarTarjetasPorPartido(partido.getId());
-    assertEquals(0, tarjetas.size());
-    
-    List<TarjetaPartido> tarjetas2 = repositorio.listarTarjetasPorPartido(partido2.getId());
-    assertEquals(1, tarjetas2.size());
-    TarjetaPartido recuperada2 = tarjetas2.get(0);
-    assertEquals(amonestado.getId(), recuperada2.getUsuarioAmonestado().getId());
-    assertEquals(TipoTarjeta.AMARILLA, recuperada2.getTipo());
-  }
-
-  @Test 
-  @Transactional 
-  public void deberiaGuardarElNombreDelJugador(){
+  public void deberiaGuardarElNombreDelJugador() {
     Usuario amonestado = guardarUsuario("amonestado@test.com");
     Partido partido = guardarPartido(amonestado);
 
     TarjetaPartido tarjeta = new TarjetaPartido();
     tarjeta.setPartido(partido);
     tarjeta.setUsuarioAmonestado(amonestado);
-    tarjeta.setJugador("amonestado@test.com");  
+    tarjeta.setJugador("amonestado@test.com");
     tarjeta.setTipo(TipoTarjeta.ROJA);
 
     repositorio.guardar(tarjeta);
 
     sesion().flush();
     sesion().clear();
-    
+
     // Verificación
     List<TarjetaPartido> tarjetas = repositorio.listarTarjetasPorPartido(partido.getId());
     assertEquals(1, tarjetas.size());
     TarjetaPartido recuperada = tarjetas.get(0);
     assertEquals("amonestado@test.com", recuperada.getJugador());
+  }
+
+  @Test
+  @Transactional
+  public void borrarPorPartidoNoDeberiaEliminarTarjetasDeOtrosPartidos() {
+    Usuario amonestado = guardarUsuario("amonestado@test.com");
+    Usuario amonestado2 = guardarUsuario("amonestado2@test.com");
+    Partido partido = guardarPartido(amonestado);
+    Partido partido2 = guardarPartido(amonestado2);
+
+    TarjetaPartido tarjeta = new TarjetaPartido();
+    tarjeta.setPartido(partido);
+    tarjeta.setUsuarioAmonestado(amonestado);
+    tarjeta.setJugador("amonestado@test.com");
+    tarjeta.setTipo(TipoTarjeta.ROJA);
+    repositorio.guardar(tarjeta);
+
+    TarjetaPartido tarjeta2 = new TarjetaPartido();
+    tarjeta2.setPartido(partido2);
+    tarjeta2.setUsuarioAmonestado(amonestado2);
+    tarjeta2.setJugador("amonestado2@test.com");
+    tarjeta2.setTipo(TipoTarjeta.AMARILLA);
+    repositorio.guardar(tarjeta2);
+    sesion().flush();
+    sesion().clear();
+
+    repositorio.borrarPorPartido(partido.getId());
+
+    sesion().flush();
+    sesion().clear();
+
+    List<TarjetaPartido> tarjetas = repositorio.listarTarjetasPorPartido(partido.getId());
+    assertEquals(0, tarjetas.size());
+
+    List<TarjetaPartido> tarjetas2 = repositorio.listarTarjetasPorPartido(partido2.getId());
+    assertEquals(1, tarjetas2.size());
+    TarjetaPartido recuperada2 = tarjetas2.get(0);
+    assertEquals(amonestado2.getId(), recuperada2.getUsuarioAmonestado().getId());
+    assertEquals(TipoTarjeta.AMARILLA, recuperada2.getTipo());
+  }
+
+  @Test
+  @Transactional
+  public void deberiaDevolverUnaListaVaciaCuandoNoHayTarjetas() {
+    Partido partido = new Partido();
+    partido.setId(1L);
+    List<TarjetaPartido> tarjetas = repositorio.listarTarjetasPorPartido(partido.getId());
+    assertEquals(0, tarjetas.size());
   }
 }
