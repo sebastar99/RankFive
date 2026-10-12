@@ -33,6 +33,12 @@ public class EstadisticasJugador {
   @Column(columnDefinition = ENTERO_EN_CERO)
   private Integer partidosPerdidos = 0;
 
+  @Column(columnDefinition = ENTERO_EN_CERO)
+  private Integer tarjetasAmarillas = 0;
+
+  @Column(columnDefinition = ENTERO_EN_CERO)
+  private Integer tarjetasRojas = 0;
+
   public double getPromedioGolesPorPartido() {
     if (partidosJugados == 0) {
       return 0.0;
