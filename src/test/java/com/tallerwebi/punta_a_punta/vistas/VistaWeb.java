@@ -28,7 +28,7 @@ public class VistaWeb {
   }
 
   protected void escribirEnElElemento(String selectorCSS, String texto) {
-    this.obtenerElemento(selectorCSS).fill(texto);
+    this.obtenerElemento(selectorCSS).pressSequentially(texto);
   }
 
   private Locator obtenerElemento(String selectorCSS) {

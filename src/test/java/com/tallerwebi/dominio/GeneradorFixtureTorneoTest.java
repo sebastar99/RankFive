@@ -79,6 +79,85 @@ public class GeneradorFixtureTorneoTest {
     assertThat(GeneradorFixtureTorneo.nombreEliminatoria(8), equalTo("Cuartos de final"));
   }
 
+  @Test
+  public void nombreEliminatoriaRetornaNombreCorrecto() {
+    assertThat(GeneradorFixtureTorneo.nombreEliminatoria(32), equalTo("Dieciseisavos de final"));
+    assertThat(GeneradorFixtureTorneo.nombreEliminatoria(16), equalTo("Octavos de final"));
+    assertThat(GeneradorFixtureTorneo.nombreEliminatoria(8), equalTo("Cuartos de final"));
+    assertThat(GeneradorFixtureTorneo.nombreEliminatoria(4), equalTo("Semifinal"));
+    assertThat(GeneradorFixtureTorneo.nombreEliminatoria(2), equalTo("Final"));
+  }
+
+  @Test
+  public void campeonRetornaNullCuandoNoHayCampeon() {
+    List<InscripcionTorneo> equipos = equipos(4);
+    FaseTorneo semis = GeneradorFixtureTorneo.crearSiguienteEliminatoria(fase(0), equipos);
+    assertThat(GeneradorFixtureTorneo.campeon(List.of(semis)), nullValue());
+  }
+
+  @Test
+  public void unaFaseSinEncuentrosNoEstaCompleta() {
+    assertThat(GeneradorFixtureTorneo.estaCompleta(fase(1)), is(false));
+  }
+
+  @Test
+  public void sinFasesNoHayCampeon() {
+    assertThat(GeneradorFixtureTorneo.campeon(List.of()), nullValue());
+  }
+
+  @Test
+  public void siLaUltimaFaseEsDeGruposNoHayCampeon() {
+    FaseTorneo grupos = new FaseTorneo();
+    grupos.setTipo(FaseTorneo.TIPO_GRUPOS);
+    assertThat(GeneradorFixtureTorneo.campeon(List.of(grupos)), nullValue());
+  }
+
+  @Test
+  public void siUnEncuentroJugadoNoTieneGanadorNoHayGanadores() {
+    List<InscripcionTorneo> equipos = equipos(2);
+    FaseTorneo fase = GeneradorFixtureTorneo.crearSiguienteEliminatoria(fase(0), equipos);
+    EncuentroTorneo e = fase.getEncuentros().get(0);
+    e.setEstado(GeneradorFixtureTorneo.JUGADO);
+    assertThat(GeneradorFixtureTorneo.ganadoresSiCompleta(fase).isEmpty(), is(true));
+  }
+
+  @Test
+  public void cuandoTodosLosGruposEstanLlenosDevuelveElMenosCargado() {
+    List<InscripcionTorneo> equipos = equipos(33);
+    GeneradorFixtureTorneo.crearFaseDeGrupos(new Torneo(), equipos);
+    assertThat(GeneradorFixtureTorneo.grupoDisponible(equipos), equalTo("B"));
+  }
+
+  @Test
+  public void unaInscripcionConGrupoYaAsignadoLoConserva() {
+    List<InscripcionTorneo> equipos = equipos(4);
+    equipos.get(0).setGrupo("H");
+    GeneradorFixtureTorneo.crearFaseDeGrupos(new Torneo(), equipos);
+    assertThat(equipos.get(0).getGrupo(), equalTo("H"));
+  }
+
+  @Test
+  public void siElPrimerClasificadoEsNullElSegundoQuedaLibre() {
+    List<InscripcionTorneo> participantes = new ArrayList<>();
+    participantes.add(null);
+    participantes.add(equipos(1).get(0));
+    FaseTorneo fase = GeneradorFixtureTorneo.crearSiguienteEliminatoria(fase(0), participantes);
+    EncuentroTorneo e = fase.getEncuentros().get(0);
+    assertThat(e.getEstado(), equalTo(GeneradorFixtureTorneo.BYE));
+    assertThat(e.getParticipanteA(), equalTo(participantes.get(1)));
+  }
+
+  @Test
+  public void conGruposImparesElUltimoGrupoCruzaSusDosPrimeros() {
+    List<InscripcionTorneo> equipos = equipos(12);
+    FaseTorneo grupos = GeneradorFixtureTorneo.crearFaseDeGrupos(new Torneo(), equipos);
+    grupos.setNumero(1);
+    jugarTodos(grupos);
+    FaseTorneo siguiente = GeneradorFixtureTorneo.crearPrimeraEliminatoria(grupos, equipos);
+    assertThat(siguiente.getEncuentros(), hasSize(3));
+    assertThat(siguiente.getNombre(), equalTo("Cuartos de final"));
+  }
+
   private static void jugarTodos(FaseTorneo fase) {
     for (EncuentroTorneo e : fase.getEncuentros()) {
       if (GeneradorFixtureTorneo.PENDIENTE.equals(e.getEstado())) {
