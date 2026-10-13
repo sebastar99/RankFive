@@ -11,6 +11,8 @@ import com.tallerwebi.dominio.EncuentroTorneo;
 import com.tallerwebi.dominio.EstadisticasJugador;
 import com.tallerwebi.dominio.FaseTorneo;
 import com.tallerwebi.dominio.Liga;
+import com.tallerwebi.dominio.NotificacionPl;
+import com.tallerwebi.dominio.Partido;
 import com.tallerwebi.dominio.ResultadoInscripcion;
 import com.tallerwebi.dominio.ServicioArbitro;
 import com.tallerwebi.dominio.ServicioCompetencia;
@@ -384,5 +386,61 @@ public class ControladorSeccionesTest {
     assertThat(modelAndView.getModel().get("estadisticas"), sameInstance(estadisticasEsperadas));
 
     verify(servicioEstadisticasJugador).obtenerEstadisticasDelUsuario(usuario.getId());
+  }
+
+  @Test
+  public void historialResumeResultadosYAsociaLasNotificacionesPorPartido() {
+    when(request.getSession(false)).thenReturn(session);
+    when(session.getAttribute("usuario")).thenReturn(usuario);
+
+    Usuario otro = new Usuario();
+    otro.setId(10L);
+    Partido ganaComoA = partido(1L, 3, 1, usuario, otro);
+    Partido ganaComoB = partido(2L, 0, 2, otro, usuario);
+    Partido empate = partido(3L, 2, 2, usuario, otro);
+    Partido pierde = partido(4L, 0, 2, usuario, otro);
+    Partido pendiente = new Partido();
+    List<Partido> partidos = List.of(ganaComoA, ganaComoB, empate, pierde, pendiente);
+    when(servicioPartido.listarPartidosDe(usuario)).thenReturn(partidos);
+
+    NotificacionPl sinPartido = new NotificacionPl();
+    NotificacionPl sinId = notificacion(new Partido(), 99);
+    NotificacionPl primera = notificacion(ganaComoA, 5);
+    NotificacionPl repetida = notificacion(ganaComoA, 20);
+    when(servicioPartido.listarNotificacionesDe(usuario))
+      .thenReturn(List.of(sinPartido, sinId, primera, repetida));
+
+    ModelAndView resultado = controlador.historial(request);
+
+    assertThat(resultado.getViewName(), equalTo("historial"));
+    assertThat(resultado.getModel().get("historial"), equalTo(partidos));
+    assertThat(resultado.getModel().get("jugados"), equalTo(4));
+    assertThat(resultado.getModel().get("ganados"), equalTo(2));
+    assertThat(resultado.getModel().get("empatados"), equalTo(1));
+    assertThat(resultado.getModel().get("perdidos"), equalTo(1));
+    assertThat(resultado.getModel().get("efectividad"), equalTo(63));
+    assertThat(resultado.getModel().get("deltas"), equalTo(Map.of(1L, 5)));
+  }
+
+  private static Partido partido(
+    long id,
+    int golesA,
+    int golesB,
+    Usuario jugadorA,
+    Usuario jugadorB
+  ) {
+    Partido partido = new Partido();
+    partido.setId(id);
+    partido.getEquipoA().add(jugadorA);
+    partido.getEquipoB().add(jugadorB);
+    partido.registrarResultado(golesA, golesB);
+    return partido;
+  }
+
+  private static NotificacionPl notificacion(Partido partido, int delta) {
+    NotificacionPl notificacion = new NotificacionPl();
+    notificacion.setPartido(partido);
+    notificacion.setDelta(delta);
+    return notificacion;
   }
 }
