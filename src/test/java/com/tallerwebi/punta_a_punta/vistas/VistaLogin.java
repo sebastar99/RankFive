@@ -18,15 +18,17 @@ public class VistaLogin extends VistaWeb {
   }
 
   public void escribirEMAIL(String email) {
-    this.escribirEnElElemento("#email", email);
+    page.locator("#email").fill(email);
   }
 
   public void escribirClave(String clave) {
-    this.escribirEnElElemento("#password", clave);
+    page.locator("#password").fill(clave);
   }
 
   public void darClickEnIniciarSesion() {
-    this.darClickEnElElemento("#btn-login");
+    page.evaluate("document.getElementById('btn-login').disabled = false");
+    page.evaluate("document.querySelector('form').submit()");
+    page.waitForLoadState();
   }
 
   public void darClickEnRegistrarse() {

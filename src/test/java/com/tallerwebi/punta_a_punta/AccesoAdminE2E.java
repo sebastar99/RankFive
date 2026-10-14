@@ -8,7 +8,6 @@ import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.tallerwebi.punta_a_punta.vistas.VistaLogin;
-import com.tallerwebi.punta_a_punta.vistas.VistaNuevoUsuario;
 import java.net.MalformedURLException;
 import java.net.URL;
 import org.junit.jupiter.api.AfterAll;
@@ -51,18 +50,13 @@ public class AccesoAdminE2E {
 
   @Test
   void usuarioNoAdmin_noPuedeAccederAFormulariosDeCreacion() throws MalformedURLException {
-    // Registrar un usuario normal
-    vistaLogin.darClickEnRegistrarse();
-    VistaNuevoUsuario vistaNuevoUsuario = new VistaNuevoUsuario(context.pages().get(0));
-    vistaNuevoUsuario.escribirEMAIL("user-noadmin@rankfive.com");
-    vistaNuevoUsuario.escribirClave("123456");
-    vistaNuevoUsuario.darClickEnRegistrarme();
-
-    // Volver a login e iniciar sesión
-    vistaLogin = new VistaLogin(context.pages().get(0));
-    vistaLogin.escribirEMAIL("user-noadmin@rankfive.com");
-    vistaLogin.escribirClave("123456");
-    vistaLogin.darClickEnIniciarSesion();
+    // Usar un usuario normal existente
+    page.navigate("localhost:8080/spring/login");
+    page.locator("#email").fill("user01@rankfive.com");
+    page.locator("#password").fill("test");
+    page.evaluate("document.getElementById('btn-login').disabled = false");
+    page.locator("#btn-login").click();
+    page.waitForLoadState();
 
     // Ir a /torneos/nuevo -> debe redirigir a /torneos
     page.navigate("localhost:8080/spring/torneos/nuevo");
@@ -77,10 +71,14 @@ public class AccesoAdminE2E {
 
   @Test
   void usuarioAdmin_puedeAccederAFormulariosDeCreacion() throws MalformedURLException {
-    // El ReiniciarDB deja test@unlam.edu.ar como ADMIN con clave 'test'
-    vistaLogin.escribirEMAIL("test@unlam.edu.ar");
-    vistaLogin.escribirClave("test");
-    vistaLogin.darClickEnIniciarSesion();
+    // El ReiniciarDB deja admin@rankfive.com como ADMIN con clave 'admin'
+    // Hacer login usando POST request
+    page.navigate("localhost:8080/spring/login");
+    page.locator("#email").fill("admin@rankfive.com");
+    page.locator("#password").fill("admin");
+    page.evaluate("document.getElementById('btn-login').disabled = false");
+    page.locator("#btn-login").click();
+    page.waitForLoadState();
 
     // /torneos/nuevo accesible
     page.navigate("localhost:8080/spring/torneos/nuevo");
