@@ -15,9 +15,11 @@ public class ReiniciarDB {
         : "user";
 
       String sqlCommands =
+        "SET FOREIGN_KEY_CHECKS = 0;\n" +
         "DELETE FROM Usuario;\n" +
         "ALTER TABLE Usuario AUTO_INCREMENT = 1;\n" +
-        "INSERT INTO Usuario(id, email, password, rol, activo) VALUES(null, 'test@unlam.edu.ar', 'test', 'ADMIN', true);";
+        "INSERT INTO Usuario(email, password, rol, activo) VALUES('admin@rankfive.com', 'admin', 'ADMIN', true);\n" +
+        "SET FOREIGN_KEY_CHECKS = 1;";
 
       String comando = String.format(
         "docker exec tallerwebi-mysql mysql -h %s -P %s -u %s -p%s %s -e \"%s\"",
@@ -29,7 +31,13 @@ public class ReiniciarDB {
         sqlCommands
       );
 
-      Process process = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", comando });
+      Process process;
+      String os = System.getProperty("os.name").toLowerCase();
+      if (os.contains("win")) {
+        process = Runtime.getRuntime().exec(new String[] { "cmd", "/c", comando });
+      } else {
+        process = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", comando });
+      }
       int exitCode = process.waitFor();
 
       if (exitCode == 0) {
