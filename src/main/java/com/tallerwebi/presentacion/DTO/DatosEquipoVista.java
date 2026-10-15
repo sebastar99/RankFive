@@ -5,6 +5,7 @@ import com.tallerwebi.dominio.RangoEquipo;
 import com.tallerwebi.dominio.Usuario;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import lombok.Getter;
 
 @Getter
@@ -18,6 +19,7 @@ public class DatosEquipoVista {
   private final RangoEquipo rango;
   private final String rangoIcono;
   private final List<Usuario> jugadores;
+  private final Long capitanId;
 
   public DatosEquipoVista(Equipo equipo) {
     this.id = equipo.getId();
@@ -27,6 +29,7 @@ public class DatosEquipoVista {
     this.promedioPl = equipo.getPromedioPl();
     this.rango = equipo.getRango();
     this.rangoIcono = RangoEquipo.assetPath(this.rango);
+    this.capitanId = Optional.ofNullable(equipo.getOwner()).map(Usuario::getId).orElse(null);
     this.jugadores =
       equipo
         .getJugadores()

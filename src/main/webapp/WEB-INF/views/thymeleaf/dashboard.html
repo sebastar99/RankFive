@@ -173,6 +173,7 @@
                   <div class="name">
                     <span th:text="${jug.perfil.nombreCompleto} ?: ${jug.email}">Nombre</span>
                     <span class="username" th:text="'@' + (${jug.perfil.nombreUsuario} ?: 'usuario')">@usuario</span>
+                    <span th:if="${jug.id != null and jug.id == equipo.capitanId}" class="captain-mark" title="Capitán" aria-label="Capitán">C</span>
                   </div>
                   <div class="points">
                     <span class="rank-badge rank-badge-sm" th:with="rj=${T(com.tallerwebi.dominio.Rango).de(jug.perfil.pl != null ? jug.perfil.pl : 0)}" th:classappend="${rj.css}">
