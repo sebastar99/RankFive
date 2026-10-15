@@ -150,6 +150,23 @@ public class ControladorEquipoTest {
   }
 
   @Test
+  public void jugadoresInsuficientesVuelvenAlFormularioConMensaje() {
+    conSesion();
+    when(servicioEquipo.crearEquipo(any(), any(), any(), any(), anyList()))
+      .thenReturn(ResultadoCreacionEquipo.JUGADORES_INSUFICIENTES);
+    DatosEquipo datos = datos("Pibes", 7, List.of("user07"));
+
+    ModelAndView mav = controlador.crearEquipo(request, datos, null);
+
+    assertThat(mav.getViewName(), equalTo("agregarEquipo"));
+    assertThat(
+      mav.getModel().get("error"),
+      equalTo(ResultadoCreacionEquipo.JUGADORES_INSUFICIENTES.getMensaje())
+    );
+    assertThat(mav.getModel().get("datosEquipo"), equalTo(datos));
+  }
+
+  @Test
   public void aceptarYRechazarInvitacionRedirigenAlDashboard() {
     conSesion();
     when(servicioEquipo.aceptarInvitacion(10L, usuario)).thenReturn(true);

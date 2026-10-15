@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion.DTO;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.tallerwebi.dominio.Equipo;
@@ -51,9 +52,28 @@ class DatosEquipoVistaTest {
     DatosEquipoVista vista = DatosEquipoVista.desde(List.of(equipo)).get(0);
 
     assertEquals("Sin rango", vista.getNombre());
+    assertNull(vista.getCapitanId());
     assertEquals(RangoEquipo.PRINCIPIANTE, vista.getRango());
     assertEquals(RangoEquipo.assetPath(RangoEquipo.PRINCIPIANTE), vista.getRangoIcono());
     assertEquals(List.of(), DatosEquipoVista.desde(List.of()).stream().toList());
+  }
+
+  @Test
+  void elCapitanEsElCreadorAunqueOtroJugadorTengaMasPuntaje() {
+    Usuario creador = jugadorConPuntaje(1100);
+    creador.setId(10L);
+    Usuario mejorPuntuado = jugadorConPuntaje(1800);
+    mejorPuntuado.setId(20L);
+    Equipo equipo = new Equipo();
+    equipo.setOwner(creador);
+    equipo.agregarJugador(creador);
+    equipo.agregarJugador(mejorPuntuado);
+
+    DatosEquipoVista vista = new DatosEquipoVista(equipo);
+
+    assertEquals(mejorPuntuado, vista.getJugadores().get(0));
+    assertEquals(creador, vista.getJugadores().get(1));
+    assertEquals(creador.getId(), vista.getCapitanId());
   }
 
   private static Usuario jugadorConPuntaje(Integer puntaje) {

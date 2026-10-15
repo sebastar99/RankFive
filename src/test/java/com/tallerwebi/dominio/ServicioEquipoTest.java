@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import com.tallerwebi.dominio.implementacion.ServicioEquipoImpl;
 import java.util.List;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -38,7 +39,16 @@ public class ServicioEquipoTest {
     owner = usuario(1L, "user02", 1450);
     amigo1 = usuario(7L, "user07", 2600);
     amigo2 = usuario(8L, "user08", 2750);
-    when(servicioAmistad.listarAmigosDe(owner)).thenReturn(List.of(amigo1, amigo2));
+    when(servicioAmistad.listarAmigosDe(owner))
+      .thenReturn(
+        List.of(
+          amigo1,
+          amigo2,
+          usuario(9L, "user09", 2000),
+          usuario(10L, "user10", 2100),
+          usuario(11L, "user11", 2200)
+        )
+      );
   }
 
   @Test
@@ -48,7 +58,7 @@ public class ServicioEquipoTest {
       "Los Pibes",
       5,
       "/escudos/x.png",
-      List.of("user07", "user08")
+      List.of("user07", "user08", "user09", "user10")
     );
 
     assertThat(resultado, equalTo(ResultadoCreacionEquipo.CREADO));
@@ -62,7 +72,7 @@ public class ServicioEquipoTest {
     assertThat(guardado.getFotoUrl(), equalTo("/escudos/x.png"));
 
     ArgumentCaptor<InvitacionEquipo> invCaptor = ArgumentCaptor.forClass(InvitacionEquipo.class);
-    verify(repositorioInvitacion, times(2)).guardar(invCaptor.capture());
+    verify(repositorioInvitacion, times(4)).guardar(invCaptor.capture());
     assertThat(invCaptor.getAllValues().get(0).getUsuario(), equalTo(amigo1));
     assertThat(invCaptor.getAllValues().get(1).getUsuario(), equalTo(amigo2));
     assertThat(invCaptor.getAllValues().get(0).estaPendiente(), is(true));
@@ -75,7 +85,7 @@ public class ServicioEquipoTest {
       "Los Pibes",
       5,
       null,
-      List.of("desconocido")
+      List.of("user07", "user08", "user09", "desconocido")
     );
 
     assertThat(resultado, equalTo(ResultadoCreacionEquipo.JUGADOR_NO_AMIGO));
@@ -83,16 +93,59 @@ public class ServicioEquipoTest {
   }
 
   @Test
-  public void noPermiteMasInvitadosQueElFormato() {
+  public void permiteMasInvitadosQueElFormato() {
     ResultadoCreacionEquipo resultado = servicio.crearEquipo(
       owner,
       "Los Pibes",
       5,
       null,
-      List.of("a", "b", "c", "d", "e")
+      List.of("user07", "user08", "user09", "user10", "user11")
     );
 
-    assertThat(resultado, equalTo(ResultadoCreacionEquipo.DEMASIADOS_JUGADORES));
+    assertThat(resultado, equalTo(ResultadoCreacionEquipo.CREADO));
+    verify(repositorioInvitacion, times(5)).guardar(any());
+  }
+
+  @Test
+  public void exigeElMinimoDeJugadoresParaCadaFormato() {
+    for (int formato : List.of(5, 7, 8, 9, 11)) {
+      List<String> nombres = nombresDeAmigos(formato);
+
+      ResultadoCreacionEquipo insuficiente = servicio.crearEquipo(
+        owner,
+        "Equipo",
+        formato,
+        null,
+        nombres.subList(0, formato - 2)
+      );
+      assertThat(insuficiente, equalTo(ResultadoCreacionEquipo.JUGADORES_INSUFICIENTES));
+      verify(repositorioEquipo, never()).guardar(any());
+    }
+  }
+
+  @Test
+  public void permiteElMinimoExactoParaCadaFormato() {
+    for (int formato : List.of(5, 7, 8, 9, 11)) {
+      List<String> nombres = nombresDeAmigos(formato);
+      assertThat(
+        servicio.crearEquipo(owner, "Equipo", formato, null, nombres.subList(0, formato - 1)),
+        equalTo(ResultadoCreacionEquipo.CREADO)
+      );
+    }
+    verify(repositorioEquipo, times(5)).guardar(any());
+  }
+
+  @Test
+  public void nombresRepetidosYElOwnerNoCuentanParaElMinimo() {
+    ResultadoCreacionEquipo resultado = servicio.crearEquipo(
+      owner,
+      "Equipo",
+      5,
+      null,
+      List.of("user07", "user07", "user08", "user02")
+    );
+
+    assertThat(resultado, equalTo(ResultadoCreacionEquipo.JUGADORES_INSUFICIENTES));
     verify(repositorioEquipo, never()).guardar(any());
   }
 
@@ -185,6 +238,15 @@ public class ServicioEquipoTest {
     perfil.setPl(pl);
     usuario.setPerfil(perfil);
     return usuario;
+  }
+
+  private List<String> nombresDeAmigos(int cantidad) {
+    List<Usuario> amigos = IntStream
+      .range(0, cantidad)
+      .mapToObj(i -> usuario(100L + i, "amigo" + i, 1000))
+      .toList();
+    when(servicioAmistad.listarAmigosDe(owner)).thenReturn(amigos);
+    return amigos.stream().map(a -> a.getPerfil().getNombreUsuario()).toList();
   }
 
   private static Equipo equipoPendienteCon(Usuario owner) {

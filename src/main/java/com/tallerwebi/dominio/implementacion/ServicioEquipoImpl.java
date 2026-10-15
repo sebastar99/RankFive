@@ -151,8 +151,8 @@ public class ServicioEquipoImpl implements ServicioEquipo {
     if (invitados.isEmpty()) {
       return ResultadoCreacionEquipo.SIN_JUGADORES;
     }
-    if (invitados.size() > formato - 1) {
-      return ResultadoCreacionEquipo.DEMASIADOS_JUGADORES;
+    if (invitados.size() < formato - 1) {
+      return ResultadoCreacionEquipo.JUGADORES_INSUFICIENTES;
     }
     return null;
   }

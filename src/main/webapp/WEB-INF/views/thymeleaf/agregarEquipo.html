@@ -43,7 +43,7 @@
           <i class="bi bi-exclamation-triangle"></i><span th:text="${error}">Error</span>
         </div>
 
-        <form th:action="@{/agregar-equipo}" method="post" enctype="multipart/form-data"
+        <form id="formCrearEquipo" th:action="@{/agregar-equipo}" method="post" enctype="multipart/form-data"
               th:with="seleccion=${datosEquipo != null ? datosEquipo.jugadores : null},
                        cantidadSel=${datosEquipo != null and datosEquipo.cantidad != null ? datosEquipo.cantidad : 5}">
           <div class="mb-4">
@@ -82,7 +82,7 @@
           <div class="mb-4">
             <label class="form-label-rf">
               Jugadores
-              <span class="text-muted fw-normal">(vos ya contás; invitá hasta <span id="maxJugadores" th:text="${cantidadSel - 1}">4</span> amigos)</span>
+              <span class="text-muted fw-normal">(vos ya contás; invitá al menos <span id="minJugadores" th:text="${cantidadSel - 1}">4</span> amigos)</span>
             </label>
             <div class="friend-picker">
               <label class="friend-option" th:each="amigo : ${amigos}">
@@ -108,11 +108,12 @@
                 </a>
               </div>
             </div>
+            <p id="faltanJugadores" class="text-warning small mt-2" aria-live="polite"></p>
           </div>
 
           <div class="d-flex gap-3">
             <a th:href="@{/dashboard}" class="btn btn-outline-light btn-action">Cancelar</a>
-            <button type="submit" class="btn btn-primary btn-action flex-fill">
+            <button type="submit" id="crearEquipoBtn" class="btn btn-primary btn-action flex-fill" disabled>
               <i class="bi bi-send-fill me-2"></i>Crear equipo e invitar
             </button>
           </div>
@@ -125,26 +126,35 @@
   <script>
     const radios = document.querySelectorAll('input[name="cantidad"]');
     const boxes = document.querySelectorAll('input[name="jugadores"]');
-    const maxLabel = document.getElementById('maxJugadores');
+    const form = document.getElementById('formCrearEquipo');
+    const minLabel = document.getElementById('minJugadores');
+    const faltanLabel = document.getElementById('faltanJugadores');
+    const crearBtn = document.getElementById('crearEquipoBtn');
     const escudoInput = document.getElementById('escudo');
     const escudoLabel = document.getElementById('escudo-label');
 
-    function maxSeleccion() {
-      // El creador ocupa un lugar, asi que se invita a (formato - 1) amigos
+    function minSeleccion() {
       return parseInt(document.querySelector('input[name="cantidad"]:checked').value, 10) - 1;
     }
 
-    radios.forEach(r => r.addEventListener('change', () => {
-      maxLabel.textContent = maxSeleccion();
-      const marcados = [...boxes].filter(b => b.checked);
-      marcados.slice(maxSeleccion()).forEach(b => { b.checked = false; });
-    }));
+    function actualizarMinimo() {
+      const minimo = minSeleccion();
+      const seleccionados = [...boxes].filter(b => b.checked).length;
+      const faltan = Math.max(0, minimo - seleccionados);
+      minLabel.textContent = minimo;
+      faltanLabel.textContent = faltan ? `Te faltan ${faltan} amigo(s) para este formato.` : '';
+      crearBtn.disabled = faltan > 0;
+    }
 
-    boxes.forEach(b => b.addEventListener('change', () => {
-      if ([...boxes].filter(x => x.checked).length > maxSeleccion()) {
-        b.checked = false;
+    radios.forEach(r => r.addEventListener('change', actualizarMinimo));
+    boxes.forEach(b => b.addEventListener('change', actualizarMinimo));
+    form.addEventListener('submit', event => {
+      actualizarMinimo();
+      if (crearBtn.disabled) {
+        event.preventDefault();
       }
-    }));
+    });
+    actualizarMinimo();
 
     escudoInput.addEventListener('change', () => {
       escudoLabel.textContent = escudoInput.files.length
