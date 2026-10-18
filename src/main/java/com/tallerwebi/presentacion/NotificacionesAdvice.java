@@ -55,6 +55,15 @@ public class NotificacionesAdvice {
     return servicioEquipo.listarInvitacionesPendientes(usuario);
   }
 
+  @ModelAttribute("respuestasTransferencia")
+  public List<InvitacionEquipo> respuestasTransferencia(HttpServletRequest request) {
+    Usuario usuario = usuarioDe(request);
+    if (usuario == null) {
+      return Collections.emptyList();
+    }
+    return servicioEquipo.listarRespuestasTransferencia(usuario);
+  }
+
   private static Usuario usuarioDe(HttpServletRequest request) {
     HttpSession session = request.getSession(false);
     if (session == null) {

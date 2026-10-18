@@ -105,6 +105,47 @@ public class RepositorioInscripcionTorneoTest {
   @Test
   @Transactional
   @Rollback
+  public void existeParaDevuelveTrueParaLosIntegrantesDelEquipoInscripto() {
+    Usuario capitan = guardarUsuario("capitan@test.com");
+    Usuario companiero = guardarUsuario("companiero@test.com");
+    Usuario ajeno = guardarUsuario("ajeno@test.com");
+    Torneo torneo = guardarTorneo("Copa A");
+    Torneo otroTorneo = guardarTorneo("Copa B");
+    Equipo equipo = guardarEquipo("SacaPuntos FC", capitan);
+    equipo.agregarJugador(companiero);
+    guardarInscripcion(torneo, capitan, equipo, LocalDateTime.now());
+    sessionFactory.getCurrentSession().flush();
+    sessionFactory.getCurrentSession().clear();
+
+    assertThat(repositorioInscripcion.existePara(capitan.getId(), torneo.getId()), is(true));
+    assertThat(repositorioInscripcion.existePara(companiero.getId(), torneo.getId()), is(true));
+    assertThat(repositorioInscripcion.existePara(ajeno.getId(), torneo.getId()), is(false));
+    assertThat(
+      repositorioInscripcion.existePara(companiero.getId(), otroTorneo.getId()),
+      is(false)
+    );
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void existeParaDevuelveFalseParaIntegranteDeOtroEquipoNoInscripto() {
+    Usuario capitan = guardarUsuario("capitan2@test.com");
+    Usuario companiero = guardarUsuario("companiero2@test.com");
+    Torneo torneo = guardarTorneo("Copa C");
+    Equipo equipoInscripto = guardarEquipo("Inscripto FC", capitan);
+    Equipo equipoAjeno = guardarEquipo("Ajeno FC", companiero);
+    guardarInscripcion(torneo, capitan, equipoInscripto, LocalDateTime.now());
+    sessionFactory.getCurrentSession().flush();
+    sessionFactory.getCurrentSession().clear();
+
+    assertThat(equipoAjeno.getJugadores(), hasSize(1));
+    assertThat(repositorioInscripcion.existePara(companiero.getId(), torneo.getId()), is(false));
+  }
+
+  @Test
+  @Transactional
+  @Rollback
   public void listarPorTorneoDevuelveSoloLasDelTorneoOrdenadasPorFecha() {
     Usuario primero = guardarUsuario("primero@test.com");
     Usuario segundo = guardarUsuario("segundo@test.com");

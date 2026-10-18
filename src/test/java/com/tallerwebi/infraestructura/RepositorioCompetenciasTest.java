@@ -4,6 +4,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 import com.tallerwebi.dominio.EncuentroTorneo;
+import com.tallerwebi.dominio.Equipo;
+import com.tallerwebi.dominio.EstadoEquipo;
 import com.tallerwebi.dominio.FaseTorneo;
 import com.tallerwebi.dominio.InscripcionLiga;
 import com.tallerwebi.dominio.InscripcionTorneo;
@@ -14,6 +16,7 @@ import com.tallerwebi.dominio.RepositorioInscripcionLiga;
 import com.tallerwebi.dominio.RepositorioPartidoLiga;
 import com.tallerwebi.dominio.RepositorioTorneo;
 import com.tallerwebi.dominio.Torneo;
+import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.infraestructura.config.HibernateInfraestructuraTestConfig;
 import java.time.LocalDate;
 import java.util.List;
@@ -71,6 +74,56 @@ public class RepositorioCompetenciasTest {
     repoInsLiga.guardar(ins);
 
     assertThat(repoInsLiga.listarPorLiga(l.getId()), hasSize(1));
+  }
+
+  @Test
+  public void existeParaLigaDevuelveTrueParaLosIntegrantesDelEquipoInscripto() {
+    Liga liga = new Liga();
+    liga.setNombre("Liga Integrantes");
+    liga.setFormato(5);
+    liga.setCupoEquipos(10);
+    liga.setInscripcionAbierta(true);
+    liga.setFechaInicio(LocalDate.now());
+    liga.setUbicacion("CABA");
+    sessionFactory.getCurrentSession().persist(liga);
+    Liga otraLiga = new Liga();
+    otraLiga.setNombre("Otra Liga");
+    otraLiga.setFormato(5);
+    sessionFactory.getCurrentSession().persist(otraLiga);
+
+    Usuario capitan = usuario("capitan-liga@test.com");
+    Usuario companiero = usuario("companiero-liga@test.com");
+    Usuario ajeno = usuario("ajeno-liga@test.com");
+    Equipo equipo = new Equipo();
+    equipo.setNombre("SacaPuntos FC");
+    equipo.setOwner(capitan);
+    equipo.setFormato(5);
+    equipo.setEstado(EstadoEquipo.ACTIVO);
+    equipo.agregarJugador(capitan);
+    equipo.agregarJugador(companiero);
+    sessionFactory.getCurrentSession().persist(equipo);
+
+    InscripcionLiga inscripcion = new InscripcionLiga();
+    inscripcion.setLiga(liga);
+    inscripcion.setUsuario(capitan);
+    inscripcion.setEquipo(equipo);
+    inscripcion.setNombreEquipo(equipo.getNombre());
+    repoInsLiga.guardar(inscripcion);
+    sessionFactory.getCurrentSession().flush();
+    sessionFactory.getCurrentSession().clear();
+
+    assertThat(repoInsLiga.existePara(capitan.getId(), liga.getId()), is(true));
+    assertThat(repoInsLiga.existePara(companiero.getId(), liga.getId()), is(true));
+    assertThat(repoInsLiga.existePara(ajeno.getId(), liga.getId()), is(false));
+    assertThat(repoInsLiga.existePara(companiero.getId(), otraLiga.getId()), is(false));
+  }
+
+  private Usuario usuario(String email) {
+    Usuario usuario = new Usuario();
+    usuario.setEmail(email);
+    usuario.setPassword("x");
+    sessionFactory.getCurrentSession().persist(usuario);
+    return usuario;
   }
 
   @Test

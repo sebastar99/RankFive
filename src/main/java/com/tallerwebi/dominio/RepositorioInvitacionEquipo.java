@@ -13,5 +13,7 @@ public interface RepositorioInvitacionEquipo {
 
   List<InvitacionEquipo> listarPendientesPara(Long usuarioId);
 
+  List<InvitacionEquipo> listarRespuestasParaCapitan(Long usuarioId);
+
   long contarPendientesPara(Long usuarioId);
 }

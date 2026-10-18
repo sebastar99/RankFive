@@ -33,7 +33,8 @@ public class RepositorioInvitacionEquipoImpl implements RepositorioInvitacionEqu
     return sessionFactory
       .getCurrentSession()
       .createQuery(
-        "select i from InvitacionEquipo i join fetch i.equipo e join fetch e.owner " +
+        "select distinct i from InvitacionEquipo i join fetch i.equipo e join fetch e.owner " +
+        "left join fetch e.jugadores left join fetch i.equipoOrigen " +
         "join fetch i.usuario where i.id = :id",
         InvitacionEquipo.class
       )
@@ -59,7 +60,23 @@ public class RepositorioInvitacionEquipoImpl implements RepositorioInvitacionEqu
       .getCurrentSession()
       .createQuery(
         "select i from InvitacionEquipo i join fetch i.equipo e join fetch e.owner " +
+        "left join fetch i.equipoOrigen " +
         "where i.usuario.id = :u and i.estado = :pendiente order by i.fecha desc",
+        InvitacionEquipo.class
+      )
+      .setParameter("u", usuarioId)
+      .setParameter("pendiente", EstadoInvitacionEquipo.PENDIENTE)
+      .list();
+  }
+
+  @Override
+  public List<InvitacionEquipo> listarRespuestasParaCapitan(Long usuarioId) {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "select i from InvitacionEquipo i join fetch i.usuario join fetch i.equipo e " +
+        "where e.owner.id = :u and i.equipoOrigen is not null and i.respuestaLeida = false " +
+        "and (i.estado <> :pendiente or i.respuestaPostergada = true) order by i.fecha desc",
         InvitacionEquipo.class
       )
       .setParameter("u", usuarioId)

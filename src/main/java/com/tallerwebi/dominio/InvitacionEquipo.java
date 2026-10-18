@@ -37,6 +37,16 @@ public class InvitacionEquipo {
   @Column(nullable = false, length = 20)
   private EstadoInvitacionEquipo estado = EstadoInvitacionEquipo.PENDIENTE;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "equipo_origen_id")
+  private Equipo equipoOrigen;
+
+  @Column(nullable = false)
+  private boolean respuestaPostergada;
+
+  @Column(nullable = false)
+  private boolean respuestaLeida;
+
   @Column(nullable = false)
   private LocalDateTime fecha = LocalDateTime.now();
 
@@ -46,6 +56,40 @@ public class InvitacionEquipo {
 
   public boolean fueAceptada() {
     return EstadoInvitacionEquipo.ACEPTADA.equals(estado);
+  }
+
+  public boolean fueRechazada() {
+    return EstadoInvitacionEquipo.RECHAZADA.equals(estado);
+  }
+
+  public boolean esPase() {
+    return equipoOrigen != null;
+  }
+
+  public boolean fueEnviadaPor(Long usuarioId) {
+    return (
+      usuarioId != null &&
+      equipo != null &&
+      equipo.getOwner() != null &&
+      usuarioId.equals(equipo.getOwner().getId())
+    );
+  }
+
+  public boolean esRespondiblePor(Long usuarioId) {
+    return estaPendiente() && fueEnviadaA(usuarioId);
+  }
+
+  public boolean puedePostergarse() {
+    return esPase() && estaPendiente() && !respuestaPostergada;
+  }
+
+  public boolean esRespuestaVisiblePara(Long usuarioId) {
+    return (
+      esPase() &&
+      !respuestaLeida &&
+      fueEnviadaPor(usuarioId) &&
+      (!estaPendiente() || respuestaPostergada)
+    );
   }
 
   public boolean fueEnviadaA(Long usuarioId) {

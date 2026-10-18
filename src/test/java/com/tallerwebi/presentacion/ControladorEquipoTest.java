@@ -19,6 +19,7 @@ import com.tallerwebi.dominio.ResultadoCreacionEquipo;
 import com.tallerwebi.dominio.ServicioEquipo;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Usuario;
+import com.tallerwebi.dominio.enums.ResultadoAceptacionInvitacion;
 import com.tallerwebi.presentacion.DTO.DatosEquipo;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -169,7 +170,8 @@ public class ControladorEquipoTest {
   @Test
   public void aceptarYRechazarInvitacionRedirigenAlDashboard() {
     conSesion();
-    when(servicioEquipo.aceptarInvitacion(10L, usuario)).thenReturn(true);
+    when(servicioEquipo.aceptarInvitacionConResultado(10L, usuario))
+      .thenReturn(ResultadoAceptacionInvitacion.ACEPTADA);
     when(servicioEquipo.rechazarInvitacion(11L, usuario)).thenReturn(false);
 
     assertThat(
@@ -180,7 +182,7 @@ public class ControladorEquipoTest {
       controlador.rechazarInvitacion(request, 11L).getViewName(),
       startsWith("redirect:/dashboard?aviso=")
     );
-    verify(servicioEquipo).aceptarInvitacion(10L, usuario);
+    verify(servicioEquipo).aceptarInvitacionConResultado(10L, usuario);
     verify(servicioEquipo).rechazarInvitacion(11L, usuario);
   }
 }

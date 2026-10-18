@@ -41,6 +41,27 @@ public class RepositorioEquipoImpl implements RepositorioEquipo {
   }
 
   @Override
+  public int minimoJugadoresEnCompetencias(Long equipoId) {
+    int minimoLiga = sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "select coalesce(max(i.liga.formato), 0) from InscripcionLiga i where i.equipo.id = :id",
+        Integer.class
+      )
+      .setParameter("id", equipoId)
+      .getSingleResult();
+    int minimoTorneo = sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "select coalesce(max(i.torneo.formato), 0) from InscripcionTorneo i where i.equipo.id = :id",
+        Integer.class
+      )
+      .setParameter("id", equipoId)
+      .getSingleResult();
+    return Math.max(minimoLiga, minimoTorneo);
+  }
+
+  @Override
   public List<Equipo> listarActivosDe(Long usuarioId) {
     return sessionFactory
       .getCurrentSession()

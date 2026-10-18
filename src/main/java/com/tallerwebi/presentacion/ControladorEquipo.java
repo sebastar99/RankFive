@@ -5,6 +5,7 @@ import com.tallerwebi.dominio.ResultadoCreacionEquipo;
 import com.tallerwebi.dominio.ServicioEquipo;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Usuario;
+import com.tallerwebi.dominio.enums.ResultadoAceptacionInvitacion;
 import com.tallerwebi.presentacion.DTO.DatosEquipo;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -90,10 +91,11 @@ public class ControladorEquipo extends ControladorBase {
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
-    boolean aceptada = servicioEquipo.aceptarInvitacion(invitacionId, usuario);
-    return redirigirAlDashboard(
-      aceptada ? "Te sumaste al equipo" : "No se pudo aceptar la invitación"
+    ResultadoAceptacionInvitacion resultado = servicioEquipo.aceptarInvitacionConResultado(
+      invitacionId,
+      usuario
     );
+    return redirigirAlDashboard(resultado.getMensaje());
   }
 
   @RequestMapping(path = "/equipos/invitaciones/rechazar", method = RequestMethod.POST)

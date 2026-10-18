@@ -34,6 +34,9 @@
   </header>
 
   <main class="container db-content">
+    <div th:if="${param.aviso != null}" class="alert alert-info" role="status">
+      <i class="bi bi-info-circle me-2"></i><span th:text="${param.aviso[0]}">Aviso</span>
+    </div>
     <section class="card-glass p-4">
       <div class="mb-4">
         <h1 class="h5 m-0">Mercado de pases</h1>
@@ -89,10 +92,29 @@
                   <span><strong th:text="${jugadorSeleccionado.perfil.pl}">0</strong> PL</span>
                 </div>
               </div>
-              <button type="button" class="btn btn-primary" disabled title="Próximamente">
-                <i class="bi bi-chat-dots me-1"></i>Iniciar conversación
-              </button>
+              <div th:if="${puedeOfertar}" class="d-flex flex-column gap-2">
+                <form th:action="@{/transferencias/ofertar}" method="post">
+                  <input type="hidden" name="tipo" th:value="${tipo}">
+                  <input type="hidden" name="id" th:value="${competenciaId}">
+                  <input type="hidden" name="equipo" th:value="${equipoSeleccionado.id}">
+                  <input type="hidden" name="jugador" th:value="${jugadorSeleccionado.id}">
+                  <button type="submit" class="btn btn-primary" aria-describedby="explicacion-pase">
+                    <i class="bi bi-arrow-left-right me-1"></i>Iniciar transferencia
+                  </button>
+                </form>
+                <span class="small text-muted">Destino: <strong th:text="${equipoPropio.nombre}">Tu equipo</strong></span>
+              </div>
             </div>
+            <p th:if="${puedeOfertar}" id="explicacion-pase" class="small text-muted mt-3 mb-0">
+              Se enviará una notificación al jugador para que vea tu equipo y decida.
+              El pase solo se completará cuando el jugador acepte. Hasta entonces, seguirá en su equipo actual.
+            </p>
+            <p th:if="${equipoPropio == null}" class="alert alert-info mt-3 mb-0">
+              Para iniciar una transferencia necesitás ser capitán de un equipo inscripto en esta competencia.
+            </p>
+            <p th:if="${equipoPropio != null and !puedeOfertar}" class="alert alert-info mt-3 mb-0">
+              Este jugador ya forma parte de tu equipo. No podés enviarle una oferta de transferencia.
+            </p>
           </div>
 
           <div class="card-glass p-3">
