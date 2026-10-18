@@ -11,6 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.tallerwebi.dominio.enums.ResultadoTransferencia;
 import com.tallerwebi.dominio.implementacion.ServicioEquipoImpl;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -24,6 +25,8 @@ public class ServicioEquipoTest {
   private RepositorioInvitacionEquipo repositorioInvitacion;
   private ServicioRelacionAmistad servicioAmistad;
   private ServicioEquipoImpl servicio;
+  private Equipo equipoDestino;
+  private Equipo equipoOrigen;
 
   private Usuario owner;
   private Usuario amigo1;
@@ -49,6 +52,19 @@ public class ServicioEquipoTest {
           usuario(11L, "user11", 2200)
         )
       );
+    equipoDestino = equipoPendienteCon(owner);
+    equipoDestino.setEstado(EstadoEquipo.ACTIVO);
+
+    equipoOrigen = new Equipo();
+    equipoOrigen.setId(200L);
+    equipoOrigen.setNombre("Rival");
+    equipoOrigen.setFormato(5);
+    equipoOrigen.setOwner(amigo2);
+    equipoOrigen.agregarJugador(amigo1);
+    equipoOrigen.agregarJugador(amigo2);
+
+    when(repositorioEquipo.buscarPorId(100L)).thenReturn(equipoDestino);
+    when(repositorioEquipo.buscarPorId(200L)).thenReturn(equipoOrigen);
   }
 
   @Test
@@ -229,6 +245,119 @@ public class ServicioEquipoTest {
     assertThat(equipo.getRango(), equalTo(RangoEquipo.SEMIPROFESIONAL));
   }
 
+  @Test
+  public void ofrecerTransferenciaCreaInvitacionPendienteConOrigenYDestino() {
+    ResultadoTransferencia r = servicio.ofrecerTransferencia(owner, 100L, 200L, 7L);
+
+    assertThat(r, equalTo(ResultadoTransferencia.OFERTA_ENVIADA));
+    ArgumentCaptor<InvitacionEquipo> cap = ArgumentCaptor.forClass(InvitacionEquipo.class);
+    verify(repositorioInvitacion).guardar(cap.capture());
+    assertThat(cap.getValue().getEquipo(), equalTo(equipoDestino));
+    assertThat(cap.getValue().getEquipoOrigen(), equalTo(equipoOrigen));
+    assertThat(cap.getValue().getUsuario(), equalTo(amigo1));
+    assertThat(cap.getValue().estaPendiente(), is(true));
+  }
+
+  @Test
+  public void soloElCapitanDelEquipoDestinoPuedeOfrecer() {
+    ResultadoTransferencia r = servicio.ofrecerTransferencia(amigo1, 100L, 200L, 8L);
+    assertThat(r, equalTo(ResultadoTransferencia.NO_SOS_CAPITAN));
+    verify(repositorioInvitacion, never()).guardar(any());
+  }
+
+  @Test
+  public void noOfreceJugadorQueNoJuegaEnElEquipoOrigen() {
+    assertThat(
+      servicio.ofrecerTransferencia(owner, 100L, 200L, 999L),
+      equalTo(ResultadoTransferencia.JUGADOR_NO_PERTENECE)
+    );
+    verify(repositorioInvitacion, never()).guardar(any());
+  }
+
+  @Test
+  public void noOfreceJugadorQueYaEsIntegranteDelDestino() {
+    equipoDestino.agregarJugador(amigo1);
+
+    assertThat(
+      servicio.ofrecerTransferencia(owner, 100L, 200L, 7L),
+      equalTo(ResultadoTransferencia.YA_ES_INTEGRANTE)
+    );
+  }
+
+  @Test
+  public void noDuplicaOfertasPendientesAlMismoJugador() {
+    InvitacionEquipo pendiente = invitacion(
+      50L,
+      equipoDestino,
+      amigo1,
+      EstadoInvitacionEquipo.PENDIENTE
+    );
+    when(repositorioInvitacion.listarDeEquipo(100L)).thenReturn(List.of(pendiente));
+
+    assertThat(
+      servicio.ofrecerTransferencia(owner, 100L, 200L, 7L),
+      equalTo(ResultadoTransferencia.OFERTA_YA_PENDIENTE)
+    );
+  }
+
+  @Test
+  public void alAceptarLaOfertaElJugadorSaleDelOrigenYEntraAlDestino() {
+    completarPlantel(equipoOrigen, 6);
+    InvitacionEquipo oferta = invitacion(
+      60L,
+      equipoDestino,
+      amigo1,
+      EstadoInvitacionEquipo.PENDIENTE
+    );
+    oferta.setEquipoOrigen(equipoOrigen);
+    when(repositorioInvitacion.buscarPorId(60L)).thenReturn(oferta);
+    when(repositorioInvitacion.listarDeEquipo(100L)).thenReturn(List.of(oferta));
+    assertThat(servicio.aceptarInvitacion(60L, amigo1), is(true));
+
+    assertThat(equipoDestino.getJugadores().contains(amigo1), is(true));
+    assertThat(equipoOrigen.getJugadores().contains(amigo1), is(false));
+    verify(repositorioEquipo).actualizar(equipoOrigen);
+  }
+
+  @Test
+  public void alRechazarLaOfertaElJugadorNoCambiaDeEquipo() {
+    InvitacionEquipo oferta = invitacion(
+      60L,
+      equipoDestino,
+      amigo1,
+      EstadoInvitacionEquipo.PENDIENTE
+    );
+    oferta.setEquipoOrigen(equipoOrigen);
+    when(repositorioInvitacion.buscarPorId(60L)).thenReturn(oferta);
+    when(repositorioInvitacion.listarDeEquipo(100L)).thenReturn(List.of(oferta));
+    assertThat(servicio.rechazarInvitacion(60L, amigo1), is(true));
+
+    assertThat(equipoDestino.getJugadores().contains(amigo1), is(false));
+    assertThat(equipoOrigen.getJugadores().contains(amigo1), is(true));
+    verify(repositorioEquipo, never()).actualizar(equipoOrigen);
+  }
+
+  @Test
+  public void elJugadorIntentaEnviarDosVecesLaMismaOferta() {
+    InvitacionEquipo pendiente = invitacion(
+      60L,
+      equipoDestino,
+      amigo1,
+      EstadoInvitacionEquipo.PENDIENTE
+    );
+    pendiente.setEquipoOrigen(equipoOrigen);
+    when(repositorioInvitacion.buscarPorId(60L)).thenReturn(pendiente);
+    when(repositorioInvitacion.listarDeEquipo(100L)).thenReturn(List.of(pendiente));
+    ResultadoTransferencia resultado = servicio.ofrecerTransferencia(
+      owner,
+      equipoDestino.getId(),
+      equipoOrigen.getId(),
+      amigo1.getId()
+    );
+    assertThat(resultado, is(ResultadoTransferencia.OFERTA_YA_PENDIENTE));
+    verify(repositorioInvitacion, never()).guardar(any());
+  }
+
   private static Usuario usuario(Long id, String nombreUsuario, int pl) {
     Usuario usuario = new Usuario();
     usuario.setId(id);
@@ -238,6 +367,82 @@ public class ServicioEquipoTest {
     perfil.setPl(pl);
     usuario.setPerfil(perfil);
     return usuario;
+  }
+
+  @Test
+  public void noAceptaPasesQueDejanAlOrigenPorDebajoDelMinimoEnNingunFormato() {
+    for (int formato : List.of(5, 7, 8, 9, 11)) {
+      Equipo origen = equipoPendienteCon(amigo2);
+      origen.setId(200L);
+      origen.setFormato(formato);
+      origen.agregarJugador(amigo1);
+      completarPlantel(origen, formato);
+      InvitacionEquipo oferta = invitacion(
+        (long) formato,
+        equipoDestino,
+        amigo1,
+        EstadoInvitacionEquipo.PENDIENTE
+      );
+      oferta.setEquipoOrigen(origen);
+      when(repositorioInvitacion.buscarPorId(oferta.getId())).thenReturn(oferta);
+
+      assertThat(servicio.aceptarInvitacion(oferta.getId(), amigo1), is(false));
+      assertThat(oferta.getEstado(), equalTo(EstadoInvitacionEquipo.PENDIENTE));
+      assertThat(origen.getJugadores(), hasSize(formato));
+      assertThat(equipoDestino.getJugadores().contains(amigo1), is(false));
+    }
+    verify(repositorioInvitacion, never()).actualizar(any());
+    verify(repositorioEquipo, never()).actualizar(any());
+  }
+
+  @Test
+  public void permitePasesCuandoQuedaElMinimoExactoParaTodosLosFormatos() {
+    for (int formato : List.of(5, 7, 8, 9, 11)) {
+      Equipo origen = equipoPendienteCon(amigo2);
+      origen.setId(200L);
+      Equipo destino = equipoPendienteCon(owner);
+      origen.setFormato(formato);
+      origen.agregarJugador(amigo1);
+      completarPlantel(origen, formato + 1);
+      InvitacionEquipo oferta = invitacion(
+        (long) formato,
+        destino,
+        amigo1,
+        EstadoInvitacionEquipo.PENDIENTE
+      );
+      oferta.setEquipoOrigen(origen);
+      when(repositorioInvitacion.buscarPorId(oferta.getId())).thenReturn(oferta);
+
+      assertThat(servicio.aceptarInvitacion(oferta.getId(), amigo1), is(true));
+      assertThat(oferta.getEstado(), equalTo(EstadoInvitacionEquipo.ACEPTADA));
+      assertThat(origen.getJugadores(), hasSize(formato));
+      assertThat(origen.getJugadores().contains(amigo1), is(false));
+      assertThat(destino.getJugadores().contains(amigo1), is(true));
+    }
+  }
+
+  @Test
+  public void tampocoAceptaSiElOrigenYaEstabaPorDebajoDelMinimo() {
+    completarPlantel(equipoOrigen, 4);
+    InvitacionEquipo oferta = invitacion(
+      60L,
+      equipoDestino,
+      amigo1,
+      EstadoInvitacionEquipo.PENDIENTE
+    );
+    oferta.setEquipoOrigen(equipoOrigen);
+    when(repositorioInvitacion.buscarPorId(60L)).thenReturn(oferta);
+
+    assertThat(servicio.aceptarInvitacion(60L, amigo1), is(false));
+    verify(repositorioEquipo, never()).actualizar(any());
+    verify(repositorioInvitacion, never()).actualizar(any());
+  }
+
+  private static void completarPlantel(Equipo equipo, int cantidad) {
+    while (equipo.getJugadores().size() < cantidad) {
+      int numero = equipo.getJugadores().size();
+      equipo.agregarJugador(usuario(1000L + numero, "suplente" + numero, 1000));
+    }
   }
 
   private List<String> nombresDeAmigos(int cantidad) {

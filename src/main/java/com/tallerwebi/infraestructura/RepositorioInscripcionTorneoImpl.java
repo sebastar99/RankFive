@@ -27,7 +27,8 @@ public class RepositorioInscripcionTorneoImpl implements RepositorioInscripcionT
     Long count = sessionFactory
       .getCurrentSession()
       .createQuery(
-        "select count(i.id) from InscripcionTorneo i where i.usuario.id = :u and i.torneo.id = :t",
+        "select count(i.id) from InscripcionTorneo i left join i.equipo e left join e.jugadores j " +
+        "where i.torneo.id = :t and (i.usuario.id = :u or j.id = :u)",
         Long.class
       )
       .setParameter("u", usuarioId)

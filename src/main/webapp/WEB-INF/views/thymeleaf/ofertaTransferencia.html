@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Oferta de transferencia | Rank5</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=16)}">
+</head>
+<body class="dashboard-page">
+  <div class="pitch-bg"></div>
+  <header class="db-header fixed-top">
+    <div class="container">
+      <div class="db-header-content">
+        <a th:href="@{/dashboard}" class="db-brand db-left">
+          <span class="db-brand-logo"><i class="bi bi-trophy-fill"></i></span>
+          <span class="db-brand-text">Rank<span class="db-brand-accent">5</span></span>
+        </a>
+        <span class="db-page-title db-center"><i class="bi bi-arrow-left-right"></i>Oferta de transferencia</span>
+        <a th:href="@{/dashboard}" class="db-link db-right"><i class="bi bi-arrow-left"></i> Volver</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container db-content">
+    <section class="card-glass p-4 mb-4" aria-labelledby="equipo-ofertante">
+      <span class="badge bg-warning text-dark mb-3">Pendiente de tu respuesta</span>
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <img th:if="${equipo.fotoUrl != null}" th:src="@{${equipo.fotoUrl}}"
+             class="jugador-foto" alt="Escudo del equipo">
+        <span th:unless="${equipo.fotoUrl != null}" class="transfer-escudo"><i class="bi bi-shield-fill"></i></span>
+        <div>
+          <h1 id="equipo-ofertante" class="h3 mb-1" th:text="${equipo.nombre}">Equipo ofertante</h1>
+          <p class="mb-0">
+            Capitán: <strong th:text="${equipo.owner.perfil.nombreCompleto}">Nombre</strong>
+            <span class="text-muted" th:text="'@' + ${equipo.owner.perfil.nombreUsuario}">@capitan</span>
+          </p>
+        </div>
+      </div>
+      <p>El capitán quiere que te sumes a su equipo. Revisá el plantel antes de decidir.</p>
+      <div class="d-flex flex-wrap gap-3 mb-4">
+        <span>Formato: <strong th:text="'F' + ${equipo.formato}">F5</strong></span>
+        <span>Integrantes: <strong th:text="${#lists.size(jugadores)}">0</strong></span>
+        <span>PL promedio: <strong th:text="${equipo.promedioPl}">0</strong></span>
+        <span>Rango: <strong th:text="${equipo.rango.nombre}">Rango</strong></span>
+      </div>
+      <div class="alert alert-info" id="consecuencias-pase">
+        Si aceptás, dejarás <strong th:text="${oferta.equipoOrigen.nombre}">tu equipo actual</strong>
+        y pasarás a formar parte de <strong th:text="${equipo.nombre}">este equipo</strong> automáticamente.
+        Si rechazás, seguirás en tu equipo actual. El pase no se completa hasta que lo aceptes.
+      </div>
+      <div class="d-flex flex-wrap gap-3">
+        <form th:action="@{/equipos/invitaciones/aceptar}" method="post">
+          <input type="hidden" name="invitacionId" th:value="${oferta.id}">
+          <button type="submit" class="btn btn-success" aria-describedby="consecuencias-pase">
+            <i class="bi bi-check-lg me-1"></i>Aceptar pase
+          </button>
+        </form>
+        <form th:action="@{/equipos/invitaciones/rechazar}" method="post">
+          <input type="hidden" name="invitacionId" th:value="${oferta.id}">
+          <button type="submit" class="btn btn-outline-danger" aria-describedby="consecuencias-pase">
+            <i class="bi bi-x-lg me-1"></i>Rechazar pase
+          </button>
+        </form>
+        <form th:action="@{/transferencias/ofertas/postergar}" method="post">
+          <input type="hidden" name="invitacionId" th:value="${oferta.id}">
+          <button type="submit" class="btn btn-outline-light" aria-describedby="aviso-postergar">
+            <i class="bi bi-clock-history me-1"></i>Decidir más tarde
+          </button>
+        </form>
+      </div>
+      <p id="aviso-postergar" class="small text-muted mt-3 mb-0">
+        El capitán recibirá un aviso de que decidiste más tarde y la oferta seguirá pendiente para que puedas responder después.
+      </p>
+    </section>
+
+    <section class="card-glass p-4" aria-labelledby="plantel-ofertante">
+      <h2 id="plantel-ofertante" class="h5 mb-3">Plantel actual</h2>
+      <div class="table-responsive">
+        <table class="tabla-posiciones tabla-jugadores">
+          <thead>
+            <tr><th>Jugador</th><th>Posición</th><th>PL</th><th>PJ</th><th>Goles</th><th>Asistencias</th></tr>
+          </thead>
+          <tbody>
+            <tr th:each="integrante : ${jugadores}">
+              <td>
+                <span th:text="${integrante.perfil.nombreCompleto}">Nombre</span>
+                <span th:if="${integrante.id == equipo.owner.id}" class="captain-mark" title="Capitán" aria-label="Capitán">C</span>
+                <div class="small text-muted" th:text="'@' + ${integrante.perfil.nombreUsuario}">@usuario</div>
+              </td>
+              <td th:text="${integrante.perfil.posicionPreferida}">Posición</td>
+              <td th:text="${integrante.perfil.pl}">0</td>
+              <td th:text="${integrante.estadisticas.partidosJugados}">0</td>
+              <td th:text="${integrante.estadisticas.goles}">0</td>
+              <td th:text="${integrante.estadisticas.asistencias}">0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

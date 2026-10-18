@@ -9,5 +9,7 @@ public interface RepositorioEquipo {
 
   Equipo buscarPorId(Long id);
 
+  int minimoJugadoresEnCompetencias(Long equipoId);
+
   List<Equipo> listarActivosDe(Long usuarioId);
 }

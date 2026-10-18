@@ -75,7 +75,7 @@ INSERT INTO arbitro (nombre, pl, puntajeTotal, cantidadCalificaciones) VALUES ('
 -- Jugadores de los equipos semilla: 48 equipos x 5 jugadores (jugador001..jugador240)
 -- Equipos 1-31 (jugador001..155) -> Copa Rank5 Apertura | Equipos 32-48 (jugador156..240) -> Liga Rank5 Premier
 INSERT INTO Usuario (email, password, rol, activo, nombreUsuario, nombreCompleto, fechaNacimiento, lugarResidencia, posicionPreferida, piernaHabil, pl, partidosJugados, goles, asistencias, puntaje)
-WITH RECURSIVE seq (n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM seq WHERE n < 240)
+WITH RECURSIVE seq (n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM seq WHERE n < 288)
 SELECT
   CONCAT('jugador', LPAD(n, 3, '0'), '@rankfive.com'),
   'test',
@@ -116,15 +116,15 @@ FROM (
   UNION ALL SELECT 44, 'Brentford Club' UNION ALL SELECT 45, 'Crystal Palace FC' UNION ALL SELECT 46, 'Leicester Barrio'
   UNION ALL SELECT 47, 'Leeds Unidos' UNION ALL SELECT 48, 'Southampton FC'
 ) t
-JOIN Usuario u ON u.nombreUsuario = CONCAT('jugador', LPAD((t.n - 1) * 5 + 1, 3, '0'));
+JOIN Usuario u ON u.nombreUsuario = CONCAT('jugador', LPAD((t.n - 1) * 6 + 1, 3, '0'));
 
 -- Plantel: cada equipo tiene a su owner y los 4 jugadores siguientes
 INSERT INTO equipo_jugador (equipo_id, usuario_id)
-WITH RECURSIVE seq (n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM seq WHERE n < 240)
+WITH RECURSIVE seq (n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM seq WHERE n < 288)
 SELECT e.id, u.id
 FROM seq
 JOIN Usuario u ON u.nombreUsuario = CONCAT('jugador', LPAD(n, 3, '0'))
-JOIN Usuario o ON o.nombreUsuario = CONCAT('jugador', LPAD(((n - 1) DIV 5) * 5 + 1, 3, '0'))
+JOIN Usuario o ON o.nombreUsuario = CONCAT('jugador', LPAD(((n - 1) DIV 6) * 6 + 1, 3, '0'))
 JOIN equipo e ON e.owner_id = o.id;
 
 -- Copa Rank5 Apertura: 31 equipos repartidos en 8 grupos (A-G con 4, H con 3 para sumar un equipo manualmente)
@@ -132,7 +132,7 @@ INSERT INTO inscripcion_torneo (usuario_id, torneo_id, equipo_id, nombreEquipo, 
 WITH RECURSIVE seq (n) AS (SELECT 0 UNION ALL SELECT n + 1 FROM seq WHERE n < 30)
 SELECT o.id, t.id, e.id, e.nombre, CHAR(65 + n DIV 4 USING utf8mb4), NOW()
 FROM seq
-JOIN Usuario o ON o.nombreUsuario = CONCAT('jugador', LPAD(n * 5 + 1, 3, '0'))
+JOIN Usuario o ON o.nombreUsuario = CONCAT('jugador', LPAD(n * 6 + 1, 3, '0'))
 JOIN equipo e ON e.owner_id = o.id
 JOIN torneo t ON t.nombre LIKE 'Copa Rank5%';
 
@@ -141,6 +141,18 @@ INSERT INTO inscripcion_liga (usuario_id, liga_id, equipo_id, nombreEquipo, fech
 WITH RECURSIVE seq (n) AS (SELECT 31 UNION ALL SELECT n + 1 FROM seq WHERE n < 47)
 SELECT o.id, l.id, e.id, e.nombre, NOW()
 FROM seq
-JOIN Usuario o ON o.nombreUsuario = CONCAT('jugador', LPAD(n * 5 + 1, 3, '0'))
+JOIN Usuario o ON o.nombreUsuario = CONCAT('jugador', LPAD(n * 6 + 1, 3, '0'))
 JOIN equipo e ON e.owner_id = o.id
 JOIN liga l ON l.nombre = 'Liga Rank5 Premier';
+
+
+INSERT INTO equipo (nombre, owner_id, formato, estado, fechaCreacion)
+SELECT 'SacaPuntos FC', u.id, 5, 'ACTIVO', NOW()
+FROM Usuario u WHERE u.nombreUsuario = 'user02';
+ 
+-- Plantel: el owner + user01, user03, user04, user05
+INSERT INTO equipo_jugador (equipo_id, usuario_id)
+SELECT e.id, u.id
+FROM equipo e
+JOIN Usuario u ON u.nombreUsuario IN ('user02', 'user01', 'user03', 'user04', 'user05')
+WHERE e.nombre = 'SacaPuntos FC';

@@ -67,6 +67,12 @@ public class Equipo {
     }
   }
 
+  public void quitarJugador(Usuario jugador) {
+    if (jugador != null && jugador.getId() != null) {
+      jugadores.removeIf(j -> jugador.getId().equals(j.getId()));
+    }
+  }
+
   public int getPromedioPl() {
     if (jugadores == null || jugadores.isEmpty()) {
       return 0;

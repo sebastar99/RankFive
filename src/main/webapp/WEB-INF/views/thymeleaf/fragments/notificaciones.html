@@ -7,7 +7,8 @@
               cantidadAvisosPartido=${avisosPartido != null ? #lists.size(avisosPartido) : 0},
               cantidadInvitaciones=${invitacionesEquipo != null ? #lists.size(invitacionesEquipo) : 0},
               cantidadSolicitudesAmistad=${cantidadSolicitudes != null ? cantidadSolicitudes : 0},
-              totalSolicitudes=${(cantidadSolicitudes != null ? cantidadSolicitudes : 0) + (invitacionesEquipo != null ? #lists.size(invitacionesEquipo) : 0)}">
+              cantidadRespuestas=${respuestasTransferencia != null ? #lists.size(respuestasTransferencia) : 0},
+              totalSolicitudes=${(cantidadSolicitudes != null ? cantidadSolicitudes : 0) + (invitacionesEquipo != null ? #lists.size(invitacionesEquipo) : 0) + (respuestasTransferencia != null ? #lists.size(respuestasTransferencia) : 0)}">
 
   <!-- Notificaciones de partidos / PL -->
   <div class="dropdown notif-dropdown">
@@ -64,11 +65,11 @@
 
     <div class="dropdown-menu dropdown-menu-end notif-menu" aria-labelledby="notifAmigosDropdown">
       <div class="notif-header">
-        <span><i class="bi bi-shield-fill me-2"></i>Invitaciones a equipos</span>
+        <span><i class="bi bi-shield-fill me-2"></i>Invitaciones y pases</span>
         <span class="notif-count" th:text="${cantidadInvitaciones}">0</span>
       </div>
 
-      <div class="notif-empty" th:if="${cantidadInvitaciones == 0}">
+      <div class="notif-empty" th:if="${cantidadInvitaciones == 0 and cantidadRespuestas == 0}">
         <i class="bi bi-inbox"></i>
         <span>No tenés invitaciones a equipos</span>
       </div>
@@ -81,14 +82,22 @@
         </div>
         <div class="notif-info">
           <div class="notif-name" th:text="${invitacion.equipo.nombre}">Equipo</div>
-          <div class="notif-user"
+          <div class="notif-user" th:if="${invitacion.equipoOrigen == null}"
                th:text="'Te invitó @' + (${invitacion.equipo.owner.perfil.nombreUsuario} ?: 'usuario')">Te invitó @usuario</div>
+          <div class="notif-user" th:if="${invitacion.equipoOrigen != null}"
+               th:text="'@' + (${invitacion.equipo.owner.perfil.nombreUsuario} ?: 'usuario') + ' quiere que te sumes a ' + ${invitacion.equipo.nombre}">Oferta de transferencia</div>
+          <div class="small text-muted" th:if="${invitacion.equipoOrigen != null}">
+            Pase pendiente: vos decidís si aceptás o rechazás.
+          </div>
           <div class="notif-points">
             <i class="bi bi-people-fill"></i>
             <span th:text="'F' + ${invitacion.equipo.formato}">F5</span>
           </div>
+          <a th:if="${invitacion.equipoOrigen != null}"
+             th:href="@{/transferencias/ofertas/{id}(id=${invitacion.id})}"
+             class="btn btn-sm btn-outline-light mt-2">Ver equipo y responder</a>
         </div>
-        <div class="notif-actions">
+        <div class="notif-actions" th:if="${invitacion.equipoOrigen == null}">
           <form th:action="@{/equipos/invitaciones/aceptar}" method="post" class="m-0">
             <input type="hidden" name="invitacionId" th:value="${invitacion.id}">
             <button type="submit" class="btn btn-sm btn-success" title="Aceptar">
@@ -99,6 +108,37 @@
             <input type="hidden" name="invitacionId" th:value="${invitacion.id}">
             <button type="submit" class="btn btn-sm btn-outline-danger" title="Rechazar">
               <i class="bi bi-x-lg"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="notif-header" th:if="${cantidadRespuestas > 0}">
+        <span><i class="bi bi-arrow-left-right me-2"></i>Respuestas a tus ofertas</span>
+        <span class="notif-count" id="respuestasTransferenciaCount" th:text="${cantidadRespuestas}">0</span>
+      </div>
+
+      <div class="notif-item" th:each="respuesta : ${respuestasTransferencia}"
+           th:attr="data-respuesta-id=${respuesta.id}">
+        <div class="notif-avatar">
+          <i th:if="${respuesta.fueAceptada()}" class="bi bi-check-circle-fill"></i>
+          <i th:if="${respuesta.fueRechazada()}" class="bi bi-x-circle-fill"></i>
+          <i th:if="${respuesta.estaPendiente()}" class="bi bi-clock-fill"></i>
+        </div>
+        <div class="notif-info">
+          <div class="notif-name" th:if="${respuesta.fueAceptada()}"
+               th:text="'@' + (${respuesta.usuario.perfil.nombreUsuario} ?: 'usuario') + ' aceptó tu oferta para ' + ${respuesta.equipo.nombre}">Oferta aceptada</div>
+          <div class="notif-name" th:if="${respuesta.fueRechazada()}"
+               th:text="'@' + (${respuesta.usuario.perfil.nombreUsuario} ?: 'usuario') + ' rechazó tu oferta para ' + ${respuesta.equipo.nombre}">Oferta rechazada</div>
+          <div class="notif-name" th:if="${respuesta.estaPendiente()}"
+               th:text="'@' + (${respuesta.usuario.perfil.nombreUsuario} ?: 'usuario') + ' postergó la respuesta a tu oferta para ' + ${respuesta.equipo.nombre}">Respuesta postergada</div>
+          <div class="notif-user" th:if="${respuesta.estaPendiente()}">La oferta sigue abierta.</div>
+        </div>
+        <div class="notif-actions">
+          <form th:action="@{/transferencias/respuestas/leidas}" method="post" class="m-0">
+            <input type="hidden" name="invitacionId" th:value="${respuesta.id}">
+            <button type="submit" class="btn btn-sm btn-outline-light" title="Marcar como leída">
+              <i class="bi bi-check2"></i>
             </button>
           </form>
         </div>
