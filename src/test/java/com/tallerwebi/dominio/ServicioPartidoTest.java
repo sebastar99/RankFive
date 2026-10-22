@@ -2,6 +2,7 @@ package com.tallerwebi.dominio;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tallerwebi.dominio.implementacion.ServicioPartidoImpl;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -369,5 +371,118 @@ public class ServicioPartidoTest {
     assertThat(ok, is(false));
     verify(repoTarjetas, never()).borrarPorPartido(anyLong());
     verify(repoTarjetas, never()).guardar(any(TarjetaPartido.class));
+  }
+
+  @Test
+  public void crearPartidoBalanceadoConDiezJugadoresYFormatoCincoArmaCincoContraCinco() {
+    List<Usuario> jugadores = new ArrayList<>();
+    jugadores.add(usuarioConPl(1L, 1000));
+    jugadores.add(usuarioConPl(2L, 1000));
+    jugadores.add(usuarioConPl(3L, 1000));
+    jugadores.add(usuarioConPl(4L, 1000));
+    jugadores.add(usuarioConPl(5L, 1000));
+    jugadores.add(usuarioConPl(6L, 1000));
+    jugadores.add(usuarioConPl(7L, 1000));
+    jugadores.add(usuarioConPl(8L, 1000));
+    jugadores.add(usuarioConPl(9L, 1000));
+    jugadores.add(usuarioConPl(10L, 1000));
+
+    Partido partido = servicioPartido.crearPartidoBalanceado(jugadores, 5, null);
+
+    assertThat(partido, is(notNullValue()));
+    assertThat(partido.getEquipoA(), hasSize(5));
+    assertThat(partido.getEquipoB(), hasSize(5));
+
+    verify(repositorioPartidoMock, times(1)).guardar(partido);
+  }
+
+  @Test
+  public void crearPartidoBalanceadoConNueveJugadoresYFormatoCincoDevuelveNull() {
+    List<Usuario> jugadores = new ArrayList<>();
+    jugadores.add(usuarioConPl(1L, 1000));
+    jugadores.add(usuarioConPl(2L, 1000));
+    jugadores.add(usuarioConPl(3L, 1000));
+    jugadores.add(usuarioConPl(4L, 1000));
+    jugadores.add(usuarioConPl(5L, 1000));
+    jugadores.add(usuarioConPl(6L, 1000));
+    jugadores.add(usuarioConPl(7L, 1000));
+    jugadores.add(usuarioConPl(8L, 1000));
+    jugadores.add(usuarioConPl(9L, 1000));
+
+    Partido partido = servicioPartido.crearPartidoBalanceado(jugadores, 5, null);
+
+    assertThat(partido, is(nullValue()));
+    verify(repositorioPartidoMock, never()).guardar(any(Partido.class));
+  }
+
+  @Test
+  public void crearPartidoBalanceadoConOnceJugadoresYFormatoCincoDevuelveNull() {
+    List<Usuario> jugadores = new ArrayList<>();
+    jugadores.add(usuarioConPl(1L, 1000));
+    jugadores.add(usuarioConPl(2L, 1000));
+    jugadores.add(usuarioConPl(3L, 1000));
+    jugadores.add(usuarioConPl(4L, 1000));
+    jugadores.add(usuarioConPl(5L, 1000));
+    jugadores.add(usuarioConPl(6L, 1000));
+    jugadores.add(usuarioConPl(7L, 1000));
+    jugadores.add(usuarioConPl(8L, 1000));
+    jugadores.add(usuarioConPl(9L, 1000));
+    jugadores.add(usuarioConPl(10L, 1000));
+    jugadores.add(usuarioConPl(11L, 1000));
+
+    Partido partido = servicioPartido.crearPartidoBalanceado(jugadores, 5, null);
+
+    assertThat(partido, is(nullValue()));
+    verify(repositorioPartidoMock, never()).guardar(any(Partido.class));
+  }
+
+  @Test
+  public void crearPartidoBalanceadoConFormatoInvalidoDevuelveNull() {
+    List<Usuario> jugadores = new ArrayList<>();
+    jugadores.add(usuarioConPl(1L, 1000));
+    jugadores.add(usuarioConPl(2L, 1000));
+    jugadores.add(usuarioConPl(3L, 1000));
+    jugadores.add(usuarioConPl(4L, 1000));
+    jugadores.add(usuarioConPl(5L, 1000));
+    jugadores.add(usuarioConPl(6L, 1000));
+    jugadores.add(usuarioConPl(7L, 1000));
+    jugadores.add(usuarioConPl(8L, 1000));
+    jugadores.add(usuarioConPl(9L, 1000));
+    jugadores.add(usuarioConPl(10L, 1000));
+    jugadores.add(usuarioConPl(11L, 1000));
+    jugadores.add(usuarioConPl(12L, 1000));
+
+    Partido partido = servicioPartido.crearPartidoBalanceado(jugadores, 6, null);
+
+    assertThat(partido, is(nullValue()));
+    verify(repositorioPartidoMock, never()).guardar(any(Partido.class));
+  }
+
+  @Test
+  public void crearPartidoBalanceadoConFormatoNuloDevuelveNull() {
+    List<Usuario> jugadores = new ArrayList<>();
+    jugadores.add(usuarioConPl(1L, 1000));
+    jugadores.add(usuarioConPl(2L, 1000));
+    jugadores.add(usuarioConPl(3L, 1000));
+    jugadores.add(usuarioConPl(4L, 1000));
+    jugadores.add(usuarioConPl(5L, 1000));
+    jugadores.add(usuarioConPl(6L, 1000));
+    jugadores.add(usuarioConPl(7L, 1000));
+    jugadores.add(usuarioConPl(8L, 1000));
+    jugadores.add(usuarioConPl(9L, 1000));
+    jugadores.add(usuarioConPl(10L, 1000));
+
+    Partido partido = servicioPartido.crearPartidoBalanceado(jugadores, null, null);
+
+    assertThat(partido, is(nullValue()));
+    verify(repositorioPartidoMock, never()).guardar(any(Partido.class));
+  }
+
+  @Test
+  public void crearPartidoBalanceadoConListaDeJugadoresNulaDevuelveNull() {
+    Partido partido = servicioPartido.crearPartidoBalanceado(null, 5, null);
+
+    assertThat(partido, is(nullValue()));
+    verify(repositorioPartidoMock, never()).guardar(any(Partido.class));
   }
 }
