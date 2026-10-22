@@ -31,6 +31,8 @@ public class ControladorPartido {
   private static final String REDIRECT_LOGIN = "redirect:/login";
   private static final String ERROR_CREACION =
     "No se pudo crear el partido. Revisá los equipos elegidos.";
+  private static final String ERROR_CREACION_BALANCEADA =
+    "No se pudo crear el partido Balanceado. Revisá que hayas elegido la cantidad justa de amigos para el formato";
   private static final String EQUIPO_A = "A";
   private static final String VISTA_PARTIDOS = "partidos";
   private static final String AVISO = "aviso";
@@ -318,5 +320,37 @@ public class ControladorPartido {
       );
     }
     return ok;
+  }
+
+  @RequestMapping(path = "/partidos/crear-balanceado", method = RequestMethod.POST)
+  public ModelAndView crearPartidoBalanceado(
+    HttpServletRequest request,
+    @RequestParam(value = "formato") Integer formato,
+    @RequestParam("fecha") String fecha,
+    @RequestParam(name = "jugadoresIds", required = false) List<Long> jugadoresIds
+  ) {
+    Usuario usuarioActual = usuarioDeSesion(request);
+    if (usuarioActual == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+
+    List<Usuario> amigos = servicioRelacionAmistad.listarAmigosDe(usuarioActual);
+
+    List<Usuario> jugadores = new ArrayList<>(filtrarPorIds(amigos, jugadoresIds));
+
+    jugadores.add(usuarioActual);
+
+    Partido partido = servicioPartido.crearPartidoBalanceado(
+      jugadores,
+      formato,
+      parsearFecha(fecha)
+    );
+    if (partido == null) {
+      Map<String, Object> modelo = modeloBase(usuarioActual);
+      modelo.put("error", ERROR_CREACION_BALANCEADA);
+      return new ModelAndView(VISTA_PARTIDOS, modelo);
+    }
+
+    return redirigirAPartidos("Partido balanceado creado");
   }
 }

@@ -1387,3 +1387,38 @@
   .db-right { justify-content: space-between; display: flex; }
   .notif-menu { width: 18rem; }
 }
+
+/* ---- Partidos: pestañas Balanceado / Manual dentro de "Crear partido" ---- */
+.partidos-page .nav-tabs {
+  border-bottom-color: var(--rf-surface-border);
+}
+.partidos-page .nav-tabs .nav-link {
+  color: var(--rf-text-muted);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+}
+.partidos-page .nav-tabs .nav-link:hover {
+  color: var(--rf-text);
+}
+.partidos-page .nav-tabs .nav-link.active {
+  color: var(--rf-primary);
+  background: none;
+  border-bottom-color: var(--rf-primary);
+}
+/* Contador del modo balanceado cuando se eligieron más jugadores que los del formato */
+.team-count-excedido {
+  color: #ff6b6b;
+  border-color: rgba(255,107,107,.35);
+  background: rgba(255,107,107,.08);
+}
+/* La tarjeta tiene alto fijo en desktop: las pestañas se reparten ese alto para que
+   la lista de amigos haga scroll adentro en vez de desbordarse. */
+.partidos-page .tab-content,
+.partidos-page .tab-content > .tab-pane.active,
+.partidos-page #crearBalanceadoForm {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}

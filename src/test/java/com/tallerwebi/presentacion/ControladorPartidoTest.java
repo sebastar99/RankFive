@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -22,6 +23,7 @@ import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Usuario;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -371,5 +373,87 @@ public class ControladorPartidoTest {
     );
 
     verify(servicioPartidoMock).registrarTarjetas(1L, tiposA, tarjetasA, tiposB, tarjetasB);
+  }
+
+  @Test
+  public void crearPartidoBalanceadoSinSesionDeberiaRedirigirALogin() {
+    when(requestMock.getSession(false)).thenReturn(null);
+
+    ModelAndView modelAndView = controladorPartido.crearPartidoBalanceado(
+      requestMock,
+      5,
+      null,
+      List.of()
+    );
+
+    assertThat(modelAndView.getViewName(), equalTo("redirect:/login"));
+  }
+
+  @Test
+  public void crearPartidoBalanceadoValidoRedirigeAPartidos() {
+    conSesionActiva();
+    when(servicioPartidoMock.crearPartidoBalanceado(anyList(), anyInt(), any()))
+      .thenReturn(new Partido());
+
+    ModelAndView modelAndView = controladorPartido.crearPartidoBalanceado(
+      requestMock,
+      5,
+      null,
+      List.of()
+    );
+
+    assertThat(modelAndView.getViewName(), startsWith("redirect:/partidos"));
+  }
+
+  @Test
+  public void crearPartidoBalanceadoMandaAlServicioLosAmigosElegidosYAlUsuario() {
+    conSesionActiva();
+    Usuario amigo1 = usuarioConId(2L);
+    Usuario amigo2 = usuarioConId(3L);
+    Usuario amigo3 = usuarioConId(4L);
+
+    when(servicioPartidoMock.crearPartidoBalanceado(anyList(), anyInt(), any()))
+      .thenReturn(new Partido());
+    when(servicioRelacionAmistadMock.listarAmigosDe(usuarioActual))
+      .thenReturn(List.of(amigo1, amigo2, amigo3));
+
+    controladorPartido.crearPartidoBalanceado(requestMock, 5, null, List.of(2L, 3L));
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<Usuario>> captor = ArgumentCaptor.forClass(List.class);
+
+    verify(servicioPartidoMock).crearPartidoBalanceado(captor.capture(), eq(5), any());
+
+    assertThat(captor.getValue(), containsInAnyOrder(amigo1, amigo2, usuarioActual));
+  }
+
+  @Test
+  public void crearPartidoBalanceadoSiElServicioFallaMuestraError() {
+    conSesionActiva();
+
+    when(servicioPartidoMock.crearPartidoBalanceado(anyList(), anyInt(), any())).thenReturn(null);
+
+    ModelAndView modelAndView = controladorPartido.crearPartidoBalanceado(
+      requestMock,
+      5,
+      null,
+      List.of()
+    );
+
+    assertThat(modelAndView.getViewName(), equalTo("partidos"));
+    assertThat(modelAndView.getModel().get("error"), notNullValue());
+  }
+
+  @Test
+  public void crearPartidoBalanceadoLePasaAlServicioLaFechaElegida() {
+    conSesionActiva();
+
+    when(servicioPartidoMock.crearPartidoBalanceado(anyList(), anyInt(), any()))
+      .thenReturn(new Partido());
+
+    controladorPartido.crearPartidoBalanceado(requestMock, 5, "2026-10-25T20:00", List.of());
+
+    verify(servicioPartidoMock)
+      .crearPartidoBalanceado(anyList(), eq(5), eq(LocalDateTime.of(2026, 10, 25, 20, 0)));
   }
 }

@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ServicioPartido {
@@ -36,4 +37,6 @@ public interface ServicioPartido {
     List<String> tiposB,
     List<Long> tarjetasBIds
   );
+
+  Partido crearPartidoBalanceado(List<Usuario> jugadores, Integer formato, LocalDateTime fecha);
 }

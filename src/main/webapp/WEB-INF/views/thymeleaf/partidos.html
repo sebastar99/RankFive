@@ -1,394 +1,520 @@
 <!DOCTYPE HTML>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Partidos | Rank5</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" th:href="@{/css/main.css}" />
-  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=16)}" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Partidos | Rank5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css(v=16)}"/>
 </head>
 <body class="dashboard-page partidos-page">
-  <div class="pitch-bg"></div>
+<div class="pitch-bg"></div>
 
-  <header class="db-header fixed-top">
+<header class="db-header fixed-top">
     <div class="container">
-      <div class="db-header-content">
-        <div class="db-left d-flex align-items-center gap-2">
-          <a th:href="@{/dashboard}" class="db-brand">
-            <span class="db-brand-logo"><i class="bi bi-trophy-fill"></i></span>
-            <span class="db-brand-text">Rank<span class="db-brand-accent">5</span></span>
-          </a>
+        <div class="db-header-content">
+            <div class="db-left d-flex align-items-center gap-2">
+                <a th:href="@{/dashboard}" class="db-brand">
+                    <span class="db-brand-logo"><i class="bi bi-trophy-fill"></i></span>
+                    <span class="db-brand-text">Rank<span class="db-brand-accent">5</span></span>
+                </a>
+            </div>
+            <div class="db-center d-flex align-items-center gap-2">
+                <span class="db-page-title"><i class="bi bi-dribbble"></i>Partidos</span>
+            </div>
+            <div class="db-right d-flex align-items-center gap-4">
+                <div th:replace="~{fragments/notificaciones :: campana}"></div>
+                <span class="db-divider"></span>
+                <a th:href="@{/dashboard}" class="db-link"><i class="bi bi-arrow-left"></i> Dashboard</a>
+            </div>
         </div>
-        <div class="db-center d-flex align-items-center gap-2">
-          <span class="db-page-title"><i class="bi bi-dribbble"></i>Partidos</span>
-        </div>
-        <div class="db-right d-flex align-items-center gap-4">
-          <div th:replace="~{fragments/notificaciones :: campana}"></div>
-          <span class="db-divider"></span>
-          <a th:href="@{/dashboard}" class="db-link"><i class="bi bi-arrow-left"></i> Dashboard</a>
-        </div>
-      </div>
     </div>
-  </header>
+</header>
 
-  <main class="container db-content">
+<main class="container db-content">
     <div th:if="${aviso != null}" class="alert alert-info alert-auto fade show d-flex align-items-center gap-2">
-      <i class="bi bi-info-circle"></i> <span th:text="${aviso}">Aviso</span>
+        <i class="bi bi-info-circle"></i> <span th:text="${aviso}">Aviso</span>
     </div>
     <div th:if="${error != null}" class="alert alert-warning alert-auto fade show d-flex align-items-center gap-2">
-      <i class="bi bi-exclamation-triangle"></i><span th:text="${error}">Error</span>
+        <i class="bi bi-exclamation-triangle"></i><span th:text="${error}">Error</span>
     </div>
 
     <div class="row g-4">
-      <div class="col-12 col-lg-5">
-        <section class="card-glass p-4">
-          <h2 class="h5 mb-3"><i class="bi bi-plus-circle me-2"></i>Crear partido</h2>
+        <div class="col-12 col-lg-5">
+            <section class="card-glass p-4">
+                <h2 class="h5 mb-3"><i class="bi bi-plus-circle me-2"></i>Crear partido</h2>
 
-          <div th:if="${#lists.isEmpty(amigos)}" class="ranking-empty">
-            <i class="bi bi-people"></i>
-            <p class="m-0">Necesitás tener amigos agregados para armar un partido.</p>
-            <a th:href="@{/buscar}" class="btn btn-sm btn-outline-light">
-              <i class="bi bi-person-plus me-1"></i>Buscar amigos
-            </a>
-          </div>
-
-          <form th:if="${!#lists.isEmpty(amigos)}" th:action="@{/partidos/crear}" method="post" id="crearPartidoForm"
-                th:attr="data-ruta-imagenes=@{/images/}">
-            <div class="row g-3 mb-3">
-              <div class="col-sm-7">
-                <label class="form-label">Formato (jugadores por equipo)</label>
-                <select class="form-select" name="formato" id="formato" required>
-                  <option value="5" selected>5 vs 5 (10 jugadores)</option>
-                  <option value="7">7 vs 7 (14 jugadores)</option>
-                  <option value="8">8 vs 8 (16 jugadores)</option>
-                  <option value="9">9 vs 9 (18 jugadores)</option>
-                  <option value="11">11 vs 11 (22 jugadores)</option>
-                </select>
-              </div>
-              <div class="col-sm-5">
-                <label class="form-label">Vos jugás en:</label>
-                <div class="d-flex gap-3 pt-2">
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="miEquipo" value="A" id="miEquipoA" checked>
-                    <label class="form-check-label" for="miEquipoA">Equipo A</label>
-                  </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="miEquipo" value="B" id="miEquipoB">
-                    <label class="form-check-label" for="miEquipoB">Equipo B</label>
-                  </div>
+                <div th:if="${#lists.isEmpty(amigos)}" class="ranking-empty">
+                    <i class="bi bi-people"></i>
+                    <p class="m-0">Necesitás tener amigos agregados para armar un partido.</p>
+                    <a th:href="@{/buscar}" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-person-plus me-1"></i>Buscar amigos
+                    </a>
                 </div>
-              </div>
-            </div>
-            <div class="row g-3 mb-3">
-              <div class="col-12 col-md-7">
-                <label class="form-label">Fecha y hora del partido</label>
-                <input type="datetime-local" class="form-control" name="fecha" id="fechaPartido" required>
-              </div>
-            </div>
-            <div class="form-text mb-3" id="requeridosHint">Se requieren al menos 10 jugadores.</div>
 
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <label class="form-label m-0">Tus amigos</label>
-              <span class="team-counts align-items-center d-flex">
-                <img id="rankIconA" class="team-rank-icon me-1" alt="Rango equipo A" title="Rango equipo A" />
-                <span class="team-count team-count-a" id="countA">A: 0</span>
-                <span class="mx-1"></span>
-                <img id="rankIconB" class="team-rank-icon me-1" alt="Rango equipo B" title="Rango equipo B" />
-                <span class="team-count team-count-b" id="countB">B: 0</span>
-              </span>
-            </div>
-            <div class="search-input-wrap player-filter mb-2">
-              <i class="bi bi-search"></i>
-              <input type="text" id="filtroAmigos" placeholder="Filtrar por nombre o usuario..." autocomplete="off">
-            </div>
-            <div class="team-rosters mb-3">
-              <div class="roster-box">
-                <div class="roster-title d-flex align-items-center justify-content-between"><span><i class="bi bi-circle-half me-1 text-success"></i>Equipo A</span><span class="badge bg-secondary" id="rosterACount">0</span></div>
-                <div class="roster-list" id="rosterA"></div>
-              </div>
-              <div class="roster-box">
-                <div class="roster-title d-flex align-items-center justify-content-between"><span><i class="bi bi-circle-half me-1 text-info"></i>Equipo B</span><span class="badge bg-secondary" id="rosterBCount">0</span></div>
-                <div class="roster-list" id="rosterB"></div>
-              </div>
-            </div>
-            <div class="player-picker mb-3" id="listaAmigos">
-              <div class="player-row" th:each="amigo : ${amigos}"
-                   th:with="rango=${T(com.tallerwebi.dominio.Rango).de(amigo.perfil.pl != null ? amigo.perfil.pl : 0)}"
-                   th:attr="data-busqueda=${(amigo.perfil.nombreCompleto ?: amigo.email) + ' ' + (amigo.perfil.nombreUsuario ?: '')},data-pl=${amigo.perfil.pl != null ? amigo.perfil.pl : 0}">
-                <div class="player-avatar"><i class="bi bi-person-circle"></i></div>
-                <div class="player-info">
-                  <span class="player-name" th:text="${amigo.perfil.nombreCompleto} ?: ${amigo.email}">Nombre</span>
-                  <span class="player-user" th:text="'@' + (${amigo.perfil.nombreUsuario} ?: 'usuario')">@usuario</span>
-                  <span class="rank-badge rank-badge-sm" th:classappend="${rango.css}" th:title="${rango.nombre}">
-                    <i th:class="'bi ' + ${rango.icono}"></i>
-                    <span th:text="${amigo.perfil.pl} ?: 0">1000</span>
-                  </span>
+                <ul th:if="${!#lists.isEmpty(amigos)}" class="nav nav-tabs mb-3" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" type="button" role="tab"
+                                data-bs-toggle="tab" data-bs-target="#tabBalanceado">
+                            <i class="bi bi-shuffle me-1"></i>Balanceado
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" type="button" role="tab"
+                                data-bs-toggle="tab" data-bs-target="#tabManual">
+                            <i class="bi bi-hand-index me-1"></i>Manual
+                        </button>
+                    </li>
+                </ul>
+
+                <div th:if="${!#lists.isEmpty(amigos)}" class="tab-content">
+
+                    <!-- Pestaña 1: el sistema arma los equipos parejos por PL -->
+                    <div class="tab-pane fade show active" id="tabBalanceado" role="tabpanel">
+                        <form th:action="@{/partidos/crear-balanceado}" method="post" id="crearBalanceadoForm">
+                            <div class="row g-3 mb-3">
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="formatoBal">Formato</label>
+                                    <select class="form-select" name="formato" id="formatoBal" required>
+                                        <option value="5" selected>5 vs 5 (10 jugadores)</option>
+                                        <option value="7">7 vs 7 (14 jugadores)</option>
+                                        <option value="8">8 vs 8 (16 jugadores)</option>
+                                        <option value="9">9 vs 9 (18 jugadores)</option>
+                                        <option value="11">11 vs 11 (22 jugadores)</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="fechaBal">Fecha y hora</label>
+                                    <input type="datetime-local" class="form-control" name="fecha" id="fechaBal" required>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="form-label m-0">Elegí a los que juegan con vos</label>
+                                <span class="team-count" id="contadorBal">Jugadores: 1/10</span>
+                            </div>
+                            <div class="form-text mb-3">
+                                El sistema arma los dos equipos lo más parejos posible según el PL.
+                            </div>
+
+                            <div class="player-picker mb-3">
+                                <div class="player-row" th:each="amigo : ${amigos}"
+                                     th:with="rango=${T(com.tallerwebi.dominio.Rango).de(amigo.perfil.pl != null ? amigo.perfil.pl : 0)}">
+                                    <div class="player-avatar"><i class="bi bi-person-circle"></i></div>
+                                    <div class="player-info">
+                                        <span class="player-name" th:text="${amigo.perfil.nombreCompleto} ?: ${amigo.email}">Nombre</span>
+                                        <span class="player-user" th:text="'@' + (${amigo.perfil.nombreUsuario} ?: 'usuario')">@usuario</span>
+                                        <span class="rank-badge rank-badge-sm" th:classappend="${rango.css}" th:title="${rango.nombre}">
+                                            <i th:class="'bi ' + ${rango.icono}"></i>
+                                            <span th:text="${amigo.perfil.pl} ?: 0">1000</span>
+                                        </span>
+                                    </div>
+                                    <div class="team-toggle">
+                                        <input class="team-check" type="checkbox" name="jugadoresIds"
+                                               th:value="${amigo.id}" th:id="'bal-' + ${amigo.id}">
+                                        <label class="team-pill team-a" th:for="'bal-' + ${amigo.id}" title="Juega">
+                                            <i class="bi bi-check-lg"></i>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-action w-100" id="crearBalanceadoBtn">
+                                <i class="bi bi-shuffle me-1"></i>Armar partido balanceado
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Pestaña 2: el armado manual de siempre (A / B) -->
+                    <div class="tab-pane fade" id="tabManual" role="tabpanel">
+                        <form th:if="${!#lists.isEmpty(amigos)}" th:action="@{/partidos/crear}" method="post"
+                              id="crearPartidoForm"
+                              th:attr="data-ruta-imagenes=@{/images/}">
+                            <div class="row g-3 mb-3">
+                                <div class="col-sm-7">
+                                    <label class="form-label">Formato (jugadores por equipo)</label>
+                                    <select class="form-select" name="formato" id="formato" required>
+                                        <option value="5" selected>5 vs 5 (10 jugadores)</option>
+                                        <option value="7">7 vs 7 (14 jugadores)</option>
+                                        <option value="8">8 vs 8 (16 jugadores)</option>
+                                        <option value="9">9 vs 9 (18 jugadores)</option>
+                                        <option value="11">11 vs 11 (22 jugadores)</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-5">
+                                    <label class="form-label">Vos jugás en:</label>
+                                    <div class="d-flex gap-3 pt-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="miEquipo" value="A"
+                                                   id="miEquipoA" checked>
+                                            <label class="form-check-label" for="miEquipoA">Equipo A</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="miEquipo" value="B"
+                                                   id="miEquipoB">
+                                            <label class="form-check-label" for="miEquipoB">Equipo B</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-12 col-md-7">
+                                    <label class="form-label">Fecha y hora del partido</label>
+                                    <input type="datetime-local" class="form-control" name="fecha" id="fechaPartido" required>
+                                </div>
+                            </div>
+                            <div class="form-text mb-3" id="requeridosHint">Se requieren al menos 10 jugadores.</div>
+        
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <label class="form-label m-0">Tus amigos</label>
+                                <span class="team-counts align-items-center d-flex">
+                        <img id="rankIconA" class="team-rank-icon me-1" alt="Rango equipo A" title="Rango equipo A"/>
+                        <span class="team-count team-count-a" id="countA">A: 0</span>
+                        <span class="mx-1"></span>
+                        <img id="rankIconB" class="team-rank-icon me-1" alt="Rango equipo B" title="Rango equipo B"/>
+                        <span class="team-count team-count-b" id="countB">B: 0</span>
+                      </span>
+                            </div>
+                            <div class="search-input-wrap player-filter mb-2">
+                                <i class="bi bi-search"></i>
+                                <input type="text" id="filtroAmigos" placeholder="Filtrar por nombre o usuario..."
+                                       autocomplete="off">
+                            </div>
+                            <div class="team-rosters mb-3">
+                                <div class="roster-box">
+                                    <div class="roster-title d-flex align-items-center justify-content-between"><span><i
+                                            class="bi bi-circle-half me-1 text-success"></i>Equipo A</span><span
+                                            class="badge bg-secondary" id="rosterACount">0</span></div>
+                                    <div class="roster-list" id="rosterA"></div>
+                                </div>
+                                <div class="roster-box">
+                                    <div class="roster-title d-flex align-items-center justify-content-between"><span><i
+                                            class="bi bi-circle-half me-1 text-info"></i>Equipo B</span><span
+                                            class="badge bg-secondary" id="rosterBCount">0</span></div>
+                                    <div class="roster-list" id="rosterB"></div>
+                                </div>
+                            </div>
+                            <div class="player-picker mb-3" id="listaAmigos">
+                                <div class="player-row" th:each="amigo : ${amigos}"
+                                     th:with="rango=${T(com.tallerwebi.dominio.Rango).de(amigo.perfil.pl != null ? amigo.perfil.pl : 0)}"
+                                     th:attr="data-busqueda=${(amigo.perfil.nombreCompleto ?: amigo.email) + ' ' + (amigo.perfil.nombreUsuario ?: '')},data-pl=${amigo.perfil.pl != null ? amigo.perfil.pl : 0}">
+                                    <div class="player-avatar"><i class="bi bi-person-circle"></i></div>
+                                    <div class="player-info">
+                                        <span class="player-name" th:text="${amigo.perfil.nombreCompleto} ?: ${amigo.email}">Nombre</span>
+                                        <span class="player-user" th:text="'@' + (${amigo.perfil.nombreUsuario} ?: 'usuario')">@usuario</span>
+                                        <span class="rank-badge rank-badge-sm" th:classappend="${rango.css}"
+                                              th:title="${rango.nombre}">
+                            <i th:class="'bi ' + ${rango.icono}"></i>
+                            <span th:text="${amigo.perfil.pl} ?: 0">1000</span>
+                          </span>
+                                    </div>
+                                    <div class="team-toggle">
+                                        <input class="team-check" type="checkbox" name="equipoAIds" th:value="${amigo.id}"
+                                               th:id="'a-' + ${amigo.id}">
+                                        <label class="team-pill team-a" th:for="'a-' + ${amigo.id}" title="Equipo A">A</label>
+                                        <input class="team-check" type="checkbox" name="equipoBIds" th:value="${amigo.id}"
+                                               th:id="'b-' + ${amigo.id}">
+                                        <label class="team-pill team-b" th:for="'b-' + ${amigo.id}" title="Equipo B">B</label>
+                                    </div>
+                                </div>
+                            </div>
+        
+                            <button type="submit" class="btn btn-primary btn-action w-100" id="crearBtn">
+                                <i class="bi bi-plus-circle me-1"></i>Crear partido
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <div class="team-toggle">
-                  <input class="team-check" type="checkbox" name="equipoAIds" th:value="${amigo.id}"
-                         th:id="'a-' + ${amigo.id}">
-                  <label class="team-pill team-a" th:for="'a-' + ${amigo.id}" title="Equipo A">A</label>
-                  <input class="team-check" type="checkbox" name="equipoBIds" th:value="${amigo.id}"
-                         th:id="'b-' + ${amigo.id}">
-                  <label class="team-pill team-b" th:for="'b-' + ${amigo.id}" title="Equipo B">B</label>
+            </section>
+        </div>
+
+        <div class="col-12 col-lg-7">
+            <section class="card-glass p-4 historial-card">
+                <h2 class="h5 mb-3"><i class="bi bi-clock-history me-2"></i>Historial de partidos</h2>
+
+                <div th:if="${#lists.isEmpty(historial)}" class="ranking-empty">
+                    <i class="bi bi-dribbble"></i>
+                    <p class="m-0">Todavía no jugaste ningún partido.</p>
                 </div>
-              </div>
-            </div>
 
-            <button type="submit" class="btn btn-primary btn-action w-100" id="crearBtn">
-              <i class="bi bi-plus-circle me-1"></i>Crear partido
-            </button>
-          </form>
-        </section>
-      </div>
-
-      <div class="col-12 col-lg-7">
-        <section class="card-glass p-4 historial-card">
-          <h2 class="h5 mb-3"><i class="bi bi-clock-history me-2"></i>Historial de partidos</h2>
-
-          <div th:if="${#lists.isEmpty(historial)}" class="ranking-empty">
-            <i class="bi bi-dribbble"></i>
-            <p class="m-0">Todavía no jugaste ningún partido.</p>
-          </div>
-
-          <div th:each="partido : ${historial}" class="card-glass p-3 mb-3">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-              <div>
-                <div class="history-teams">
-                  <div class="history-team">
-                    <span class="text-muted me-1">Equipo A</span>
-                    <span th:each="jugador, iter : ${partido.equipoA}">
-                      <span th:text="${jugador.perfil.nombreUsuario} ?: ${jugador.email}">jugador</span><span th:if="${!iter.last}">, </span>
+                <div th:each="partido : ${historial}" class="card-glass p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <div class="history-teams">
+                                <div class="history-team">
+                                    <span class="text-muted me-1">Equipo A</span>
+                                    <span th:each="jugador, iter : ${partido.equipoA}">
+                      <span th:text="${jugador.perfil.nombreUsuario} ?: ${jugador.email}">jugador</span><span
+                                            th:if="${!iter.last}">, </span>
                     </span>
-                  </div>
-                  <div class="history-team">
-                    <span class="text-muted me-1">Equipo B</span>
-                    <span th:each="jugador, iter : ${partido.equipoB}">
-                      <span th:text="${jugador.perfil.nombreUsuario} ?: ${jugador.email}">jugador</span><span th:if="${!iter.last}">, </span>
+                                </div>
+                                <div class="history-team">
+                                    <span class="text-muted me-1">Equipo B</span>
+                                    <span th:each="jugador, iter : ${partido.equipoB}">
+                      <span th:text="${jugador.perfil.nombreUsuario} ?: ${jugador.email}">jugador</span><span
+                                            th:if="${!iter.last}">, </span>
                     </span>
-                  </div>
-                </div>
-                <div class="text-muted small" th:text="${#temporals.format(partido.fecha, 'dd/MM/yyyy HH:mm')}">fecha</div>
-              </div>
+                                </div>
+                            </div>
+                            <div class="text-muted small"
+                                 th:text="${#temporals.format(partido.fecha, 'dd/MM/yyyy HH:mm')}">fecha
+                            </div>
+                        </div>
 
-              <div th:if="${partido.fueJugado()}" class="rank-badge">
-                <span th:text="${partido.golesEquipoA} + ' - ' + ${partido.golesEquipoB}">0 - 0</span>
-              </div>
-              <details th:if="${partido.fueJugado()}" class="mt-2 goles-detalle w-100">
-                <summary class="small"><i class="bi bi-pencil-square me-1"></i>Editar goles y asistencias</summary>
-                <form th:action="@{/partidos/registrar-detalles}" method="post" class="detalles-form mt-2">
-                  <input type="hidden" name="partidoId" th:value="${partido.id}">
-                  <div th:replace="~{fragments/goles :: editorGoles(${partido})}"></div>
-                  <div class="d-flex justify-content-end mt-3">
-                    <button type="submit" class="btn btn-sm btn-primary">
-                      <i class="bi bi-save me-1"></i>Guardar detalles
-                    </button>
-                  </div>
-                </form>
-              </details>
+                        <div th:if="${partido.fueJugado()}" class="rank-badge">
+                            <span th:text="${partido.golesEquipoA} + ' - ' + ${partido.golesEquipoB}">0 - 0</span>
+                        </div>
+                        <details th:if="${partido.fueJugado()}" class="mt-2 goles-detalle w-100">
+                            <summary class="small"><i class="bi bi-pencil-square me-1"></i>Editar goles y asistencias
+                            </summary>
+                            <form th:action="@{/partidos/registrar-detalles}" method="post" class="detalles-form mt-2">
+                                <input type="hidden" name="partidoId" th:value="${partido.id}">
+                                <div th:replace="~{fragments/goles :: editorGoles(${partido})}"></div>
+                                <div class="d-flex justify-content-end mt-3">
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-save me-1"></i>Guardar detalles
+                                    </button>
+                                </div>
+                            </form>
+                        </details>
 
-              <form th:if="${!partido.fueJugado()}" th:action="@{/partidos/registrar-resultado}" method="post"
-                    class="resultado-form w-100 mt-2">
-                <input type="hidden" name="partidoId" th:value="${partido.id}">
-                <div class="resultado-fila">
-                  <div class="marcador-inputs">
-                    <input type="number" name="golesEquipoA" min="0" class="form-control form-control-sm"
-                           aria-label="Goles equipo A" required>
-                    <span class="marcador-sep">-</span>
-                    <input type="number" name="golesEquipoB" min="0" class="form-control form-control-sm"
-                           aria-label="Goles equipo B" required>
-                  </div>
-                  <button type="submit" class="btn btn-sm btn-primary">
-                    <i class="bi bi-check-lg me-1"></i>Registrar resultado
-                  </button>
+                        <form th:if="${!partido.fueJugado()}" th:action="@{/partidos/registrar-resultado}" method="post"
+                              class="resultado-form w-100 mt-2">
+                            <input type="hidden" name="partidoId" th:value="${partido.id}">
+                            <div class="resultado-fila">
+                                <div class="marcador-inputs">
+                                    <input type="number" name="golesEquipoA" min="0"
+                                           class="form-control form-control-sm"
+                                           aria-label="Goles equipo A" required>
+                                    <span class="marcador-sep">-</span>
+                                    <input type="number" name="golesEquipoB" min="0"
+                                           class="form-control form-control-sm"
+                                           aria-label="Goles equipo B" required>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-check-lg me-1"></i>Registrar resultado
+                                </button>
+                            </div>
+                            <details class="goles-detalle mt-2">
+                                <summary class="small"><i class="bi bi-list-check me-1"></i>Cargar goles y asistencias
+                                    (opcional)
+                                </summary>
+                                <div class="mt-2">
+                                    <div th:replace="~{fragments/goles :: editorGoles(${partido})}"></div>
+                                </div>
+                            </details>
+                        </form>
+                    </div>
                 </div>
-                <details class="goles-detalle mt-2">
-                  <summary class="small"><i class="bi bi-list-check me-1"></i>Cargar goles y asistencias (opcional)</summary>
-                  <div class="mt-2"><div th:replace="~{fragments/goles :: editorGoles(${partido})}"></div></div>
-                </details>
-              </form>
-            </div>
-          </div>
-        </section>
-      </div>
+            </section>
+        </div>
     </div>
-  </main>
+</main>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script th:src="@{/js/auto-alerts.js}"></script>
-  <script>
-    (function(){
-      const form = document.getElementById('crearPartidoForm');
-      if (!form) return;
-      const formato = document.getElementById('formato');
-      const crearBtn = document.getElementById('crearBtn');
-      const hint = document.getElementById('requeridosHint');
-      const countA = document.getElementById('countA');
-      const countB = document.getElementById('countB');
-      const rankIconA = document.getElementById('rankIconA');
-      const rankIconB = document.getElementById('rankIconB');
-      const filtro = document.getElementById('filtroAmigos');
-      const radios = form.querySelectorAll('input[name="miEquipo"]');
-      const checkA = () => form.querySelectorAll('input[name="equipoAIds"]:checked').length;
-      const checkB = () => form.querySelectorAll('input[name="equipoBIds"]:checked').length;
-      const miEquipo = () => Array.from(radios).find(r => r.checked)?.value || 'A';
-      const rosterA = document.getElementById('rosterA');
-      const rosterB = document.getElementById('rosterB');
-      const rutaImagenes = form.getAttribute('data-ruta-imagenes') || '/images/';
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/auto-alerts.js}"></script>
+<script>
+    (function () {
+        const form = document.getElementById('crearPartidoForm');
+        if (!form) return;
+        const formato = document.getElementById('formato');
+        const crearBtn = document.getElementById('crearBtn');
+        const hint = document.getElementById('requeridosHint');
+        const countA = document.getElementById('countA');
+        const countB = document.getElementById('countB');
+        const rankIconA = document.getElementById('rankIconA');
+        const rankIconB = document.getElementById('rankIconB');
+        const filtro = document.getElementById('filtroAmigos');
+        const radios = form.querySelectorAll('input[name="miEquipo"]');
+        const checkA = () => form.querySelectorAll('input[name="equipoAIds"]:checked').length;
+        const checkB = () => form.querySelectorAll('input[name="equipoBIds"]:checked').length;
+        const miEquipo = () => Array.from(radios).find(r => r.checked)?.value || 'A';
+        const rosterA = document.getElementById('rosterA');
+        const rosterB = document.getElementById('rosterB');
+        const rutaImagenes = form.getAttribute('data-ruta-imagenes') || '/images/';
 
-      // Un amigo no puede estar en los dos equipos a la vez
-      form.querySelectorAll('.team-check').forEach(cb => {
-        cb.addEventListener('change', () => {
-          if (!cb.checked) return;
-          const prefijo = cb.name === 'equipoAIds' ? 'b-' : 'a-';
-          const hermano = document.getElementById(prefijo + cb.value);
-          if (hermano) hermano.checked = false;
+        // Un amigo no puede estar en los dos equipos a la vez
+        form.querySelectorAll('.team-check').forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (!cb.checked) return;
+                const prefijo = cb.name === 'equipoAIds' ? 'b-' : 'a-';
+                const hermano = document.getElementById(prefijo + cb.value);
+                if (hermano) hermano.checked = false;
+            });
         });
-      });
 
-      function promedioSeleccion(name){
-        const checks = form.querySelectorAll(`input[name="${name}"]:checked`);
-        let suma = 0; let n = 0;
-        checks.forEach(cb => {
-          const row = cb.closest('.player-row');
-          if (!row) return;
-          const pl = parseInt(row.getAttribute('data-pl') || '0', 10) || 0;
-          suma += pl; n += 1;
-        });
-        // sumar al propio usuario segun equipo elegido
-        const yoEsA = miEquipo()==='A';
-        if ((name==='equipoAIds' && yoEsA) || (name==='equipoBIds' && !yoEsA)) {
-          // el propio PL no lo tenemos aqui; usar 1000 como base si no esta en la lista
-          // Nota: si el propio usuario aparece en amigos, el usuario no marca A/B para sí, por eso estimamos 1000
-          suma += 1000; n += 1;
+        function promedioSeleccion(name) {
+            const checks = form.querySelectorAll(`input[name="${name}"]:checked`);
+            let suma = 0;
+            let n = 0;
+            checks.forEach(cb => {
+                const row = cb.closest('.player-row');
+                if (!row) return;
+                const pl = parseInt(row.getAttribute('data-pl') || '0', 10) || 0;
+                suma += pl;
+                n += 1;
+            });
+            // sumar al propio usuario segun equipo elegido
+            const yoEsA = miEquipo() === 'A';
+            if ((name === 'equipoAIds' && yoEsA) || (name === 'equipoBIds' && !yoEsA)) {
+                // el propio PL no lo tenemos aqui; usar 1000 como base si no esta en la lista
+                // Nota: si el propio usuario aparece en amigos, el usuario no marca A/B para sí, por eso estimamos 1000
+                suma += 1000;
+                n += 1;
+            }
+            return n > 0 ? Math.round(suma / n) : 0;
         }
-        return n>0 ? Math.round(suma / n) : 0;
-      }
 
-      function rangoEquipoSlug(prom){
-        if (prom >= 3495) return 'legendario';
-        if (prom >= 2996) return 'clase-mundial';
-        if (prom >= 2497) return 'profesional';
-        if (prom >= 1998) return 'semiprofesional';
-        if (prom >= 1499) return 'amateur';
-        if (prom >= 1000) return 'principiante';
-        return 'principiante';
-      }
+        function rangoEquipoSlug(prom) {
+            if (prom >= 3495) return 'legendario';
+            if (prom >= 2996) return 'clase-mundial';
+            if (prom >= 2497) return 'profesional';
+            if (prom >= 1998) return 'semiprofesional';
+            if (prom >= 1499) return 'amateur';
+            if (prom >= 1000) return 'principiante';
+            return 'principiante';
+        }
 
-      function setRankIcon(imgEl, slug){
-        if (!imgEl) return;
-        if (!slug) { imgEl.style.display = 'none'; return; }
-        imgEl.src = `${rutaImagenes}rangos-equipo/${slug}.png`;
-        imgEl.style.display = 'inline-block';
-      }
+        function setRankIcon(imgEl, slug) {
+            if (!imgEl) return;
+            if (!slug) {
+                imgEl.style.display = 'none';
+                return;
+            }
+            imgEl.src = `${rutaImagenes}rangos-equipo/${slug}.png`;
+            imgEl.style.display = 'inline-block';
+        }
 
-      function buildRosters(){
-        if (!rosterA || !rosterB) return;
-        rosterA.innerHTML = '';
-        rosterB.innerHTML = '';
-        const addChip = (container, nombre, usuario, self=false) => {
-          const chip = document.createElement('span');
-          chip.className = 'player-chip' + (self ? ' self' : '');
-          chip.textContent = self ? 'Vos' : (nombre || usuario || 'Jugador');
-          container.appendChild(chip);
+        function buildRosters() {
+            if (!rosterA || !rosterB) return;
+            rosterA.innerHTML = '';
+            rosterB.innerHTML = '';
+            const addChip = (container, nombre, usuario, self = false) => {
+                const chip = document.createElement('span');
+                chip.className = 'player-chip' + (self ? ' self' : '');
+                chip.textContent = self ? 'Vos' : (nombre || usuario || 'Jugador');
+                container.appendChild(chip);
+            };
+            // amigos seleccionados
+            form.querySelectorAll('input[name="equipoAIds"]:checked').forEach(cb => {
+                const row = cb.closest('.player-row');
+                if (!row) return;
+                const nombre = row.querySelector('.player-name')?.textContent?.trim();
+                const usuario = row.querySelector('.player-user')?.textContent?.trim();
+                addChip(rosterA, nombre, usuario);
+            });
+            form.querySelectorAll('input[name="equipoBIds"]:checked').forEach(cb => {
+                const row = cb.closest('.player-row');
+                if (!row) return;
+                const nombre = row.querySelector('.player-name')?.textContent?.trim();
+                const usuario = row.querySelector('.player-user')?.textContent?.trim();
+                addChip(rosterB, nombre, usuario);
+            });
+            // vos
+            if (miEquipo() === 'A') addChip(rosterA, null, null, true); else addChip(rosterB, null, null, true);
+            // actualizar contadores visuales de roster
+            const cntA = rosterA.querySelectorAll('.player-chip').length;
+            const cntB = rosterB.querySelectorAll('.player-chip').length;
+            const rACount = document.getElementById('rosterACount');
+            const rBCount = document.getElementById('rosterBCount');
+            if (rACount) rACount.textContent = cntA;
+            if (rBCount) rBCount.textContent = cntB;
+        }
+
+        function validar() {
+            const req = parseInt(formato.value || '5', 10);
+            const a = checkA() + (miEquipo() === 'A' ? 1 : 0);
+            const b = checkB() + (miEquipo() === 'B' ? 1 : 0);
+            const total = a + b;
+            hint.textContent = `Se requieren al menos ${req * 2} jugadores (${req} por equipo). Seleccionados: ${total}`;
+            if (countA) countA.textContent = `A: ${a}/${req}`;
+            if (countB) countB.textContent = `B: ${b}/${req}`;
+            // actualizar iconos de rango por equipo segun promedio
+            const promA = promedioSeleccion('equipoAIds');
+            const promB = promedioSeleccion('equipoBIds');
+            setRankIcon(rankIconA, rangoEquipoSlug(promA));
+            setRankIcon(rankIconB, rangoEquipoSlug(promB));
+            buildRosters();
+            const valido = total >= req * 2 && a <= req && b <= req;
+            crearBtn.disabled = !valido;
+        }
+
+        form.addEventListener('change', validar);
+        radios.forEach(r => r.addEventListener('change', validar));
+        // Cuando se tilda A/B de un amigo, además de validar, reconstruir rosters inmediatamente
+        form.querySelectorAll('input[name="equipoAIds"], input[name="equipoBIds"]').forEach(cb => {
+            cb.addEventListener('change', buildRosters);
+        });
+
+        if (filtro) {
+            filtro.addEventListener('input', () => {
+                const q = filtro.value.trim().toLowerCase();
+                form.querySelectorAll('.player-row').forEach(row => {
+                    const txt = (row.getAttribute('data-busqueda') || '').toLowerCase();
+                    row.style.display = txt.includes(q) ? '' : 'none';
+                });
+            });
+        }
+        // preset de fecha/hora a próximo múltiplo de 30 minutos
+        const fechaInput = document.getElementById('fechaPartido');
+        if (fechaInput) {
+            const now = new Date();
+            const mins = now.getMinutes();
+            const delta = 30 - (mins % 30);
+            now.setMinutes(mins + delta, 0, 0);
+            const pad = n => String(n).padStart(2, '0');
+            const val = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            fechaInput.value = val;
+        }
+        // Editor de goles: agregar y quitar filas por equipo
+        const renumerar = rows => {
+            rows.querySelectorAll('.gol-num').forEach((n, i) => {
+                n.textContent = i + 1;
+            });
         };
-        // amigos seleccionados
-        form.querySelectorAll('input[name="equipoAIds"]:checked').forEach(cb => {
-          const row = cb.closest('.player-row');
-          if (!row) return;
-          const nombre = row.querySelector('.player-name')?.textContent?.trim();
-          const usuario = row.querySelector('.player-user')?.textContent?.trim();
-          addChip(rosterA, nombre, usuario);
+        document.querySelectorAll('[data-gol-add]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const rows = btn.closest('.gol-section')?.querySelector('.gol-rows');
+                const primera = rows?.querySelector('.gol-row');
+                if (!primera) return;
+                const clone = primera.cloneNode(true);
+                clone.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+                rows.appendChild(clone);
+                renumerar(rows);
+            });
         });
-        form.querySelectorAll('input[name="equipoBIds"]:checked').forEach(cb => {
-          const row = cb.closest('.player-row');
-          if (!row) return;
-          const nombre = row.querySelector('.player-name')?.textContent?.trim();
-          const usuario = row.querySelector('.player-user')?.textContent?.trim();
-          addChip(rosterB, nombre, usuario);
+        document.querySelectorAll('.gol-rows').forEach(rows => {
+            rows.addEventListener('click', e => {
+                const quitar = e.target.closest('[data-gol-remove]');
+                if (!quitar || rows.querySelectorAll('.gol-row').length <= 1) return;
+                quitar.closest('.gol-row').remove();
+                renumerar(rows);
+            });
         });
-        // vos
-        if (miEquipo()==='A') addChip(rosterA, null, null, true); else addChip(rosterB, null, null, true);
-        // actualizar contadores visuales de roster
-        const cntA = rosterA.querySelectorAll('.player-chip').length;
-        const cntB = rosterB.querySelectorAll('.player-chip').length;
-        const rACount = document.getElementById('rosterACount');
-        const rBCount = document.getElementById('rosterBCount');
-        if (rACount) rACount.textContent = cntA;
-        if (rBCount) rBCount.textContent = cntB;
-      }
-
-      function validar(){
-        const req = parseInt(formato.value || '5', 10);
-        const a = checkA() + (miEquipo()==='A'?1:0);
-        const b = checkB() + (miEquipo()==='B'?1:0);
-        const total = a + b;
-        hint.textContent = `Se requieren al menos ${req*2} jugadores (${req} por equipo). Seleccionados: ${total}`;
-        if (countA) countA.textContent = `A: ${a}/${req}`;
-        if (countB) countB.textContent = `B: ${b}/${req}`;
-        // actualizar iconos de rango por equipo segun promedio
-        const promA = promedioSeleccion('equipoAIds');
-        const promB = promedioSeleccion('equipoBIds');
-        setRankIcon(rankIconA, rangoEquipoSlug(promA));
-        setRankIcon(rankIconB, rangoEquipoSlug(promB));
-        buildRosters();
-        const valido = total >= req*2 && a <= req && b <= req;
-        crearBtn.disabled = !valido;
-      }
-      form.addEventListener('change', validar);
-      radios.forEach(r => r.addEventListener('change', validar));
-      // Cuando se tilda A/B de un amigo, además de validar, reconstruir rosters inmediatamente
-      form.querySelectorAll('input[name="equipoAIds"], input[name="equipoBIds"]').forEach(cb => {
-        cb.addEventListener('change', buildRosters);
-      });
-
-      if (filtro) {
-        filtro.addEventListener('input', () => {
-          const q = filtro.value.trim().toLowerCase();
-          form.querySelectorAll('.player-row').forEach(row => {
-            const txt = (row.getAttribute('data-busqueda') || '').toLowerCase();
-            row.style.display = txt.includes(q) ? '' : 'none';
-          });
-        });
-      }
-      // preset de fecha/hora a próximo múltiplo de 30 minutos
-      const fechaInput = document.getElementById('fechaPartido');
-      if (fechaInput) {
-        const now = new Date();
-        const mins = now.getMinutes();
-        const delta = 30 - (mins % 30);
-        now.setMinutes(mins + delta, 0, 0);
-        const pad = n => String(n).padStart(2, '0');
-        const val = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-        fechaInput.value = val;
-      }
-      // Editor de goles: agregar y quitar filas por equipo
-      const renumerar = rows => {
-        rows.querySelectorAll('.gol-num').forEach((n, i) => { n.textContent = i + 1; });
-      };
-      document.querySelectorAll('[data-gol-add]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const rows = btn.closest('.gol-section')?.querySelector('.gol-rows');
-          const primera = rows?.querySelector('.gol-row');
-          if (!primera) return;
-          const clone = primera.cloneNode(true);
-          clone.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
-          rows.appendChild(clone);
-          renumerar(rows);
-        });
-      });
-      document.querySelectorAll('.gol-rows').forEach(rows => {
-        rows.addEventListener('click', e => {
-          const quitar = e.target.closest('[data-gol-remove]');
-          if (!quitar || rows.querySelectorAll('.gol-row').length <= 1) return;
-          quitar.closest('.gol-row').remove();
-          renumerar(rows);
-        });
-      });
-      validar();
+        validar();
     })();
-  </script>
+</script>
+<script>
+    // Modo balanceado: muestra "Jugadores: elegidos/total" contando al usuario, que siempre juega
+    (function () {
+        const form = document.getElementById('crearBalanceadoForm');
+        if (!form) return;
+        const formato = document.getElementById('formatoBal');
+        const contador = document.getElementById('contadorBal');
+
+        function actualizarContador() {
+            const elegidos = form.querySelectorAll('input[name="jugadoresIds"]:checked').length + 1;
+            const total = parseInt(formato.value, 10) * 2;
+            contador.textContent = 'Jugadores: ' + elegidos + '/' + total;
+            contador.classList.toggle('team-count-a', elegidos === total);
+            contador.classList.toggle('team-count-excedido', elegidos > total);
+        }
+
+        form.addEventListener('change', actualizarContador);
+        actualizarContador();
+    })();
+</script>
 </body>
 </html>

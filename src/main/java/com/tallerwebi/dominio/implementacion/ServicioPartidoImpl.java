@@ -1,5 +1,7 @@
 package com.tallerwebi.dominio.implementacion;
 
+import com.tallerwebi.dominio.BalanceadorEquipos;
+import com.tallerwebi.dominio.EquiposBalanceados;
 import com.tallerwebi.dominio.GolPartido;
 import com.tallerwebi.dominio.NotificacionPartido;
 import com.tallerwebi.dominio.NotificacionPl;
@@ -29,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ServicioPartidoImpl implements ServicioPartido {
 
   private static final int FACTOR_K = 32;
+  private static final Set<Integer> FORMATOS_VALIDOS = Set.of(5, 7, 8, 9, 11);
 
   private final RepositorioPartido repositorioPartido;
   private final RepositorioUsuario repositorioUsuario;
@@ -37,6 +40,7 @@ public class ServicioPartidoImpl implements ServicioPartido {
   private final RepositorioGolPartido repositorioGolPartido;
   private final RepositorioTarjetaPartido repositorioTarjetaPartido;
   private final SoportePartido soportePartido;
+  private final BalanceadorEquipos balanceadorEquipos = new BalanceadorEquipos();
 
   @Autowired
   public ServicioPartidoImpl(
@@ -94,6 +98,26 @@ public class ServicioPartidoImpl implements ServicioPartido {
       repositorioPartido.actualizar(partido);
     }
     return partido;
+  }
+
+  @Override
+  public Partido crearPartidoBalanceado(
+    List<Usuario> jugadores,
+    Integer formato,
+    LocalDateTime fecha
+  ) {
+    if (
+      jugadores == null ||
+      formato == null ||
+      !FORMATOS_VALIDOS.contains(formato) ||
+      jugadores.size() != formato * 2
+    ) {
+      return null;
+    }
+
+    EquiposBalanceados resultado = this.balanceadorEquipos.armarEquipos(jugadores);
+
+    return crearPartido(resultado.getEquipoA(), resultado.getEquipoB(), fecha);
   }
 
   @Override
