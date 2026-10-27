@@ -21,6 +21,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+@SuppressWarnings("PMD.CloseResource")
 @Component
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
@@ -152,7 +153,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     );
   }
 
-  @SuppressWarnings("PMD.CloseResource")
   private void entregarAParticipantes(Long emisorId, Long destinatarioId, String json) {
     for (WebSocketSession conexion : conexiones.values()) {
       Long usuarioId = obtenerUsuarioAutenticado(conexion);
@@ -172,7 +172,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     }
   }
 
-  @SuppressWarnings("PMD.CloseResource")
   private void enviarError(WebSocketSession session, String descripcion)
     throws JsonProcessingException {
     String json = objectMapper.writeValueAsString(
