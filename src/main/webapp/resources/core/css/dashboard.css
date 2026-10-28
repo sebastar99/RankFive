@@ -219,6 +219,48 @@
   align-items: center;
   gap: .5rem;
 }
+.friends-ranking .ranking-item {
+  grid-template-columns: 32px 40px minmax(0, 1fr) auto;
+}
+.friends-ranking .ranking-item .name {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: .4rem;
+  min-width: 0;
+}
+.friends-ranking .ranking-item .name > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.friends-ranking .ranking-item .name .username { margin-left: 0; }
+.friends-ranking .ranking-item .points { margin-right: 0; white-space: nowrap; }
+.btn-chat {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  margin-left: 0;
+  text-decoration: none;
+  border-radius: 50%;
+  border: 1px solid var(--rf-surface-border);
+  background: rgba(0, 224, 123, 0.08);
+  color: var(--rf-primary);
+  font-size: .8rem;
+  line-height: 1;
+  vertical-align: middle;
+  transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
+}
+.btn-chat:hover,
+.btn-chat:focus-visible {
+  background: var(--rf-primary);
+  border-color: var(--rf-primary);
+  color: #04101f;
+  transform: translateY(-1px);
+}
 .rank-badge-sm {
   padding: .2rem .55rem;
   font-size: .78rem;

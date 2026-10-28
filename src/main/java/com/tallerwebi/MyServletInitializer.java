@@ -3,6 +3,7 @@ package com.tallerwebi;
 import com.tallerwebi.config.DatabaseInitializationConfig;
 import com.tallerwebi.config.HibernateConfig;
 import com.tallerwebi.config.SpringWebConfig;
+import com.tallerwebi.config.WebSocketConfig;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletRegistration;
 import org.springframework.lang.NonNull;
@@ -23,6 +24,7 @@ public class MyServletInitializer extends AbstractAnnotationConfigDispatcherServ
       SpringWebConfig.class,
       HibernateConfig.class,
       DatabaseInitializationConfig.class,
+      WebSocketConfig.class,
     };
   }
 

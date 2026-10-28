@@ -8,7 +8,7 @@
         integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" th:href="@{/css/main.css}" />
-  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=14)}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard.css(v=15)}" />
 </head>
 <body class="dashboard-page">
   <div class="pitch-bg"></div>
@@ -122,6 +122,12 @@
               <div class="name">
                 <span th:text="${amigo.perfil.nombreCompleto} ?: ${amigo.email}">Nombre</span>
                 <span class="username" th:text="'@' + (${amigo.perfil.nombreUsuario} ?: 'usuario')">@usuario</span>
+                <a th:href="@{/chat/{id}(id=${amigo.id})}"
+                   class="btn-chat"
+                   title="Chatear con este amigo"
+                   aria-label="Chatear">
+                  <i class="bi bi-chat-dots"></i>
+                </a>
               </div>
               <div class="points">
                 <span class="rank-badge rank-badge-sm"
@@ -132,6 +138,7 @@
                 <span th:text="(${amigo.perfil.pl} ?: 0) + ' pts'">0 pts</span>
               </div>
             </div>
+
             <div class="ranking-empty" th:if="${#lists.isEmpty(rankingAmigos)}">
               <i class="bi bi-people"></i>
               <p class="m-0">Todavía no tenés amigos.</p>
