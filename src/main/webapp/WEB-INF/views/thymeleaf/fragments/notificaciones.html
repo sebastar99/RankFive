@@ -17,10 +17,27 @@
             th:attr="data-leidas-url=@{/partidos/notificaciones/leidas}"
             th:title="${cantidadAvisosPl + cantidadAvisosPartido} + ' notificaciones de partidos'">
       <i class="bi bi-bell-fill"></i>
+      <span id="indicador-mensajes-chat" hidden style="font-size: 11px; color: #00e69a; margin-left: 4px;">
+</span>
       <span class="notif-badge" id="notifPartidosBadge" th:if="${cantidadAvisosPl + cantidadAvisosPartido > 0}" th:text="${cantidadAvisosPl + cantidadAvisosPartido}">0</span>
     </button>
 
     <div class="dropdown-menu dropdown-menu-end notif-menu" aria-labelledby="notifPartidosDropdown">
+      <div id="avisos-chat" th:if="${session.usuario != null}"th:attr="data-usuario-id=${session.usuario.id},data-websocket-url=@{/ws/chat},data-chat-base-url=@{/chat/}">
+
+    <div class="notif-header">
+        <span><i class="bi bi-chat-dots-fill me-2"></i>Mensajes</span>
+
+        <span id="cantidad-mensajes-chat"class="notif-count">0</span>
+    </div>
+
+    <div id="sin-mensajes-chat" class="notif-empty"><i class="bi bi-inbox"></i><span>No tenés mensajes nuevos</span>
+    </div>
+
+    <div id="lista-mensajes-chat" aria-live="polite"style="max-height: 260px; overflow-y: auto;">
+    </div>
+
+</div>
       <div class="notif-header">
         <span><i class="bi bi-dribbble me-2"></i>Partidos</span>
         <span class="notif-count" th:text="${cantidadAvisosPl + cantidadAvisosPartido}">0</span>
@@ -200,6 +217,7 @@
       });
     })();
   </script>
+  <script defer th:src="@{/js/notificaciones-chat.js}"></script>
 </div>
 
 </body>

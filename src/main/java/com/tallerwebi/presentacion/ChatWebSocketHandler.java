@@ -77,7 +77,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
       return;
     }
 
-    DatosMensaje respuesta = new DatosMensaje(mensajeGuardado);
+    String nombreEmisor = servicioChat.obtenerNombreUsuario(mensajeGuardado.getEmisor().getId());
+    DatosMensaje respuesta = new DatosMensaje(mensajeGuardado, nombreEmisor);
 
     String json = objectMapper.writeValueAsString(Map.of("tipo", "mensaje", "datos", respuesta));
 
