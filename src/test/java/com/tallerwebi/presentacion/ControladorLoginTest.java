@@ -15,6 +15,7 @@ import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import com.tallerwebi.presentacion.DTO.DatosLogin;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +28,7 @@ public class ControladorLoginTest {
   private Usuario usuarioMock;
   private DatosLogin datosLoginMock;
   private HttpServletRequest requestMock;
+  private HttpServletResponse responseMock;
   private HttpSession sessionMock;
   private ServicioLogin servicioLoginMock;
   private ServicioRelacionAmistad servicioRelacionAmistadMock;
@@ -37,6 +39,7 @@ public class ControladorLoginTest {
     usuarioMock = mock(Usuario.class);
     when(usuarioMock.getEmail()).thenReturn("dami@unlam.com");
     requestMock = mock(HttpServletRequest.class);
+    responseMock = mock(HttpServletResponse.class);
     sessionMock = mock(HttpSession.class);
     servicioLoginMock = mock(ServicioLogin.class);
     servicioRelacionAmistadMock = mock(ServicioRelacionAmistad.class);
@@ -183,7 +186,7 @@ public class ControladorLoginTest {
 
   @Test
   public void irAlDashboardSinUsuarioEnSesionDeberiaRedirigirAlLogin() {
-    when(requestMock.getSession()).thenReturn(sessionMock);
+    when(requestMock.getSession(false)).thenReturn(sessionMock);
     when(sessionMock.getAttribute("usuario")).thenReturn(null);
 
     ModelAndView modelAndView = controladorLogin.irADashboard(requestMock, null);
@@ -296,24 +299,25 @@ public class ControladorLoginTest {
   public void logoutConSesionActivaDeberiaInvalidarlaYRedirigir() {
     when(requestMock.getSession(false)).thenReturn(sessionMock);
 
-    ModelAndView modelAndView = controladorLogin.logout(requestMock);
+    ModelAndView modelAndView = controladorLogin.logout(requestMock, responseMock);
 
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/login"));
     verify(sessionMock, times(1)).invalidate();
+    verify(responseMock, times(1)).addCookie(any());
   }
 
   @Test
   public void logoutSinSesionDeberiaRedirigirSinInvalidar() {
     when(requestMock.getSession(false)).thenReturn(null);
 
-    ModelAndView modelAndView = controladorLogin.logout(requestMock);
+    ModelAndView modelAndView = controladorLogin.logout(requestMock, responseMock);
 
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/login"));
     verify(sessionMock, never()).invalidate();
   }
 
   private void prepararSesionYDashboard(Usuario usuario) {
-    when(requestMock.getSession()).thenReturn(sessionMock);
+    when(requestMock.getSession(false)).thenReturn(sessionMock);
     when(sessionMock.getAttribute("usuario")).thenReturn(usuario);
     when(servicioRelacionAmistadMock.contarSolicitudesPendientes(usuario)).thenReturn(0L);
     when(servicioRelacionAmistadMock.listarSolicitudesPendientes(usuario))
