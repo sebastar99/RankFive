@@ -13,12 +13,21 @@ const contenido = document.getElementById("contenido");
 const estadoConexion = document.getElementById("estado-conexion");
 const errorChat = document.getElementById("error-chat");
 const botonReconectar = document.getElementById("boton-reconectar");
+const contadorCaracteres = document.getElementById("contador-caracteres");
 
 const mensajes = new Map();
 
 let socket;
 let historialPreparado = false;
 let ultimoTextoEnviado = "";
+
+function actualizarContador() {
+  const restantes = Math.max(0, contenido.maxLength - contenido.value.length);
+  contadorCaracteres.textContent = restantes === 1
+    ? "1 car\u00e1cter disponible"
+    : `${restantes} caracteres disponibles`;
+  contadorCaracteres.classList.toggle("chat-counter-limit", restantes === 0);
+}
 
 function mostrarError(texto) {
   errorChat.textContent = texto;
@@ -69,7 +78,7 @@ function mostrarMensajes() {
     const aviso = document.createElement("p");
     aviso.className = "text-center text-muted py-5";
     aviso.textContent =
-            "Todavía no hay mensajes en esta conversación.";
+            "Todav\u00eda no hay mensajes en esta conversaci\u00f3n.";
 
     fragmento.appendChild(aviso);
   }
@@ -128,7 +137,7 @@ async function cargarHistorial() {
 
   if (respuesta.status === 401) {
     throw new Error(
-      "Tu sesión terminó. Volvé a iniciar sesión."
+      "Tu sesi\u00f3n termin\u00f3. Volv\u00e9 a iniciar sesi\u00f3n."
     );
   }
 
@@ -139,7 +148,7 @@ async function cargarHistorial() {
   const historial = await respuesta.json();
 
   if (!Array.isArray(historial)) {
-    throw new Error("El historial recibido no es válido.");
+    throw new Error("El historial recibido no es v\u00e1lido.");
   }
 
   for (const mensaje of historial) {
@@ -201,7 +210,7 @@ function conectar() {
     try {
       respuesta = JSON.parse(evento.data);
     } catch {
-      mostrarError("Se recibió una respuesta no válida.");
+      mostrarError("Se recibi\u00f3 una respuesta no v\u00e1lida.");
       return;
     }
 
@@ -210,6 +219,7 @@ function conectar() {
 
       if (contenido.value === "" && ultimoTextoEnviado !== "") {
         contenido.value = ultimoTextoEnviado;
+        actualizarContador();
       }
 
       return;
@@ -233,7 +243,7 @@ function conectar() {
 
   socket.addEventListener("error", () => {
     mostrarError(
-      "No se pudo mantener la conexión. Si tu sesión terminó, volvé a iniciar sesión."
+      "No se pudo mantener la conexi\u00f3n. Si tu sesi\u00f3n termin\u00f3, volv\u00e9 a iniciar sesi\u00f3n."
     );
   });
 }
@@ -245,7 +255,7 @@ formulario.addEventListener("submit", (evento) => {
   const texto = contenido.value.trim();
 
   if (texto === "") {
-    mostrarError("Escribí un mensaje antes de enviar.");
+    mostrarError("Escrib\u00ed un mensaje antes de enviar.");
     return;
   }
 
@@ -259,7 +269,7 @@ formulario.addEventListener("submit", (evento) => {
         socket.readyState !== WebSocket.OPEN ||
         !historialPreparado
   ) {
-    mostrarError("Esperá a que se restablezca la conexión.");
+    mostrarError("Esper\u00e1 a que se restablezca la conexi\u00f3n.");
     return;
   }
 
@@ -271,14 +281,18 @@ formulario.addEventListener("submit", (evento) => {
 
     ultimoTextoEnviado = texto;
     contenido.value = "";
+    actualizarContador();
     contenido.focus();
   } catch {
     mostrarError(
-      "No se pudo enviar el mensaje. Revisá la conexión."
+      "No se pudo enviar el mensaje. Revis\u00e1 la conexi\u00f3n."
     );
   }
 });
 
 botonReconectar.addEventListener("click", conectar);
+contenido.addEventListener("input", actualizarContador);
+window.addEventListener("pageshow", actualizarContador);
 
+actualizarContador();
 conectar();
