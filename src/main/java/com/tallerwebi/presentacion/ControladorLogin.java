@@ -9,7 +9,10 @@ import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import com.tallerwebi.presentacion.DTO.DatosEquipoVista;
 import com.tallerwebi.presentacion.DTO.DatosLogin;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -119,7 +122,8 @@ public class ControladorLogin {
     HttpServletRequest request,
     @RequestParam(name = "aviso", required = false) String aviso
   ) {
-    Usuario usuario = (Usuario) request.getSession().getAttribute(ATRIBUTO_USUARIO);
+    HttpSession session = request.getSession(false);
+    Usuario usuario = session == null ? null : (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
     if (usuario == null) {
       return new ModelAndView("redirect:/login");
     }
@@ -176,10 +180,17 @@ public class ControladorLogin {
   }
 
   @RequestMapping(path = "/logout", method = RequestMethod.GET)
-  public ModelAndView logout(HttpServletRequest request) {
-    if (request.getSession(false) != null) {
-      request.getSession(false).invalidate();
+  public ModelAndView logout(HttpServletRequest request, HttpServletResponse response) {
+    HttpSession session = request.getSession(false);
+    if (session != null) {
+      session.invalidate();
     }
+    String contexto = request.getContextPath();
+    Cookie cookie = new Cookie("JSESSIONID", "");
+    cookie.setPath(contexto == null || contexto.isEmpty() ? "/" : contexto);
+    cookie.setMaxAge(0);
+    cookie.setHttpOnly(true);
+    response.addCookie(cookie);
     return new ModelAndView("redirect:/login");
   }
 

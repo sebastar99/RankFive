@@ -1,6 +1,7 @@
 package com.tallerwebi.config;
 
 import com.tallerwebi.infraestructura.AlmacenamientoImagenesImpl;
+import com.tallerwebi.presentacion.NoCacheInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -38,6 +40,14 @@ public class SpringWebConfig implements WebMvcConfigurer {
     registry
       .addResourceHandler(AlmacenamientoImagenesImpl.URL_PUBLICA + "**")
       .addResourceLocations(AlmacenamientoImagenesImpl.directorioPorDefecto().toUri().toString());
+  }
+
+  @Override
+  public void addInterceptors(@NonNull InterceptorRegistry registry) {
+    registry
+      .addInterceptor(new NoCacheInterceptor())
+      .addPathPatterns("/**")
+      .excludePathPatterns("/css/**", "/js/**", "/images/**", "/webjars/**");
   }
 
   @Bean

@@ -4,8 +4,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.text.IsEqualIgnoringCase.equalToIgnoringCase;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.tallerwebi.dominio.Usuario;
@@ -16,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -72,5 +77,34 @@ public class ControladorLoginTest {
       modelAndView.getModel().get("datosLogin").toString(),
       containsString("com.tallerwebi.presentacion.DTO.DatosLogin")
     );
+  }
+
+  @Test
+  public void logoutInvalidaLaSesionYMarcaLaRespuestaComoNoCacheable() throws Exception {
+    MockHttpSession session = new MockHttpSession();
+    session.setAttribute("usuario", usuarioMock);
+
+    mockMvc
+      .perform(get("/logout").session(session))
+      .andExpect(status().is3xxRedirection())
+      .andExpect(cookie().maxAge("JSESSIONID", 0))
+      .andExpect(header().string("Cache-Control", containsString("no-store")))
+      .andExpect(header().string("Pragma", "no-cache"))
+      .andExpect(header().string("Expires", "0"));
+
+    assertTrue(session.isInvalid());
+  }
+
+  @Test
+  public void dashboardSinSesionRedirigeAlLoginYNoCacheaLaRespuesta() throws Exception {
+    MvcResult result = mockMvc
+      .perform(get("/dashboard"))
+      .andExpect(status().is3xxRedirection())
+      .andExpect(header().string("Cache-Control", containsString("no-store")))
+      .andExpect(header().string("Pragma", "no-cache"))
+      .andExpect(header().string("Expires", "0"))
+      .andReturn();
+
+    assertNull(result.getRequest().getSession(false));
   }
 }

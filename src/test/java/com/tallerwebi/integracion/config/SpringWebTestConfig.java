@@ -1,12 +1,15 @@
 package com.tallerwebi.integracion.config;
 
+import com.tallerwebi.presentacion.NoCacheInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.NonNull;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -30,6 +33,14 @@ public class SpringWebTestConfig implements WebMvcConfigurer {
     registry.addResourceHandler("/css/**").addResourceLocations("/resources/core/css/");
     registry.addResourceHandler("/js/**").addResourceLocations("/resources/core/js/");
     registry.addResourceHandler("/webjars/**").addResourceLocations("/webjars/");
+  }
+
+  @Override
+  public void addInterceptors(@NonNull InterceptorRegistry registry) {
+    registry
+      .addInterceptor(new NoCacheInterceptor())
+      .addPathPatterns("/**")
+      .excludePathPatterns("/css/**", "/js/**", "/images/**", "/webjars/**");
   }
 
   // https://www.thymeleaf.org/doc/tutorials/3.0/thymeleafspring.html
