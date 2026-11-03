@@ -6,7 +6,14 @@ import java.util.Map;
 public interface ServicioCompetencia {
   List<Torneo> listarTorneos();
   List<Liga> listarLigas();
-  ResultadoInscripcion inscribirATorneo(Usuario usuario, Long torneoId);
+
+  default ResultadoInscripcion inscribirATorneo(Usuario usuario, Long torneoId) {
+    return inscribirATorneo(usuario, torneoId, null);
+  }
+
+  ResultadoInscripcion inscribirATorneo(Usuario usuario, Long torneoId, Long equipoId);
+
+  List<Equipo> listarEquiposCompatibles(Usuario usuario, Integer formato);
 
   boolean tieneEquipoActivo(Usuario usuario);
 

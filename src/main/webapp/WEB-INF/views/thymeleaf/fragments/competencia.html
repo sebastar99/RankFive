@@ -10,6 +10,68 @@
   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
 </div>
 
+<div th:fragment="inscripcionTorneo(torneo, equipos, inscripto)">
+  <button th:if="${inscripto}" type="button" class="btn btn-outline-success" disabled>
+    <i class="bi bi-check2-circle"></i>Ya inscripto
+  </button>
+  <th:block th:if="${!inscripto and torneo.inscripcionAbierta}">
+    <form th:if="${equipos != null and !#lists.isEmpty(equipos)}"
+          th:action="@{/torneos/inscribirse}" method="post" class="m-0 d-flex flex-column gap-2">
+      <input type="hidden" name="torneoId" th:value="${torneo.id}">
+      <label class="form-label m-0 small" th:for="${'equipo-torneo-' + torneo.id}">
+        Eleg&iacute; tu equipo &middot; F<span th:text="${torneo.formato}">5</span>
+      </label>
+      <select name="equipoId" th:id="${'equipo-torneo-' + torneo.id}" class="form-select form-select-sm" required>
+        <option th:if="${#lists.size(equipos) > 1}" value="" selected disabled>Seleccion&aacute; un equipo</option>
+        <option th:each="equipo : ${equipos}" th:value="${equipo.id}" th:text="${equipo.nombre}">Equipo</option>
+      </select>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-pencil-square"></i>Inscribirse
+      </button>
+    </form>
+    <div th:if="${equipos == null or #lists.isEmpty(equipos)}">
+      <button type="button" class="btn btn-primary" disabled>
+        <i class="bi bi-lock-fill"></i>Inscribirse
+      </button>
+      <p class="small text-muted mt-2 mb-0">Necesit&aacute;s un equipo activo de F<span th:text="${torneo.formato}">5</span> para inscribirte.</p>
+    </div>
+  </th:block>
+  <button th:if="${!inscripto and !torneo.inscripcionAbierta}" type="button" class="btn btn-outline-light" disabled>
+    <i class="bi bi-bell"></i>Pr&oacute;ximamente
+  </button>
+</div>
+
+<div th:fragment="inscripcionLiga(liga, equipos, inscripto)">
+  <button th:if="${inscripto}" type="button" class="btn btn-outline-success" disabled>
+    <i class="bi bi-check2-circle"></i>Ya inscripto
+  </button>
+  <th:block th:if="${!inscripto and liga.inscripcionAbierta}">
+    <form th:if="${equipos != null and !#lists.isEmpty(equipos)}"
+          th:action="@{/ligas/inscribirse}" method="post" class="m-0 d-flex flex-column gap-2">
+      <input type="hidden" name="ligaId" th:value="${liga.id}">
+      <label class="form-label m-0 small" th:for="${'equipo-liga-' + liga.id}">
+        Eleg&iacute; tu equipo &middot; F<span th:text="${liga.formato}">5</span>
+      </label>
+      <select name="equipoId" th:id="${'equipo-liga-' + liga.id}" class="form-select form-select-sm" required>
+        <option th:if="${#lists.size(equipos) > 1}" value="" selected disabled>Seleccion&aacute; un equipo</option>
+        <option th:each="equipo : ${equipos}" th:value="${equipo.id}" th:text="${equipo.nombre}">Equipo</option>
+      </select>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-pencil-square"></i>Inscribirse
+      </button>
+    </form>
+    <div th:if="${equipos == null or #lists.isEmpty(equipos)}">
+      <button type="button" class="btn btn-primary" disabled>
+        <i class="bi bi-lock-fill"></i>Inscribirse
+      </button>
+      <p class="small text-muted mt-2 mb-0">Necesit&aacute;s un equipo activo de F<span th:text="${liga.formato}">5</span> para inscribirte.</p>
+    </div>
+  </th:block>
+  <button th:if="${!inscripto and !liga.inscripcionAbierta}" type="button" class="btn btn-outline-light" disabled>
+    <i class="bi bi-bell"></i>Pr&oacute;ximamente
+  </button>
+</div>
+
 <div th:fragment="tabla(filas, clasificados)" class="table-responsive">
   <table class="tabla-posiciones">
     <thead>

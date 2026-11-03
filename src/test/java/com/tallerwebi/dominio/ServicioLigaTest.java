@@ -43,6 +43,7 @@ public class ServicioLigaTest {
 
     liga = new Liga();
     liga.setId(5L);
+    liga.setFormato(5);
     liga.setCupoEquipos(18);
     liga.setInscripcionAbierta(true);
     when(repoLiga.buscarPorId(5L)).thenReturn(liga);
@@ -54,6 +55,7 @@ public class ServicioLigaTest {
   public void inscribeConEquipoActivoYRechazaSinEquipo() {
     Equipo equipo = new Equipo();
     equipo.setNombre("Los Pibes");
+    equipo.setFormato(5);
     when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(equipo));
 
     assertThat(servicio.inscribir(usuario, 5L), equalTo(ResultadoInscripcion.INSCRIPTO));
@@ -61,6 +63,43 @@ public class ServicioLigaTest {
 
     when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(Collections.emptyList());
     assertThat(servicio.inscribir(usuario, 5L), equalTo(ResultadoInscripcion.SIN_EQUIPO_ACTIVO));
+  }
+
+  @Test
+  public void rechazaInscripcionSiElFormatoDelEquipoNoCoincideConLaLiga() {
+    liga.setFormato(8);
+    Equipo futbol5 = new Equipo();
+    futbol5.setFormato(5);
+    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(futbol5));
+
+    assertThat(
+      servicio.inscribir(usuario, 5L),
+      equalTo(ResultadoInscripcion.SIN_EQUIPO_COMPATIBLE)
+    );
+    verify(repoInscripcion, never()).guardar(any(InscripcionLiga.class));
+  }
+
+  @Test
+  public void exigeElegirEquipoCuandoHayVariosCompatiblesYRechazaUnIdInvalido() {
+    liga.setFormato(5);
+    Equipo primero = new Equipo();
+    primero.setId(11L);
+    primero.setFormato(5);
+    Equipo segundo = new Equipo();
+    segundo.setId(12L);
+    segundo.setFormato(5);
+    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(primero, segundo));
+
+    assertThat(servicio.inscribir(usuario, 5L), equalTo(ResultadoInscripcion.SELECCIONAR_EQUIPO));
+    assertThat(
+      servicio.inscribir(usuario, 5L, 99L),
+      equalTo(ResultadoInscripcion.EQUIPO_NO_DISPONIBLE)
+    );
+
+    assertThat(servicio.inscribir(usuario, 5L, 12L), equalTo(ResultadoInscripcion.INSCRIPTO));
+    var captor = org.mockito.ArgumentCaptor.forClass(InscripcionLiga.class);
+    verify(repoInscripcion).guardar(captor.capture());
+    assertThat(captor.getValue().getEquipo().getId(), equalTo(12L));
   }
 
   @Test

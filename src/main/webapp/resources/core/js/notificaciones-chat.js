@@ -81,9 +81,9 @@
     const total = Number(cantidad.textContent) + 1;
 
     cantidad.textContent = String(total);
-    indicador.textContent = `(${total})`;
+    indicador.textContent = String(total);
     indicador.hidden = false;
-    vacio.hidden = true;
+    vacio.style.display = "none";
 
     // Limitamos los elementos visibles para no sobrecargar la página.
     while (lista.children.length > 50) {

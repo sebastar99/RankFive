@@ -209,15 +209,15 @@ public class ControladorSeccionesTest {
   public void inscribirseTorneoRedirigeConAviso() {
     when(request.getSession(false)).thenReturn(session);
     when(session.getAttribute("usuario")).thenReturn(usuario);
-    when(servicioCompetencia.inscribirATorneo(usuario, 3L))
+    when(servicioCompetencia.inscribirATorneo(usuario, 3L, null))
       .thenReturn(ResultadoInscripcion.INSCRIPTO);
 
-    ModelAndView ok = controlador.inscribirseTorneo(request, 3L);
+    ModelAndView ok = controlador.inscribirseTorneo(request, 3L, null);
     assertThat(ok.getViewName(), equalTo("redirect:/torneos/detalle?id=3&aviso=INSCRIPTO"));
 
-    when(servicioCompetencia.inscribirATorneo(usuario, 3L))
+    when(servicioCompetencia.inscribirATorneo(usuario, 3L, null))
       .thenReturn(ResultadoInscripcion.SIN_EQUIPO_ACTIVO);
-    ModelAndView fail = controlador.inscribirseTorneo(request, 3L);
+    ModelAndView fail = controlador.inscribirseTorneo(request, 3L, null);
     assertThat(fail.getViewName(), equalTo("redirect:/torneos?aviso=SIN_EQUIPO_ACTIVO"));
   }
 

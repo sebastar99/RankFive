@@ -15,6 +15,7 @@ import com.tallerwebi.dominio.RepositorioLiga;
 import com.tallerwebi.dominio.RepositorioNotificacionEncuentro;
 import com.tallerwebi.dominio.RepositorioTorneo;
 import com.tallerwebi.dominio.ResultadoInscripcion;
+import com.tallerwebi.dominio.SeleccionEquipo;
 import com.tallerwebi.dominio.ServicioArbitro;
 import com.tallerwebi.dominio.ServicioCompetencia;
 import com.tallerwebi.dominio.ServicioEquipo;
@@ -78,7 +79,7 @@ public class ServicioCompetenciaImpl implements ServicioCompetencia {
   }
 
   @Override
-  public ResultadoInscripcion inscribirATorneo(Usuario usuario, Long torneoId) {
+  public ResultadoInscripcion inscribirATorneo(Usuario usuario, Long torneoId, Long equipoId) {
     if (usuario == null || usuario.getId() == null || torneoId == null) {
       return ResultadoInscripcion.INVALIDO;
     }
@@ -87,11 +88,15 @@ public class ServicioCompetenciaImpl implements ServicioCompetencia {
     if (validacion != null) {
       return validacion;
     }
-    List<Equipo> equipos = servicioEquipo.listarEquiposActivosDe(usuario);
-    if (equipos == null || equipos.isEmpty()) {
-      return ResultadoInscripcion.SIN_EQUIPO_ACTIVO;
+    SeleccionEquipo seleccion = SeleccionEquipo.elegir(
+      servicioEquipo.listarEquiposActivosDe(usuario),
+      torneo.getFormato(),
+      equipoId
+    );
+    if (seleccion.error() != null) {
+      return seleccion.error();
     }
-    Equipo equipoSeleccionado = equipos.get(0);
+    Equipo equipoSeleccionado = seleccion.equipo();
     InscripcionTorneo insc = new InscripcionTorneo();
     insc.setUsuario(usuario);
     insc.setTorneo(torneo);
@@ -102,6 +107,14 @@ public class ServicioCompetenciaImpl implements ServicioCompetencia {
     );
     repoInscripcion.guardar(insc);
     return ResultadoInscripcion.INSCRIPTO;
+  }
+
+  @Override
+  public List<Equipo> listarEquiposCompatibles(Usuario usuario, Integer formato) {
+    if (usuario == null || usuario.getId() == null || formato == null) {
+      return Collections.emptyList();
+    }
+    return SeleccionEquipo.compatibles(servicioEquipo.listarEquiposActivosDe(usuario), formato);
   }
 
   private ResultadoInscripcion validarInscripcion(Usuario usuario, Torneo torneo) {

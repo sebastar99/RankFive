@@ -156,3 +156,33 @@ SELECT e.id, u.id
 FROM equipo e
 JOIN Usuario u ON u.nombreUsuario IN ('user02', 'user01', 'user03', 'user04', 'user05')
 WHERE e.nombre = 'SacaPuntos FC';
+
+-- Equipo de 11 integrantes con user02 como capitán
+INSERT INTO equipo (nombre, owner_id, formato, estado, fechaCreacion)
+SELECT 'Once Ideal FC', u.id, 11, 'ACTIVO', NOW()
+FROM Usuario u WHERE u.nombreUsuario = 'user02';
+
+-- Plantel: el capitán + user06..user15 (11 integrantes en total)
+INSERT INTO equipo_jugador (equipo_id, usuario_id)
+SELECT e.id, u.id
+FROM equipo e
+JOIN Usuario u ON u.nombreUsuario IN (
+  'user06', 'user02', 'user07', 'user08', 'user09', 'user10',
+  'user11', 'user12', 'user13', 'user14', 'user15'
+)
+WHERE e.nombre = 'Once Ideal FC';
+
+-- Equipo de 7 integrantes con user02 como capitán
+INSERT INTO equipo (nombre, owner_id, formato, estado, fechaCreacion)
+SELECT 'La Plaga FC', u.id, 7, 'ACTIVO', NOW()
+FROM Usuario u WHERE u.nombreUsuario = 'user02';
+
+-- Plantel: el capitán + user06..user15 (7 integrantes en total)
+INSERT INTO equipo_jugador (equipo_id, usuario_id)
+SELECT e.id, u.id
+FROM equipo e
+JOIN Usuario u ON u.nombreUsuario IN (
+  'user06', 'user02', 'user07', 'user08', 'user09', 'user10',
+  'user11'
+)
+WHERE e.nombre = 'La Plaga FC';

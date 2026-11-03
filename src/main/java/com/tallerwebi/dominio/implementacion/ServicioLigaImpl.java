@@ -12,6 +12,7 @@ import com.tallerwebi.dominio.RepositorioLiga;
 import com.tallerwebi.dominio.RepositorioPartidoLiga;
 import com.tallerwebi.dominio.ResultadoInscripcion;
 import com.tallerwebi.dominio.RoundRobin;
+import com.tallerwebi.dominio.SeleccionEquipo;
 import com.tallerwebi.dominio.ServicioArbitro;
 import com.tallerwebi.dominio.ServicioEquipo;
 import com.tallerwebi.dominio.ServicioLiga;
@@ -59,7 +60,7 @@ public class ServicioLigaImpl implements ServicioLiga {
   }
 
   @Override
-  public ResultadoInscripcion inscribir(Usuario usuario, Long ligaId) {
+  public ResultadoInscripcion inscribir(Usuario usuario, Long ligaId, Long equipoId) {
     if (usuario == null || usuario.getId() == null || ligaId == null) {
       return ResultadoInscripcion.INVALIDO;
     }
@@ -68,17 +69,30 @@ public class ServicioLigaImpl implements ServicioLiga {
     if (validacion != null) {
       return validacion;
     }
-    List<Equipo> equipos = servicioEquipo.listarEquiposActivosDe(usuario);
-    if (equipos == null || equipos.isEmpty()) {
-      return ResultadoInscripcion.SIN_EQUIPO_ACTIVO;
+    SeleccionEquipo seleccion = SeleccionEquipo.elegir(
+      servicioEquipo.listarEquiposActivosDe(usuario),
+      liga.getFormato(),
+      equipoId
+    );
+    if (seleccion.error() != null) {
+      return seleccion.error();
     }
+    Equipo equipoSeleccionado = seleccion.equipo();
     InscripcionLiga insc = new InscripcionLiga();
     insc.setLiga(liga);
     insc.setUsuario(usuario);
-    insc.setEquipo(equipos.get(0));
-    insc.setNombreEquipo(equipos.get(0).getNombre());
+    insc.setEquipo(equipoSeleccionado);
+    insc.setNombreEquipo(equipoSeleccionado.getNombre());
     repoInscripcion.guardar(insc);
     return ResultadoInscripcion.INSCRIPTO;
+  }
+
+  @Override
+  public List<Equipo> listarEquiposCompatibles(Usuario usuario, Integer formato) {
+    if (usuario == null || usuario.getId() == null || formato == null) {
+      return Collections.emptyList();
+    }
+    return SeleccionEquipo.compatibles(servicioEquipo.listarEquiposActivosDe(usuario), formato);
   }
 
   private ResultadoInscripcion validar(Usuario usuario, Liga liga) {

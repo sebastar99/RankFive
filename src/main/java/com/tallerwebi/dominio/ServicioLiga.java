@@ -6,7 +6,13 @@ import java.util.Map;
 public interface ServicioLiga {
   Liga buscarPorId(Long ligaId);
 
-  ResultadoInscripcion inscribir(Usuario usuario, Long ligaId);
+  default ResultadoInscripcion inscribir(Usuario usuario, Long ligaId) {
+    return inscribir(usuario, ligaId, null);
+  }
+
+  ResultadoInscripcion inscribir(Usuario usuario, Long ligaId, Long equipoId);
+
+  List<Equipo> listarEquiposCompatibles(Usuario usuario, Integer formato);
 
   boolean yaInscripto(Usuario usuario, Long ligaId);
 
