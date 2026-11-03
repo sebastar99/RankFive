@@ -199,15 +199,16 @@ public class ControladorLigaTest {
 
   @Test
   public void inscripcionRedirigeSegunResultado() {
-    when(servicioLiga.inscribir(usuario, 4L)).thenReturn(ResultadoInscripcion.INSCRIPTO);
+    when(servicioLiga.inscribir(usuario, 4L, null)).thenReturn(ResultadoInscripcion.INSCRIPTO);
     assertThat(
-      controlador.inscribirse(request, 4L).getViewName(),
+      controlador.inscribirse(request, 4L, null).getViewName(),
       equalTo("redirect:/ligas/detalle?id=4&aviso=INSCRIPTO")
     );
 
-    when(servicioLiga.inscribir(usuario, 4L)).thenReturn(ResultadoInscripcion.SIN_EQUIPO_ACTIVO);
+    when(servicioLiga.inscribir(usuario, 4L, null))
+      .thenReturn(ResultadoInscripcion.SIN_EQUIPO_ACTIVO);
     assertThat(
-      controlador.inscribirse(request, 4L).getViewName(),
+      controlador.inscribirse(request, 4L, null).getViewName(),
       equalTo("redirect:/torneos?aviso=SIN_EQUIPO_ACTIVO")
     );
   }

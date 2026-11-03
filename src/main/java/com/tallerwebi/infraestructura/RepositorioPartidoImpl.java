@@ -38,8 +38,11 @@ public class RepositorioPartidoImpl implements RepositorioPartido {
       .getCurrentSession()
       .createQuery(
         "select distinct p from Partido p " +
-        "left join fetch p.equipoA a left join fetch p.equipoB b " +
-        "where a.id = :u or b.id = :u order by p.fecha desc",
+        "left join fetch p.equipoA " +
+        "left join fetch p.equipoB " +
+        "where exists (select ea from p.equipoA ea where ea.id = :u) " +
+        "or exists (select eb from p.equipoB eb where eb.id = :u) " +
+        "order by p.fecha desc",
         Partido.class
       )
       .setParameter("u", usuarioId)

@@ -109,6 +109,8 @@ public class ServicioCompetenciaTest {
   public void inscribeConElEquipoActivoDelUsuario() {
     Equipo equipo = new Equipo();
     equipo.setNombre("Los Pibes");
+    equipo.setFormato(5);
+    torneo.setFormato(5);
     when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(equipo));
 
     ResultadoInscripcion resultado = servicio.inscribirATorneo(usuario, 10L);
@@ -118,6 +120,20 @@ public class ServicioCompetenciaTest {
     verify(repoInscripcion).guardar(captor.capture());
     assertThat(captor.getValue().getEquipo(), equalTo(equipo));
     assertThat(captor.getValue().getNombreEquipo(), equalTo("Los Pibes"));
+  }
+
+  @Test
+  public void noInscribeUnEquipoDeOtroFormatoNiSinFormatoDefinido() {
+    Equipo equipo = new Equipo();
+    equipo.setFormato(5);
+    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(equipo));
+    torneo.setFormato(8);
+
+    assertThat(servicio.inscribirATorneo(usuario, 10L).esExitoso(), is(false));
+    torneo.setFormato(null);
+    equipo.setFormato(null);
+    assertThat(servicio.inscribirATorneo(usuario, 10L).esExitoso(), is(false));
+    verify(repoInscripcion, never()).guardar(any(InscripcionTorneo.class));
   }
 
   @Test

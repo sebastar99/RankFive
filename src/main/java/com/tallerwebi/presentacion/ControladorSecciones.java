@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.EncuentroTorneo;
+import com.tallerwebi.dominio.Equipo;
 import com.tallerwebi.dominio.FaseTorneo;
 import com.tallerwebi.dominio.Liga;
 import com.tallerwebi.dominio.NotificacionPl;
@@ -79,21 +80,40 @@ public class ControladorSecciones extends ControladorBase {
     }
     Map<String, Object> modelo = new HashMap<>(modeloBase(usuario));
     List<Torneo> torneos = servicioCompetencia.listarTorneos();
+    Map<Long, List<Equipo>> equiposPorTorneo = new HashMap<>();
+    Map<Integer, List<Equipo>> equiposPorFormato = new HashMap<>();
     Set<Long> inscriptos = new HashSet<>();
     for (Torneo torneo : torneos) {
+      equiposPorTorneo.put(
+        torneo.getId(),
+        equiposPorFormato.computeIfAbsent(
+          torneo.getFormato(),
+          formato -> servicioCompetencia.listarEquiposCompatibles(usuario, formato)
+        )
+      );
       if (servicioCompetencia.yaInscripto(usuario, torneo.getId())) {
         inscriptos.add(torneo.getId());
       }
     }
     List<Liga> ligas = servicioCompetencia.listarLigas();
+    Map<Long, List<Equipo>> equiposPorLiga = new HashMap<>();
     Set<Long> ligasInscriptas = new HashSet<>();
     for (Liga liga : ligas) {
+      equiposPorLiga.put(
+        liga.getId(),
+        equiposPorFormato.computeIfAbsent(
+          liga.getFormato(),
+          formato -> servicioLiga.listarEquiposCompatibles(usuario, formato)
+        )
+      );
       if (servicioLiga.yaInscripto(usuario, liga.getId())) {
         ligasInscriptas.add(liga.getId());
       }
     }
     modelo.put("torneos", torneos);
+    modelo.put("equiposPorTorneo", equiposPorTorneo);
     modelo.put("ligas", ligas);
+    modelo.put("equiposPorLiga", equiposPorLiga);
     modelo.put("torneosInscriptos", inscriptos);
     modelo.put("ligasInscriptas", ligasInscriptas);
     modelo.put("tieneEquipoActivo", servicioCompetencia.tieneEquipoActivo(usuario));
@@ -118,13 +138,18 @@ public class ControladorSecciones extends ControladorBase {
   @RequestMapping(path = "/torneos/inscribirse", method = RequestMethod.POST)
   public ModelAndView inscribirseTorneo(
     HttpServletRequest request,
-    @RequestParam(PARAM_TORNEO) Long torneoId
+    @RequestParam(PARAM_TORNEO) Long torneoId,
+    @RequestParam(name = "equipoId", required = false) Long equipoId
   ) {
     Usuario usuario = usuarioDeSesion(request);
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
-    ResultadoInscripcion resultado = servicioCompetencia.inscribirATorneo(usuario, torneoId);
+    ResultadoInscripcion resultado = servicioCompetencia.inscribirATorneo(
+      usuario,
+      torneoId,
+      equipoId
+    );
     if (resultado.esExitoso()) {
       return new ModelAndView(REDIRECT_DETALLE + torneoId + PARAM_AVISO + resultado.name());
     }
@@ -148,6 +173,10 @@ public class ControladorSecciones extends ControladorBase {
     List<FaseTorneo> fases = servicioCompetencia.obtenerFases(torneoId);
     Map<String, Object> modelo = new HashMap<>(modeloBase(usuario));
     modelo.put("torneo", torneo);
+    modelo.put(
+      "equiposCompatibles",
+      servicioCompetencia.listarEquiposCompatibles(usuario, torneo.getFormato())
+    );
     modelo.put("inscripciones", servicioCompetencia.listarInscripciones(torneoId));
     modelo.put("fases", fases);
     modelo.put("tablasGrupos", servicioCompetencia.calcularTablasPorGrupo(torneoId));

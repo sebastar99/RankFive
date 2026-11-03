@@ -77,6 +77,10 @@ public class ControladorLiga extends ControladorBase {
     modelo.put("tabla", servicioLiga.calcularTabla(ligaId));
     modelo.put("yaInscripto", servicioLiga.yaInscripto(usuario, ligaId));
     modelo.put("tieneEquipoActivo", servicioCompetencia.tieneEquipoActivo(usuario));
+    modelo.put(
+      "equiposCompatibles",
+      servicioLiga.listarEquiposCompatibles(usuario, liga.getFormato())
+    );
     if (servicioArbitro != null) {
       ModeloCompetencia.arbitraje(
         modelo,
@@ -94,13 +98,14 @@ public class ControladorLiga extends ControladorBase {
   @RequestMapping(path = "/ligas/inscribirse", method = RequestMethod.POST)
   public ModelAndView inscribirse(
     HttpServletRequest request,
-    @RequestParam(PARAM_LIGA) Long ligaId
+    @RequestParam(PARAM_LIGA) Long ligaId,
+    @RequestParam(name = "equipoId", required = false) Long equipoId
   ) {
     Usuario usuario = usuarioDeSesion(request);
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
-    ResultadoInscripcion resultado = servicioLiga.inscribir(usuario, ligaId);
+    ResultadoInscripcion resultado = servicioLiga.inscribir(usuario, ligaId, equipoId);
     if (resultado.esExitoso()) {
       return new ModelAndView(REDIRECT_DETALLE + ligaId + PARAM_AVISO + resultado.name());
     }
