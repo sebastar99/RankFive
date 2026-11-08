@@ -61,9 +61,36 @@ public class RepositorioGolTorneoTest {
     assertThat(goles.get(0).getEquipoNombre(), equalTo("Alfa"));
     assertThat(goles.get(0).getAsistidor(), equalTo("Di María"));
     assertThat(goles.get(0).getPartidoId(), equalTo(encuentro.getId()));
-    assertThat(repositorio.contarPor(encuentro.getId(), alfa.getId()), equalTo(2L));
-    assertThat(repositorio.contarPor(encuentro.getId(), beta.getId()), equalTo(1L));
-    assertThat(repositorio.contarPor(encuentro.getId(), 999L), equalTo(0L));
+  }
+
+  @Test
+  public void borraLosGolesDelEncuentroSinTocarLosDeOtros() {
+    EncuentroTorneo otro = encuentro(torneo, beta, alfa);
+    repositorio.guardar(gol(encuentro, alfa, "Messi", null));
+    repositorio.guardar(gol(otro, beta, "Otro", null));
+    sesion().flush();
+
+    repositorio.borrarPorEncuentro(encuentro.getId());
+    sesion().flush();
+    sesion().clear();
+
+    List<GolTorneo> goles = repositorio.listarPorTorneo(torneo.getId());
+    assertThat(goles, hasSize(1));
+    assertThat(goles.get(0).getGoleador(), equalTo("Otro"));
+  }
+
+  @Test
+  public void cuentaGolesYAsistenciasPorUsuario() {
+    GolTorneo gol = gol(encuentro, alfa, "Messi", "Enzo");
+    gol.setUsuarioGoleador(alfa.getUsuario());
+    gol.setUsuarioAsistente(beta.getUsuario());
+    repositorio.guardar(gol);
+    sesion().flush();
+
+    assertThat(repositorio.contarGolesDe(alfa.getUsuario().getId()), equalTo(1L));
+    assertThat(repositorio.contarAsistenciasDe(beta.getUsuario().getId()), equalTo(1L));
+    assertThat(repositorio.contarGolesDe(999L), equalTo(0L));
+    assertThat(repositorio.contarAsistenciasDe(999L), equalTo(0L));
   }
 
   @Test

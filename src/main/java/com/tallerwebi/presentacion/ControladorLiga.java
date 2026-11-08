@@ -9,6 +9,7 @@ import com.tallerwebi.dominio.ServicioEstadisticasLiga;
 import com.tallerwebi.dominio.ServicioLiga;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Usuario;
+import com.tallerwebi.presentacion.DTO.DatosDetallesEncuentro;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -133,39 +135,48 @@ public class ControladorLiga extends ControladorBase {
     @RequestParam(PARAM_LIGA) Long ligaId,
     @RequestParam("partidoId") Long partidoId,
     @RequestParam("golesLocal") Integer golesLocal,
-    @RequestParam("golesVisitante") Integer golesVisitante
+    @RequestParam("golesVisitante") Integer golesVisitante,
+    @ModelAttribute DatosDetallesEncuentro detalles
   ) {
     Usuario usuario = usuarioDeSesion(request);
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
-    if (usuario.getRol() == null || !"ADMIN".equalsIgnoreCase(usuario.getRol())) {
+    if (!ModeloCompetencia.esAdmin(usuario)) {
       return new ModelAndView(REDIRECT_DETALLE + ligaId + PARAM_AVISO + Avisos.RESULTADO_INVALIDO);
     }
-    boolean ok = servicioLiga.registrarResultado(partidoId, golesLocal, golesVisitante);
-    String codigo = ok ? Avisos.RESULTADO_GUARDADO : Avisos.RESULTADO_INVALIDO;
+    if (!servicioLiga.registrarResultado(partidoId, golesLocal, golesVisitante)) {
+      return new ModelAndView(REDIRECT_DETALLE + ligaId + PARAM_AVISO + Avisos.RESULTADO_INVALIDO);
+    }
+    boolean sinDetalles = detalles == null || detalles.aDominio().estaVacio();
+    String codigo = sinDetalles || guardarDetalles(partidoId, detalles)
+      ? Avisos.RESULTADO_GUARDADO
+      : Avisos.DETALLES_INVALIDOS;
     return new ModelAndView(REDIRECT_DETALLE + ligaId + PARAM_AVISO + codigo);
   }
 
-  @RequestMapping(path = "/ligas/partido/gol", method = RequestMethod.POST)
-  public ModelAndView registrarGol(
+  @RequestMapping(path = "/ligas/partido/detalles", method = RequestMethod.POST)
+  public ModelAndView registrarDetalles(
     HttpServletRequest request,
     @RequestParam(PARAM_LIGA) Long ligaId,
     @RequestParam("partidoId") Long partidoId,
-    @RequestParam("inscripcionId") Long inscripcionId,
-    @RequestParam("goleador") String goleador,
-    @RequestParam(name = "asistidor", required = false) String asistidor
+    @ModelAttribute DatosDetallesEncuentro detalles
   ) {
     Usuario usuario = usuarioDeSesion(request);
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
-    boolean ok =
-      ModeloCompetencia.esAdmin(usuario) &&
-      servicioEstadisticas != null &&
-      servicioEstadisticas.registrarGol(partidoId, inscripcionId, goleador, asistidor);
-    String codigo = ok ? Avisos.GOL_REGISTRADO : Avisos.GOL_INVALIDO;
+    boolean ok = ModeloCompetencia.esAdmin(usuario) && guardarDetalles(partidoId, detalles);
+    String codigo = ok ? Avisos.DETALLES_GUARDADOS : Avisos.DETALLES_INVALIDOS;
     return new ModelAndView(REDIRECT_DETALLE + ligaId + PARAM_AVISO + codigo);
+  }
+
+  private boolean guardarDetalles(Long partidoId, DatosDetallesEncuentro detalles) {
+    return (
+      servicioEstadisticas != null &&
+      detalles != null &&
+      servicioEstadisticas.registrarDetalles(partidoId, detalles.aDominio())
+    );
   }
 
   @RequestMapping(path = "/ligas/partido/calificar-arbitro", method = RequestMethod.POST)
@@ -195,7 +206,8 @@ public class ControladorLiga extends ControladorBase {
       servicioEstadisticas.goleadores(ligaId),
       servicioEstadisticas.asistencias(ligaId),
       servicioEstadisticas.golesPorPartido(ligaId),
-      servicioEstadisticas.jugadoresPorInscripcion(ligaId)
+      servicioEstadisticas.tarjetasPorPartido(ligaId),
+      servicioEstadisticas.plantelesPorInscripcion(ligaId)
     );
   }
 

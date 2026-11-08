@@ -1,5 +1,9 @@
 package com.tallerwebi.dominio.implementacion;
 
+import com.tallerwebi.dominio.ConstructorDetalles;
+import com.tallerwebi.dominio.ConstructorDetalles.GolCargado;
+import com.tallerwebi.dominio.ConstructorDetalles.TarjetaCargada;
+import com.tallerwebi.dominio.DetallesEncuentro;
 import com.tallerwebi.dominio.EncuentroTorneo;
 import com.tallerwebi.dominio.EstadisticasGoles;
 import com.tallerwebi.dominio.FaseTorneo;
@@ -11,7 +15,11 @@ import com.tallerwebi.dominio.RepositorioEncuentroTorneo;
 import com.tallerwebi.dominio.RepositorioFaseTorneo;
 import com.tallerwebi.dominio.RepositorioGolTorneo;
 import com.tallerwebi.dominio.RepositorioInscripcionTorneo;
+import com.tallerwebi.dominio.RepositorioTarjetaTorneo;
+import com.tallerwebi.dominio.ResolucionDetalles;
 import com.tallerwebi.dominio.ServicioEstadisticasTorneo;
+import com.tallerwebi.dominio.TarjetaTorneo;
+import com.tallerwebi.dominio.Usuario;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,14 +40,17 @@ public class ServicioEstadisticasTorneoImpl implements ServicioEstadisticasTorne
   private final RepositorioEncuentroTorneo repoEncuentro;
   private final RepositorioInscripcionTorneo repoInscripcion;
   private final RepositorioFaseTorneo repoFase;
+  private final RepositorioTarjetaTorneo repoTarjeta;
 
   @Autowired
   public ServicioEstadisticasTorneoImpl(
     RepositorioGolTorneo repoGol,
     RepositorioEncuentroTorneo repoEncuentro,
     RepositorioInscripcionTorneo repoInscripcion,
-    RepositorioFaseTorneo repoFase
+    RepositorioFaseTorneo repoFase,
+    RepositorioTarjetaTorneo repoTarjeta
   ) {
+    this.repoTarjeta = repoTarjeta;
     this.repoGol = repoGol;
     this.repoEncuentro = repoEncuentro;
     this.repoInscripcion = repoInscripcion;
@@ -47,38 +58,65 @@ public class ServicioEstadisticasTorneoImpl implements ServicioEstadisticasTorne
   }
 
   @Override
-  public boolean registrarGol(
-    Long encuentroId,
-    Long inscripcionId,
-    String goleador,
-    String asistidor
-  ) {
-    String autor = EstadisticasGoles.normalizar(goleador);
-    String pase = EstadisticasGoles.normalizar(asistidor);
+  public boolean registrarDetalles(Long encuentroId, DetallesEncuentro detalles) {
+    EncuentroTorneo encuentro = encuentroId == null ? null : repoEncuentro.buscarPorId(encuentroId);
     if (
-      encuentroId == null || inscripcionId == null || !EstadisticasGoles.nombresValidos(autor, pase)
+      encuentro == null ||
+      !JUGADO.equals(encuentro.getEstado()) ||
+      encuentro.getParticipanteA() == null ||
+      encuentro.getParticipanteB() == null
     ) {
       return false;
     }
-    EncuentroTorneo encuentro = repoEncuentro.buscarPorId(encuentroId);
-    if (encuentro == null || !JUGADO.equals(encuentro.getEstado())) {
-      return false;
-    }
-    InscripcionTorneo participante = participante(encuentro, inscripcionId);
-    if (participante == null) {
-      return false;
-    }
-    int permitidos = EstadisticasGoles.golesDe(
-      esParticipanteA(encuentro, inscripcionId) ? encuentro.getGolesA() : encuentro.getGolesB()
+    InscripcionTorneo local = encuentro.getParticipanteA();
+    InscripcionTorneo visitante = encuentro.getParticipanteB();
+    var resolucion = ResolucionDetalles.de(
+      detalles,
+      local.getEquipo(),
+      visitante.getEquipo(),
+      encuentro.getGolesA(),
+      encuentro.getGolesB()
     );
-    if (repoGol.contarPor(encuentroId, inscripcionId) >= permitidos) {
+    if (resolucion.isEmpty()) {
       return false;
     }
-    GolTorneo gol = EstadisticasGoles.completar(new GolTorneo(), autor, pase);
-    gol.setEncuentro(encuentro);
-    gol.setInscripcion(participante);
-    repoGol.guardar(gol);
+    repoGol.borrarPorEncuentro(encuentroId);
+    repoTarjeta.borrarPorEncuentro(encuentroId);
+    guardar(encuentro, local, resolucion.get().golesLocal(), resolucion.get().tarjetasLocal());
+    guardar(
+      encuentro,
+      visitante,
+      resolucion.get().golesVisitante(),
+      resolucion.get().tarjetasVisitante()
+    );
     return true;
+  }
+
+  private void guardar(
+    EncuentroTorneo encuentro,
+    InscripcionTorneo inscripcion,
+    List<GolCargado> goles,
+    List<TarjetaCargada> tarjetas
+  ) {
+    for (GolCargado cargado : goles) {
+      GolTorneo gol = EstadisticasGoles.completar(
+        new GolTorneo(),
+        cargado.goleador(),
+        cargado.asistidor()
+      );
+      gol.setEncuentro(encuentro);
+      gol.setInscripcion(inscripcion);
+      repoGol.guardar(gol);
+    }
+    for (TarjetaCargada cargada : tarjetas) {
+      TarjetaTorneo tarjeta = new TarjetaTorneo();
+      tarjeta.setEncuentro(encuentro);
+      tarjeta.setInscripcion(inscripcion);
+      tarjeta.setUsuarioAmonestado(cargada.jugador());
+      tarjeta.setJugador(ConstructorDetalles.nombreVisible(cargada.jugador()));
+      tarjeta.setTipo(cargada.tipo());
+      repoTarjeta.guardar(tarjeta);
+    }
   }
 
   @Override
@@ -97,15 +135,31 @@ public class ServicioEstadisticasTorneoImpl implements ServicioEstadisticasTorne
   }
 
   @Override
-  public Map<Long, List<String>> jugadoresPorInscripcion(Long torneoId) {
+  public Map<Long, List<TarjetaTorneo>> tarjetasPorPartido(Long torneoId) {
+    Map<Long, List<TarjetaTorneo>> agrupadas = new HashMap<>();
+    if (torneoId != null) {
+      for (TarjetaTorneo tarjeta : repoTarjeta.listarPorTorneo(torneoId)) {
+        agrupadas.computeIfAbsent(tarjeta.getPartidoId(), id -> new ArrayList<>()).add(tarjeta);
+      }
+    }
+    return agrupadas;
+  }
+
+  @Override
+  public Map<Long, List<Usuario>> plantelesPorInscripcion(Long torneoId) {
     if (torneoId == null) {
       return Collections.emptyMap();
     }
-    Map<Long, List<String>> nombres = new HashMap<>();
+    Map<Long, List<Usuario>> planteles = new HashMap<>();
     repoInscripcion
       .listarPorTorneo(torneoId)
-      .forEach(insc -> nombres.put(insc.getId(), EstadisticasGoles.nombresDe(insc.getEquipo())));
-    return nombres;
+      .forEach(insc ->
+        planteles.put(
+          insc.getId(),
+          ConstructorDetalles.plantelDe(insc.getEquipo()).stream().toList()
+        )
+      );
+    return planteles;
   }
 
   @Override
@@ -146,24 +200,5 @@ public class ServicioEstadisticasTorneoImpl implements ServicioEstadisticasTorne
 
   private List<GolTorneo> golesDe(Long torneoId) {
     return torneoId == null ? Collections.emptyList() : repoGol.listarPorTorneo(torneoId);
-  }
-
-  private static boolean esParticipanteA(EncuentroTorneo encuentro, Long inscripcionId) {
-    return (
-      encuentro.getParticipanteA() != null &&
-      inscripcionId.equals(encuentro.getParticipanteA().getId())
-    );
-  }
-
-  private static InscripcionTorneo participante(EncuentroTorneo encuentro, Long inscripcionId) {
-    for (InscripcionTorneo candidato : new InscripcionTorneo[] {
-      encuentro.getParticipanteA(),
-      encuentro.getParticipanteB(),
-    }) {
-      if (candidato != null && inscripcionId.equals(candidato.getId())) {
-        return candidato;
-      }
-    }
-    return null;
   }
 }

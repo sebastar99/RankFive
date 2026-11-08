@@ -10,4 +10,6 @@ public interface RepositorioInscripcionLiga {
   List<InscripcionLiga> listarPorLiga(Long ligaId);
 
   List<Equipo> listarEquipos(Long ligaId);
+
+  List<InscripcionLiga> listarTodas();
 }

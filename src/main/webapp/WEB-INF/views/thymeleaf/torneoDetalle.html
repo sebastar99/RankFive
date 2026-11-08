@@ -132,7 +132,7 @@
                  th:with="esAdmin=${usuario != null and usuario.rol != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN')},
                           compId=${torneo.id}, campoComp='torneoId', campoPartido='encuentroId',
                           campoGL='golesA', campoGV='golesB',
-                          urlResultado='/torneos/encuentro/resultado', urlGol='/torneos/encuentro/gol',
+                          urlResultado='/torneos/encuentro/resultado', urlDetalles='/torneos/encuentro/detalles',
                           urlCalificar='/torneos/encuentro/calificar-arbitro'">
               <div class="fixture-nav">
                 <button type="button" class="btn btn-sm btn-outline-light fixture-flecha" data-fixture-mover="-1" aria-label="Fase anterior">
@@ -183,5 +183,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
   <script th:src="@{/js/fixture.js}"></script>
+  <script th:src="@{/js/goles-editor.js}"></script>
 </body>
 </html>

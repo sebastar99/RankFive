@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.tallerwebi.dominio.Partido;
 import com.tallerwebi.dominio.ServicioArbitro;
 import com.tallerwebi.dominio.ServicioCompetencia;
+import com.tallerwebi.dominio.ServicioEstadisticasEquipo;
 import com.tallerwebi.dominio.ServicioEstadisticasJugador;
 import com.tallerwebi.dominio.ServicioLiga;
 import com.tallerwebi.dominio.ServicioPartido;
@@ -46,7 +47,8 @@ public class ControladorSeccionesHistorialTest {
         servicioCompetencia,
         servicioArbitro,
         servicioLiga,
-        mock(ServicioEstadisticasJugador.class)
+        mock(ServicioEstadisticasJugador.class),
+        mock(ServicioEstadisticasEquipo.class)
       );
 
     when(servicioRelacionAmistad.listarSolicitudesPendientes(any())).thenReturn(List.of());

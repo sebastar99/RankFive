@@ -121,6 +121,25 @@ public class RepositorioEquipoTest {
   @Test
   @Transactional
   @Rollback
+  public void listarActivosDevuelveTodosLosEquiposActivosConSusJugadores() {
+    Usuario owner = guardarUsuario("o@test.com", "owner", 1500);
+    Usuario amigo = guardarUsuario("a@test.com", "amigo", 2500);
+    Usuario ajeno = guardarUsuario("x@test.com", "ajeno", 2000);
+    guardarEquipo(owner, EstadoEquipo.ACTIVO, amigo);
+    guardarEquipo(ajeno, EstadoEquipo.ACTIVO);
+    guardarEquipo(owner, EstadoEquipo.PENDIENTE, amigo);
+    sessionFactory.getCurrentSession().flush();
+    sessionFactory.getCurrentSession().clear();
+
+    List<Equipo> activos = repositorioEquipo.listarActivos();
+
+    assertThat(activos, hasSize(2));
+    assertThat(activos.stream().mapToInt(e -> e.getJugadores().size()).sum(), equalTo(3));
+  }
+
+  @Test
+  @Transactional
+  @Rollback
   public void listarActivosDeSoloDevuelveEquiposActivosDondeParticipaElUsuario() {
     Usuario owner = guardarUsuario("o@test.com", "owner", 1500);
     Usuario amigo = guardarUsuario("a@test.com", "amigo", 2500);

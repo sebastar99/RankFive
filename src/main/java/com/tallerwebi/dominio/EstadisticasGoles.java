@@ -1,14 +1,11 @@
 package com.tallerwebi.dominio;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 
 public final class EstadisticasGoles {
@@ -35,6 +32,16 @@ public final class EstadisticasGoles {
     return gol;
   }
 
+  public static <T extends GolBase> T completar(T gol, Usuario goleador, Usuario asistidor) {
+    gol.setUsuarioGoleador(goleador);
+    gol.setUsuarioAsistente(asistidor);
+    return completar(
+      gol,
+      ConstructorDetalles.nombreVisible(goleador),
+      ConstructorDetalles.nombreVisible(asistidor)
+    );
+  }
+
   public static int golesDe(Integer goles) {
     return goles == null ? 0 : goles;
   }
@@ -55,18 +62,6 @@ public final class EstadisticasGoles {
     return agrupados;
   }
 
-  public static List<String> nombresDe(Equipo equipo) {
-    if (equipo == null) {
-      return Collections.emptyList();
-    }
-    Set<String> nombres = new LinkedHashSet<>();
-    agregarNombre(nombres, equipo.getOwner());
-    if (equipo.getJugadores() != null) {
-      equipo.getJugadores().forEach(j -> agregarNombre(nombres, j));
-    }
-    return new ArrayList<>(nombres);
-  }
-
   private static List<FilaEstadistica> ranking(
     List<? extends GolBase> goles,
     Function<GolBase, String> jugador
@@ -83,18 +78,5 @@ public final class EstadisticasGoles {
     List<FilaEstadistica> tabla = new ArrayList<>(filas.values());
     tabla.sort(FilaEstadistica.ORDEN);
     return tabla;
-  }
-
-  private static void agregarNombre(Set<String> nombres, Usuario usuario) {
-    if (usuario == null) {
-      return;
-    }
-    String nombre = usuario.getPerfil() != null ? usuario.getPerfil().getNombreUsuario() : null;
-    if (nombre == null || nombre.isBlank()) {
-      nombre = usuario.getEmail();
-    }
-    if (nombre != null && !nombre.isBlank()) {
-      nombres.add(nombre);
-    }
   }
 }

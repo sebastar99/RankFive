@@ -60,4 +60,15 @@ public class RepositorioInscripcionTorneoImpl implements RepositorioInscripcionT
       .setParameter("t", torneoId)
       .list();
   }
+
+  @Override
+  public java.util.List<InscripcionTorneo> listarTodas() {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "select i from InscripcionTorneo i left join fetch i.equipo",
+        InscripcionTorneo.class
+      )
+      .list();
+  }
 }

@@ -15,8 +15,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tallerwebi.dominio.AlmacenamientoImagenes;
+import com.tallerwebi.dominio.Equipo;
+import com.tallerwebi.dominio.PosicionEquipo;
 import com.tallerwebi.dominio.ResultadoCreacionEquipo;
 import com.tallerwebi.dominio.ServicioEquipo;
+import com.tallerwebi.dominio.ServicioRankingEquipos;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.enums.ResultadoAceptacionInvitacion;
@@ -35,6 +38,7 @@ public class ControladorEquipoTest {
   private ServicioEquipo servicioEquipo;
   private ServicioRelacionAmistad servicioAmistad;
   private AlmacenamientoImagenes almacenamiento;
+  private ServicioRankingEquipos servicioRanking;
   private HttpServletRequest request;
   private HttpSession session;
   private Usuario usuario;
@@ -44,11 +48,13 @@ public class ControladorEquipoTest {
     servicioEquipo = mock(ServicioEquipo.class);
     servicioAmistad = mock(ServicioRelacionAmistad.class);
     almacenamiento = mock(AlmacenamientoImagenes.class);
+    servicioRanking = mock(ServicioRankingEquipos.class);
     request = mock(HttpServletRequest.class);
     session = mock(HttpSession.class);
     usuario = new Usuario();
     usuario.setId(1L);
-    controlador = new ControladorEquipo(servicioAmistad, servicioEquipo, almacenamiento);
+    controlador =
+      new ControladorEquipo(servicioAmistad, servicioEquipo, almacenamiento, servicioRanking);
   }
 
   private void conSesion() {
@@ -184,5 +190,28 @@ public class ControladorEquipoTest {
     );
     verify(servicioEquipo).aceptarInvitacionConResultado(10L, usuario);
     verify(servicioEquipo).rechazarInvitacion(11L, usuario);
+  }
+
+  @Test
+  public void rankingEquiposSinSesionRedirigeAlLogin() {
+    when(request.getSession(false)).thenReturn(null);
+
+    assertThat(controlador.rankingEquipos(request).getViewName(), equalTo("redirect:/login"));
+  }
+
+  @Test
+  public void rankingEquiposPoneElTop10EnElModelo() {
+    conSesion();
+    Equipo equipo = new Equipo();
+    equipo.setNombre("Los Reales");
+    equipo.setFormato(5);
+    when(servicioRanking.obtenerRanking(usuario, 10))
+      .thenReturn(List.of(new PosicionEquipo(1, equipo, false)));
+
+    ModelAndView modelAndView = controlador.rankingEquipos(request);
+
+    assertThat(modelAndView.getViewName(), equalTo("rankingEquipos"));
+    assertThat(((List<?>) modelAndView.getModel().get("ranking")).size(), equalTo(1));
+    assertThat(modelAndView.getModel().get("topRanking"), equalTo(10));
   }
 }

@@ -38,7 +38,7 @@
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
           <h1 class="h5 m-0">Ranking general de equipos</h1>
-          <p class="text-muted small m-0 mt-1">Ordenado por puntaje promedio de sus integrantes.</p>
+          <p class="text-muted small m-0 mt-1">Top 10 por puntaje promedio de sus integrantes.</p>
         </div>
         <a th:href="@{/agregar-equipo}" class="btn btn-primary btn-action">
           <i class="bi bi-people-fill me-2"></i>Crear equipo
@@ -46,110 +46,35 @@
       </div>
 
       <div class="ranking-list">
-        <div class="team-rank-row">
-          <div class="pos top">1</div>
-          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
-          <div class="name">
-            <span>Los Galácticos</span>
-            <span class="username">3 jugadores · F5</span>
-          </div>
-          <span class="team-record">12V · 2E · 1D</span>
-          <div class="points">
-            <span class="rank-badge rank-badge-sm rank-plat"><i class="bi bi-diamond"></i><span>Platino</span></span>
-            <span>2967 pts</span>
-          </div>
+        <div class="notif-empty" th:if="${#lists.isEmpty(ranking)}">
+          <i class="bi bi-inbox"></i>
+          <span>Todavía no hay equipos activos</span>
         </div>
-        <div class="team-rank-row">
-          <div class="pos top">2</div>
-          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
-          <div class="name">
-            <span>Deportivo Sur</span>
-            <span class="username">7 jugadores · F7</span>
+        <th:block th:each="fila, st : ${ranking}">
+          <div class="text-muted small text-uppercase fw-bold mt-3 mb-1"
+               th:if="${st.index == topRanking and fila.posicion > topRanking}">Tus equipos</div>
+          <div class="team-rank-row" th:classappend="${fila.propio} ? 'mine' : ''">
+            <div class="pos" th:classappend="${fila.posicion <= 3} ? 'top' : ''" th:text="${fila.posicion}">1</div>
+            <div class="team-shield">
+              <img th:if="${fila.equipo.fotoUrl != null}" th:src="@{${fila.equipo.fotoUrl}}" th:alt="${fila.equipo.nombre}" class="team-rank-icon lg" />
+              <i th:if="${fila.equipo.fotoUrl == null}" class="bi bi-shield-fill"></i>
+            </div>
+            <div class="name">
+              <span th:text="${fila.equipo.nombre}">Equipo</span>
+              <span class="username">
+                <span th:text="${#lists.size(fila.equipo.jugadores)}">5</span> jugadores · F<span th:text="${fila.equipo.formato}">5</span>
+                <th:block th:if="${fila.propio}"> · <span class="text-primary">Tu equipo</span></th:block>
+              </span>
+            </div>
+            <div class="points">
+              <span class="rank-badge rank-badge-sm team-rank-badge" th:classappend="'team-rank-' + ${fila.equipo.rango.slug}" title="Promedio del equipo">
+                <img class="team-rank-icon lg" th:src="@{${fila.equipo.rangoIcono}}" th:alt="${fila.equipo.rango.nombre}" />
+                <span th:text="${fila.equipo.rango.nombre}">Rango</span>
+              </span>
+              <span th:text="${fila.equipo.promedioPl} + ' pts'">0 pts</span>
+            </div>
           </div>
-          <span class="team-record">10V · 3E · 2D</span>
-          <div class="points">
-            <span class="rank-badge rank-badge-sm rank-plat"><i class="bi bi-diamond"></i><span>Platino</span></span>
-            <span>2650 pts</span>
-          </div>
-        </div>
-        <div class="team-rank-row mine">
-          <div class="pos top">3</div>
-          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
-          <div class="name">
-            <span>Los Pibes FC</span>
-            <span class="username">5 jugadores · F5 · <span class="text-primary">Tu equipo</span></span>
-          </div>
-          <span class="team-record">8V · 2E · 3D</span>
-          <div class="points">
-            <span class="rank-badge rank-badge-sm rank-gold"><i class="bi bi-trophy-fill"></i><span>Oro</span></span>
-            <span>2320 pts</span>
-          </div>
-        </div>
-        <div class="team-rank-row mine">
-          <div class="pos">4</div>
-          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
-          <div class="name">
-            <span>Dream Team</span>
-            <span class="username">4 jugadores · F7 · <span class="text-primary">Tu equipo</span></span>
-          </div>
-          <span class="team-record">6V · 4E · 4D</span>
-          <div class="points">
-            <span class="rank-badge rank-badge-sm rank-gold"><i class="bi bi-trophy-fill"></i><span>Oro</span></span>
-            <span>2250 pts</span>
-          </div>
-        </div>
-        <div class="team-rank-row">
-          <div class="pos">5</div>
-          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
-          <div class="name">
-            <span>Atlético Norte</span>
-            <span class="username">8 jugadores · F8</span>
-          </div>
-          <span class="team-record">5V · 3E · 6D</span>
-          <div class="points">
-            <span class="rank-badge rank-badge-sm rank-gold"><i class="bi bi-trophy-fill"></i><span>Oro</span></span>
-            <span>2100 pts</span>
-          </div>
-        </div>
-        <div class="team-rank-row">
-          <div class="pos">6</div>
-          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
-          <div class="name">
-            <span>FC Amigos</span>
-            <span class="username">5 jugadores · F5</span>
-          </div>
-          <span class="team-record">4V · 2E · 7D</span>
-          <div class="points">
-            <span class="rank-badge rank-badge-sm rank-silver"><i class="bi bi-trophy"></i><span>Plata</span></span>
-            <span>1840 pts</span>
-          </div>
-        </div>
-        <div class="team-rank-row">
-          <div class="pos">7</div>
-          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
-          <div class="name">
-            <span>Real Mandiyú</span>
-            <span class="username">11 jugadores · F11</span>
-          </div>
-          <span class="team-record">3V · 1E · 9D</span>
-          <div class="points">
-            <span class="rank-badge rank-badge-sm rank-silver"><i class="bi bi-trophy"></i><span>Plata</span></span>
-            <span>1620 pts</span>
-          </div>
-        </div>
-        <div class="team-rank-row">
-          <div class="pos">8</div>
-          <div class="team-shield"><i class="bi bi-shield-fill"></i></div>
-          <div class="name">
-            <span>Sportivo Oeste</span>
-            <span class="username">5 jugadores · F5</span>
-          </div>
-          <span class="team-record">2V · 2E · 9D</span>
-          <div class="points">
-            <span class="rank-badge rank-badge-sm rank-bronze"><i class="bi bi-award"></i><span>Bronce</span></span>
-            <span>1310 pts</span>
-          </div>
-        </div>
+        </th:block>
       </div>
     </section>
   </main>

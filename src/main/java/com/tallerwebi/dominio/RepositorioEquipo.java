@@ -12,4 +12,6 @@ public interface RepositorioEquipo {
   int minimoJugadoresEnCompetencias(Long equipoId);
 
   List<Equipo> listarActivosDe(Long usuarioId);
+
+  List<Equipo> listarActivos();
 }

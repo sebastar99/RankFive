@@ -62,6 +62,19 @@ public class RepositorioEquipoImpl implements RepositorioEquipo {
   }
 
   @Override
+  public List<Equipo> listarActivos() {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "select distinct e from Equipo e join fetch e.owner left join fetch e.jugadores " +
+        "where e.estado = :activo",
+        Equipo.class
+      )
+      .setParameter("activo", EstadoEquipo.ACTIVO)
+      .list();
+  }
+
+  @Override
   public List<Equipo> listarActivosDe(Long usuarioId) {
     return sessionFactory
       .getCurrentSession()

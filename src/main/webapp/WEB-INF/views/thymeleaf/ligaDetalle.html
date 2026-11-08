@@ -112,7 +112,7 @@
                  th:with="esAdmin=${usuario != null and usuario.rol != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN')},
                           compId=${liga.id}, campoComp='ligaId', campoPartido='partidoId',
                           campoGL='golesLocal', campoGV='golesVisitante',
-                          urlResultado='/ligas/partido/resultado', urlGol='/ligas/partido/gol',
+                          urlResultado='/ligas/partido/resultado', urlDetalles='/ligas/partido/detalles',
                           urlCalificar='/ligas/partido/calificar-arbitro'">
               <div class="fixture-nav">
                 <button type="button" class="btn btn-sm btn-outline-light fixture-flecha" data-fixture-mover="-1" aria-label="Fecha anterior">
@@ -160,5 +160,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
   <script th:src="@{/js/fixture.js}"></script>
+  <script th:src="@{/js/goles-editor.js}"></script>
 </body>
 </html>

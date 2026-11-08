@@ -7,5 +7,9 @@ public interface RepositorioGolLiga {
 
   List<GolLiga> listarPorLiga(Long ligaId);
 
-  long contarPor(Long partidoId, Long inscripcionId);
+  void borrarPorPartido(Long partidoId);
+
+  long contarGolesDe(Long usuarioId);
+
+  long contarAsistenciasDe(Long usuarioId);
 }

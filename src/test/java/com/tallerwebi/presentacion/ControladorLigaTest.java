@@ -125,29 +125,65 @@ public class ControladorLigaTest {
   }
 
   @Test
-  public void registrarGolComoAdminInformaElResultado() {
+  public void registrarDetallesComoAdminInformaElResultado() {
     usuario.setRol("ADMIN");
     ServicioEstadisticasLiga estadisticas = mock(ServicioEstadisticasLiga.class);
     controlador.setServicioEstadisticas(estadisticas);
-    when(estadisticas.registrarGol(7L, 1L, "Messi", null)).thenReturn(true);
+    when(estadisticas.registrarDetalles(eq(7L), any())).thenReturn(true);
 
     assertThat(
-      controlador.registrarGol(request, 4L, 7L, 1L, "Messi", null).getViewName(),
-      equalTo("redirect:/ligas/detalle?id=4&aviso=" + Avisos.GOL_REGISTRADO)
+      controlador.registrarDetalles(request, 4L, 7L, datos()).getViewName(),
+      equalTo("redirect:/ligas/detalle?id=4&aviso=" + Avisos.DETALLES_GUARDADOS)
     );
   }
 
   @Test
-  public void registrarGolNoAdminEsInvalidoYNoSeEjecuta() {
+  public void registrarDetallesNoAdminEsInvalidoYNoSeEjecuta() {
     usuario.setRol("USER");
     ServicioEstadisticasLiga estadisticas = mock(ServicioEstadisticasLiga.class);
     controlador.setServicioEstadisticas(estadisticas);
 
     assertThat(
-      controlador.registrarGol(request, 4L, 7L, 1L, "Messi", null).getViewName(),
-      equalTo("redirect:/ligas/detalle?id=4&aviso=" + Avisos.GOL_INVALIDO)
+      controlador.registrarDetalles(request, 4L, 7L, datos()).getViewName(),
+      equalTo("redirect:/ligas/detalle?id=4&aviso=" + Avisos.DETALLES_INVALIDOS)
     );
-    verify(estadisticas, never()).registrarGol(any(), any(), any(), any());
+    verify(estadisticas, never()).registrarDetalles(any(), any());
+  }
+
+  @Test
+  public void registrarResultadoConDetallesLosReenviaAlServicio() {
+    usuario.setRol("ADMIN");
+    ServicioEstadisticasLiga estadisticas = mock(ServicioEstadisticasLiga.class);
+    controlador.setServicioEstadisticas(estadisticas);
+    when(servicioLiga.registrarResultado(7L, 2, 0)).thenReturn(true);
+    when(estadisticas.registrarDetalles(eq(7L), any())).thenReturn(true);
+
+    assertThat(
+      controlador.registrarResultado(request, 4L, 7L, 2, 0, datos()).getViewName(),
+      equalTo("redirect:/ligas/detalle?id=4&aviso=" + Avisos.RESULTADO_GUARDADO)
+    );
+    verify(estadisticas).registrarDetalles(eq(7L), any());
+  }
+
+  @Test
+  public void registrarResultadoConDetallesInvalidosLoInforma() {
+    usuario.setRol("ADMIN");
+    ServicioEstadisticasLiga estadisticas = mock(ServicioEstadisticasLiga.class);
+    controlador.setServicioEstadisticas(estadisticas);
+    when(servicioLiga.registrarResultado(7L, 2, 0)).thenReturn(true);
+    when(estadisticas.registrarDetalles(eq(7L), any())).thenReturn(false);
+
+    assertThat(
+      controlador.registrarResultado(request, 4L, 7L, 2, 0, datos()).getViewName(),
+      equalTo("redirect:/ligas/detalle?id=4&aviso=" + Avisos.DETALLES_INVALIDOS)
+    );
+  }
+
+  private static com.tallerwebi.presentacion.DTO.DatosDetallesEncuentro datos() {
+    com.tallerwebi.presentacion.DTO.DatosDetallesEncuentro datos =
+      new com.tallerwebi.presentacion.DTO.DatosDetallesEncuentro();
+    datos.setGolesAIds(List.of(1L));
+    return datos;
   }
 
   @Test
@@ -163,7 +199,8 @@ public class ControladorLigaTest {
     verify(estadisticas).goleadores(4L);
     verify(estadisticas).asistencias(4L);
     assertThat(mav.getModel().containsKey("golesPorPartido"), equalTo(true));
-    assertThat(mav.getModel().containsKey("jugadoresPorEquipo"), equalTo(true));
+    assertThat(mav.getModel().containsKey("tarjetasPorPartido"), equalTo(true));
+    assertThat(mav.getModel().containsKey("plantelesPorEquipo"), equalTo(true));
   }
 
   @Test
@@ -225,7 +262,7 @@ public class ControladorLigaTest {
     when(servicioLiga.registrarResultado(7L, 1, 0)).thenReturn(false);
     usuario.setRol("ADMIN");
     assertThat(
-      controlador.registrarResultado(request, 4L, 7L, 1, 0).getViewName(),
+      controlador.registrarResultado(request, 4L, 7L, 1, 0, null).getViewName(),
       equalTo("redirect:/ligas/detalle?id=4&aviso=RESULTADO_INVALIDO")
     );
   }
@@ -240,7 +277,7 @@ public class ControladorLigaTest {
     verify(servicioLiga, never()).generarFixtureSiNoExiste(anyLong());
 
     assertThat(
-      controlador.registrarResultado(request, 4L, 7L, 1, 0).getViewName(),
+      controlador.registrarResultado(request, 4L, 7L, 1, 0, null).getViewName(),
       equalTo("redirect:/ligas/detalle?id=4&aviso=" + Avisos.RESULTADO_INVALIDO)
     );
     verify(servicioLiga, never()).registrarResultado(anyLong(), anyInt(), anyInt());
