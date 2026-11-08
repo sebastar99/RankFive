@@ -91,6 +91,11 @@ public class DetalleCompetenciaVistaTest {
     assertThat(html, containsString("Asistidor Uno"));
     assertThat(html, containsString("/ligas/partido/calificar-arbitro"));
     assertThat(html, containsString("/ligas/partido/resultado"));
+    assertThat(html, containsString("/ligas/partido/detalles"));
+    assertThat(html, containsString("golesAIds"));
+    assertThat(html, containsString("tarjetasBIds"));
+    assertThat(html, containsString("/js/goles-editor.js"));
+    assertThat(html, not(containsString("/ligas/partido/gol")));
     assertThat(html, containsString("tipo=liga"));
     assertThat(html, containsString("/js/fixture.js"));
   }
@@ -131,13 +136,42 @@ public class DetalleCompetenciaVistaTest {
     assertThat(html, containsString("Goleador Copa"));
     assertThat(html, containsString("Goles por equipo"));
     assertThat(html, containsString("/torneos/encuentro/calificar-arbitro"));
+    assertThat(html, containsString("/torneos/encuentro/detalles"));
+    assertThat(html, containsString("golesAIds"));
+    assertThat(html, containsString("/js/goles-editor.js"));
+    assertThat(html, not(containsString("/torneos/encuentro/gol")));
     assertThat(html, containsString("tipo=torneo"));
     assertThat(html, not(containsString("Árbitros designados")));
   }
 
+  @Test
+  public void elEditorDeDetallesListaLosJugadoresDelPlantel() throws Exception {
+    Liga liga = new Liga();
+    liga.setNombre("Liga Planteles");
+    liga.setFormato(5);
+    liga.setCupoEquipos(4);
+    liga.setFechaInicio(LocalDate.now());
+    liga.setUbicacion("CABA");
+    sesion().persist(liga);
+    InscripcionLiga local = inscripcionLigaConEquipo(liga, admin, "Locales FC");
+    InscripcionLiga visitante = inscripcionLigaConEquipo(
+      liga,
+      usuario("visitante@vista.com", "USER"),
+      "Visitantes FC"
+    );
+    partidoLiga(liga, 1, local, visitante, PartidoLiga.JUGADO);
+    sesion().flush();
+
+    String html = renderizar("/ligas/detalle?id=" + liga.getId());
+
+    assertThat(html, containsString("golesAIds"));
+    assertThat(html, containsString("jugador-local"));
+    assertThat(html, containsString("jugador-visitante"));
+  }
+
   private String renderizar(String url) throws Exception {
     return mockMvc
-      .perform(get(url).sessionAttr("usuario", admin))
+      .perform(get(url).sessionAttr("usuario", java.util.Objects.requireNonNull(admin)))
       .andExpect(status().isOk())
       .andReturn()
       .getResponse()
@@ -156,6 +190,25 @@ public class DetalleCompetenciaVistaTest {
     usuario.getPerfil().setNombreUsuario(email.substring(0, email.indexOf('@')));
     sesion().persist(usuario);
     return usuario;
+  }
+
+  private InscripcionLiga inscripcionLigaConEquipo(Liga liga, Usuario usuario, String nombre) {
+    com.tallerwebi.dominio.Equipo equipo = new com.tallerwebi.dominio.Equipo();
+    equipo.setNombre(nombre);
+    equipo.setOwner(usuario);
+    equipo.setFormato(5);
+    equipo.setEstado(com.tallerwebi.dominio.EstadoEquipo.ACTIVO);
+    Usuario extra = usuario(
+      "jugador-" + nombre.toLowerCase().replace(" ", "-") + "@vista.com",
+      "USER"
+    );
+    extra.getPerfil().setNombreUsuario("jugador-" + nombre.toLowerCase().split(" ")[0]);
+    equipo.agregarJugador(usuario);
+    equipo.agregarJugador(extra);
+    sesion().persist(equipo);
+    InscripcionLiga insc = inscripcionLiga(liga, usuario, nombre);
+    insc.setEquipo(equipo);
+    return insc;
   }
 
   private InscripcionLiga inscripcionLiga(Liga liga, Usuario usuario, String nombre) {

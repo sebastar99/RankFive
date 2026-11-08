@@ -61,4 +61,15 @@ public class RepositorioInscripcionLigaImpl implements RepositorioInscripcionLig
       .setParameter("l", ligaId)
       .list();
   }
+
+  @Override
+  public List<InscripcionLiga> listarTodas() {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "select i from InscripcionLiga i left join fetch i.equipo",
+        InscripcionLiga.class
+      )
+      .list();
+  }
 }

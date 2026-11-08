@@ -3,10 +3,12 @@ package com.tallerwebi.presentacion;
 import com.tallerwebi.dominio.AlmacenamientoImagenes;
 import com.tallerwebi.dominio.ResultadoCreacionEquipo;
 import com.tallerwebi.dominio.ServicioEquipo;
+import com.tallerwebi.dominio.ServicioRankingEquipos;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.enums.ResultadoAceptacionInvitacion;
 import com.tallerwebi.presentacion.DTO.DatosEquipo;
+import com.tallerwebi.presentacion.DTO.DatosPosicionEquipo;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -25,19 +27,23 @@ import org.springframework.web.servlet.ModelAndView;
 public class ControladorEquipo extends ControladorBase {
 
   private static final String VISTA_AGREGAR = "agregarEquipo";
+  private static final int TOP_RANKING = 10;
 
   private final ServicioEquipo servicioEquipo;
   private final AlmacenamientoImagenes almacenamientoImagenes;
+  private final ServicioRankingEquipos servicioRankingEquipos;
 
   @Autowired
   public ControladorEquipo(
     ServicioRelacionAmistad servicioRelacionAmistad,
     ServicioEquipo servicioEquipo,
-    AlmacenamientoImagenes almacenamientoImagenes
+    AlmacenamientoImagenes almacenamientoImagenes,
+    ServicioRankingEquipos servicioRankingEquipos
   ) {
     super(servicioRelacionAmistad);
     this.servicioEquipo = servicioEquipo;
     this.almacenamientoImagenes = almacenamientoImagenes;
+    this.servicioRankingEquipos = servicioRankingEquipos;
   }
 
   @RequestMapping(path = "/agregar-equipo", method = RequestMethod.GET)
@@ -131,6 +137,16 @@ public class ControladorEquipo extends ControladorBase {
 
   @RequestMapping(path = "/ranking-equipos", method = RequestMethod.GET)
   public ModelAndView rankingEquipos(HttpServletRequest request) {
-    return vistaProtegida(request, "rankingEquipos");
+    Usuario usuario = usuarioDeSesion(request);
+    if (usuario == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+    Map<String, Object> modelo = modeloBase(usuario);
+    modelo.put(
+      "ranking",
+      DatosPosicionEquipo.desde(servicioRankingEquipos.obtenerRanking(usuario, TOP_RANKING))
+    );
+    modelo.put("topRanking", TOP_RANKING);
+    return new ModelAndView("rankingEquipos", modelo);
   }
 }

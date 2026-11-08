@@ -15,4 +15,8 @@ public interface RepositorioInscripcionTorneo {
   default java.util.List<Equipo> listarEquipos(Long torneoId) {
     return java.util.Collections.emptyList();
   }
+
+  default java.util.List<InscripcionTorneo> listarTodas() {
+    return java.util.Collections.emptyList();
+  }
 }

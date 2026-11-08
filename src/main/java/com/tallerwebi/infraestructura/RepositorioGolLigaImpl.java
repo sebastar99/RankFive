@@ -38,15 +38,29 @@ public class RepositorioGolLigaImpl implements RepositorioGolLiga {
   }
 
   @Override
-  public long contarPor(Long partidoId, Long inscripcionId) {
+  public void borrarPorPartido(Long id) {
+    sessionFactory
+      .getCurrentSession()
+      .createMutationQuery("delete from GolLiga g where g.partido.id = :id")
+      .setParameter("id", id)
+      .executeUpdate();
+  }
+
+  @Override
+  public long contarGolesDe(Long usuarioId) {
+    return contar("select count(g) from GolLiga g where g.usuarioGoleador.id = :u", usuarioId);
+  }
+
+  @Override
+  public long contarAsistenciasDe(Long usuarioId) {
+    return contar("select count(g) from GolLiga g where g.usuarioAsistente.id = :u", usuarioId);
+  }
+
+  private long contar(String consulta, Long usuarioId) {
     Long total = sessionFactory
       .getCurrentSession()
-      .createQuery(
-        "select count(g) from GolLiga g where g.partido.id = :p and g.inscripcion.id = :i",
-        Long.class
-      )
-      .setParameter("p", partidoId)
-      .setParameter("i", inscripcionId)
+      .createQuery(consulta, Long.class)
+      .setParameter("u", usuarioId)
       .uniqueResult();
     return total == null ? 0L : total;
   }

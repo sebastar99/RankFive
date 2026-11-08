@@ -9,9 +9,11 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.tallerwebi.dominio.enums.TipoTarjeta;
 import com.tallerwebi.dominio.implementacion.ServicioEstadisticasLigaImpl;
 import java.util.List;
 import java.util.Map;
@@ -24,20 +26,28 @@ public class ServicioEstadisticasLigaTest {
   private RepositorioGolLiga repoGol;
   private RepositorioPartidoLiga repoPartido;
   private RepositorioInscripcionLiga repoInscripcion;
+  private RepositorioTarjetaLiga repoTarjeta;
   private ServicioEstadisticasLiga servicio;
   private InscripcionLiga local;
   private InscripcionLiga visitante;
   private PartidoLiga partido;
+  private Usuario goleador;
+  private Usuario asistidor;
+  private Usuario rival;
 
   @BeforeEach
   public void init() {
     repoGol = mock(RepositorioGolLiga.class);
     repoPartido = mock(RepositorioPartidoLiga.class);
     repoInscripcion = mock(RepositorioInscripcionLiga.class);
-    servicio = new ServicioEstadisticasLigaImpl(repoGol, repoPartido, repoInscripcion);
+    repoTarjeta = mock(RepositorioTarjetaLiga.class);
+    servicio = new ServicioEstadisticasLigaImpl(repoGol, repoPartido, repoInscripcion, repoTarjeta);
 
-    local = inscripcion(1L, "Local FC");
-    visitante = inscripcion(2L, "Visitante FC");
+    goleador = usuario(1L, "delantero");
+    asistidor = usuario(2L, "enganche");
+    rival = usuario(9L, "rival");
+    local = inscripcion(1L, "Local FC", equipo(goleador, asistidor));
+    visitante = inscripcion(2L, "Visitante FC", equipo(rival));
     partido = new PartidoLiga();
     partido.setId(10L);
     partido.setLocal(local);
@@ -49,50 +59,105 @@ public class ServicioEstadisticasLigaTest {
   }
 
   @Test
-  public void registraGolConAsistenciaNormalizandoNombres() {
-    boolean ok = servicio.registrarGol(10L, 1L, "  Lionel   Messi ", " Di María ");
+  public void registraGolesYTarjetasReemplazandoLasAnteriores() {
+    DetallesEncuentro detalles = new DetallesEncuentro(
+      List.of(1L, 1L),
+      java.util.Arrays.asList(2L, null),
+      List.of("ROJA"),
+      List.of(1L),
+      List.of(9L),
+      List.of(),
+      List.of("AMARILLA"),
+      List.of(9L)
+    );
 
-    assertThat(ok, equalTo(true));
-    ArgumentCaptor<GolLiga> captor = ArgumentCaptor.forClass(GolLiga.class);
-    verify(repoGol).guardar(captor.capture());
-    assertThat(captor.getValue().getGoleador(), equalTo("Lionel Messi"));
-    assertThat(captor.getValue().getAsistidor(), equalTo("Di María"));
-    assertThat(captor.getValue().getInscripcion(), equalTo(local));
-  }
+    assertThat(servicio.registrarDetalles(10L, detalles), equalTo(true));
 
-  @Test
-  public void registraGolSinAsistencia() {
-    assertThat(servicio.registrarGol(10L, 2L, "Messi", "  "), equalTo(true));
-    ArgumentCaptor<GolLiga> captor = ArgumentCaptor.forClass(GolLiga.class);
-    verify(repoGol).guardar(captor.capture());
-    assertThat(captor.getValue().getAsistidor(), nullValue());
+    verify(repoGol).borrarPorPartido(10L);
+    verify(repoTarjeta).borrarPorPartido(10L);
+    ArgumentCaptor<GolLiga> goles = ArgumentCaptor.forClass(GolLiga.class);
+    verify(repoGol, times(3)).guardar(goles.capture());
+    GolLiga primero = goles.getAllValues().get(0);
+    assertThat(primero.getUsuarioGoleador(), equalTo(goleador));
+    assertThat(primero.getUsuarioAsistente(), equalTo(asistidor));
+    assertThat(primero.getGoleador(), equalTo("delantero"));
+    assertThat(primero.getInscripcion(), equalTo(local));
+    assertThat(goles.getAllValues().get(1).getUsuarioAsistente(), nullValue());
+    assertThat(goles.getAllValues().get(2).getInscripcion(), equalTo(visitante));
+
+    ArgumentCaptor<TarjetaLiga> tarjetas = ArgumentCaptor.forClass(TarjetaLiga.class);
+    verify(repoTarjeta, times(2)).guardar(tarjetas.capture());
+    assertThat(tarjetas.getAllValues().get(0).getTipo(), equalTo(TipoTarjeta.ROJA));
+    assertThat(tarjetas.getAllValues().get(0).getInscripcion(), equalTo(local));
+    assertThat(tarjetas.getAllValues().get(1).getTipo(), equalTo(TipoTarjeta.AMARILLA));
+    assertThat(tarjetas.getAllValues().get(1).getUsuarioAmonestado(), equalTo(rival));
   }
 
   @Test
   public void noRegistraSiSuperaLosGolesDelMarcador() {
-    when(repoGol.contarPor(10L, 2L)).thenReturn(1L);
+    DetallesEncuentro detalles = new DetallesEncuentro(
+      List.of(1L, 1L, 1L),
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    );
 
-    assertThat(servicio.registrarGol(10L, 2L, "Messi", null), equalTo(false));
+    assertThat(servicio.registrarDetalles(10L, detalles), equalTo(false));
     verify(repoGol, never()).guardar(any());
+    verify(repoGol, never()).borrarPorPartido(any());
   }
 
   @Test
-  public void noRegistraSiElPartidoNoFueJugado() {
+  public void ignoraJugadoresQueNoSonDelEquipo() {
+    DetallesEncuentro detalles = new DetallesEncuentro(
+      List.of(1L, 9L),
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    );
+
+    assertThat(servicio.registrarDetalles(10L, detalles), equalTo(true));
+    ArgumentCaptor<GolLiga> goles = ArgumentCaptor.forClass(GolLiga.class);
+    verify(repoGol).guardar(goles.capture());
+    assertThat(goles.getValue().getUsuarioGoleador(), equalTo(goleador));
+  }
+
+  @Test
+  public void noRegistraSiElPartidoNoFueJugadoOEsInexistente() {
     partido.setEstado(PartidoLiga.PENDIENTE);
-    assertThat(servicio.registrarGol(10L, 1L, "Messi", null), equalTo(false));
-  }
-
-  @Test
-  public void noRegistraSiElEquipoNoJuegaElPartido() {
-    assertThat(servicio.registrarGol(10L, 99L, "Messi", null), equalTo(false));
-  }
-
-  @Test
-  public void noRegistraSinGoleadorOConAsistidorIgualAlGoleador() {
-    assertThat(servicio.registrarGol(10L, 1L, " ", null), equalTo(false));
-    assertThat(servicio.registrarGol(10L, 1L, "Messi", "messi"), equalTo(false));
-    assertThat(servicio.registrarGol(null, 1L, "Messi", null), equalTo(false));
+    assertThat(servicio.registrarDetalles(10L, detallesUnGol()), equalTo(false));
+    assertThat(servicio.registrarDetalles(99L, detallesUnGol()), equalTo(false));
+    assertThat(servicio.registrarDetalles(null, detallesUnGol()), equalTo(false));
+    assertThat(servicio.registrarDetalles(10L, null), equalTo(false));
     verify(repoGol, never()).guardar(any());
+  }
+
+  @Test
+  public void laAsistenciaNoPuedeSerDelMismoGoleador() {
+    DetallesEncuentro detalles = new DetallesEncuentro(
+      List.of(1L),
+      List.of(1L),
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    );
+
+    assertThat(servicio.registrarDetalles(10L, detalles), equalTo(true));
+    ArgumentCaptor<GolLiga> goles = ArgumentCaptor.forClass(GolLiga.class);
+    verify(repoGol).guardar(goles.capture());
+    assertThat(goles.getValue().getUsuarioAsistente(), nullValue());
+    assertThat(goles.getValue().getAsistidor(), nullValue());
   }
 
   @Test
@@ -123,31 +188,35 @@ public class ServicioEstadisticasLigaTest {
   }
 
   @Test
-  public void agrupaGolesPorPartido() {
+  public void agrupaGolesYTarjetasPorPartido() {
     GolLiga gol = gol(local, "Messi", null);
     when(repoGol.listarPorLiga(5L)).thenReturn(List.of(gol));
+    TarjetaLiga tarjeta = new TarjetaLiga();
+    tarjeta.setPartido(partido);
+    tarjeta.setInscripcion(local);
+    tarjeta.setJugador("Messi");
+    tarjeta.setTipo(TipoTarjeta.AMARILLA);
+    when(repoTarjeta.listarPorLiga(5L)).thenReturn(List.of(tarjeta));
 
-    Map<Long, List<GolLiga>> goles = servicio.golesPorPartido(5L);
-
-    assertThat(goles.get(10L), contains(gol));
+    assertThat(servicio.golesPorPartido(5L).get(10L), contains(gol));
+    assertThat(servicio.tarjetasPorPartido(5L).get(10L), contains(tarjeta));
+    assertThat(servicio.tarjetasPorPartido(null).isEmpty(), equalTo(true));
   }
 
   @Test
-  public void listaNombresDeJugadoresPorInscripcion() {
-    Usuario owner = usuario("capitan");
-    Usuario jugador = usuario("delantero");
-    Equipo equipo = new Equipo();
-    equipo.setOwner(owner);
-    equipo.agregarJugador(owner);
-    equipo.agregarJugador(jugador);
-    local.setEquipo(equipo);
+  public void listaPlantelesPorInscripcion() {
     when(repoInscripcion.listarPorLiga(5L)).thenReturn(List.of(local, visitante));
 
-    Map<Long, List<String>> jugadores = servicio.jugadoresPorInscripcion(5L);
+    Map<Long, List<Usuario>> planteles = servicio.plantelesPorInscripcion(5L);
 
-    assertThat(jugadores.get(1L), hasSize(2));
-    assertThat(jugadores.get(1L).get(0), equalTo("capitan"));
-    assertThat(jugadores.get(2L), empty());
+    assertThat(planteles.get(1L), hasSize(2));
+    assertThat(planteles.get(1L), org.hamcrest.Matchers.containsInAnyOrder(goleador, asistidor));
+    assertThat(planteles.get(2L), hasSize(1));
+    assertThat(servicio.plantelesPorInscripcion(null).isEmpty(), equalTo(true));
+  }
+
+  private DetallesEncuentro detallesUnGol() {
+    return new DetallesEncuentro(List.of(1L), null, null, null, null, null, null, null);
   }
 
   private GolLiga gol(InscripcionLiga equipo, String goleador, String asistidor) {
@@ -159,15 +228,27 @@ public class ServicioEstadisticasLigaTest {
     return gol;
   }
 
-  private static InscripcionLiga inscripcion(Long id, String nombre) {
+  private static InscripcionLiga inscripcion(Long id, String nombre, Equipo equipo) {
     InscripcionLiga insc = new InscripcionLiga();
     insc.setId(id);
     insc.setNombreEquipo(nombre);
+    equipo.setNombre(nombre);
+    insc.setEquipo(equipo);
     return insc;
   }
 
-  private static Usuario usuario(String nombre) {
+  private static Equipo equipo(Usuario... jugadores) {
+    Equipo equipo = new Equipo();
+    equipo.setOwner(jugadores[0]);
+    for (Usuario jugador : jugadores) {
+      equipo.agregarJugador(jugador);
+    }
+    return equipo;
+  }
+
+  private static Usuario usuario(Long id, String nombre) {
     Usuario usuario = new Usuario();
+    usuario.setId(id);
     usuario.getPerfil().setNombreUsuario(nombre);
     usuario.setEmail(nombre + "@mail.com");
     return usuario;

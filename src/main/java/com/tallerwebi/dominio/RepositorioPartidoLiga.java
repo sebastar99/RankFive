@@ -10,4 +10,6 @@ public interface RepositorioPartidoLiga {
   PartidoLiga buscarPorId(Long id);
 
   List<PartidoLiga> listarPorLiga(Long ligaId);
+
+  List<PartidoLiga> listarJugados();
 }

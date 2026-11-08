@@ -78,15 +78,34 @@ public class RepositorioGolLigaTest {
   }
 
   @Test
-  public void contarPorPartidoYEquipo() {
-    repositorio.guardar(gol(partido, local, "Messi", null));
+  public void borraLosGolesDelPartidoSinTocarLosDeOtros() {
+    PartidoLiga otro = partido(partido.getLiga(), visitante, local);
     repositorio.guardar(gol(partido, local, "Messi", null));
     repositorio.guardar(gol(partido, visitante, "Alvarez", null));
+    repositorio.guardar(gol(otro, visitante, "Otro", null));
     sesion().flush();
 
-    assertThat(repositorio.contarPor(partido.getId(), local.getId()), equalTo(2L));
-    assertThat(repositorio.contarPor(partido.getId(), visitante.getId()), equalTo(1L));
-    assertThat(repositorio.contarPor(partido.getId(), 999L), equalTo(0L));
+    repositorio.borrarPorPartido(partido.getId());
+    sesion().flush();
+    sesion().clear();
+
+    List<GolLiga> goles = repositorio.listarPorLiga(partido.getLiga().getId());
+    assertThat(goles, hasSize(1));
+    assertThat(goles.get(0).getGoleador(), equalTo("Otro"));
+  }
+
+  @Test
+  public void cuentaGolesYAsistenciasPorUsuario() {
+    GolLiga gol = gol(partido, local, "Messi", "Di María");
+    gol.setUsuarioGoleador(local.getUsuario());
+    gol.setUsuarioAsistente(visitante.getUsuario());
+    repositorio.guardar(gol);
+    sesion().flush();
+
+    assertThat(repositorio.contarGolesDe(local.getUsuario().getId()), equalTo(1L));
+    assertThat(repositorio.contarAsistenciasDe(visitante.getUsuario().getId()), equalTo(1L));
+    assertThat(repositorio.contarGolesDe(999L), equalTo(0L));
+    assertThat(repositorio.contarAsistenciasDe(999L), equalTo(0L));
   }
 
   @Test

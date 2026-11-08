@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface ServicioEstadisticasTorneo {
-  boolean registrarGol(Long encuentroId, Long inscripcionId, String goleador, String asistidor);
+  boolean registrarDetalles(Long encuentroId, DetallesEncuentro detalles);
 
   List<FilaEstadistica> goleadores(Long torneoId);
 
@@ -12,7 +12,9 @@ public interface ServicioEstadisticasTorneo {
 
   Map<Long, List<GolTorneo>> golesPorPartido(Long torneoId);
 
-  Map<Long, List<String>> jugadoresPorInscripcion(Long torneoId);
+  Map<Long, List<TarjetaTorneo>> tarjetasPorPartido(Long torneoId);
+
+  Map<Long, List<Usuario>> plantelesPorInscripcion(Long torneoId);
 
   List<FilaPosicion> golesPorEquipo(Long torneoId);
 }

@@ -2,6 +2,7 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.FilaEstadistica;
 import com.tallerwebi.dominio.GolBase;
+import com.tallerwebi.dominio.TarjetaBase;
 import com.tallerwebi.dominio.Usuario;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,7 +15,8 @@ final class ModeloCompetencia {
   static final String GOLEADORES = "goleadores";
   static final String ASISTENCIAS = "asistencias";
   static final String GOLES_POR_PARTIDO = "golesPorPartido";
-  static final String JUGADORES_POR_EQUIPO = "jugadoresPorEquipo";
+  static final String TARJETAS_POR_PARTIDO = "tarjetasPorPartido";
+  static final String PLANTELES_POR_EQUIPO = "plantelesPorEquipo";
   static final String CALIFICABLES = "calificables";
   static final String ARBITROS = "arbitros";
 
@@ -25,12 +27,14 @@ final class ModeloCompetencia {
     List<FilaEstadistica> goleadores,
     List<FilaEstadistica> asistencias,
     Map<Long, ? extends List<? extends GolBase>> golesPorPartido,
-    Map<Long, List<String>> jugadoresPorEquipo
+    Map<Long, ? extends List<? extends TarjetaBase>> tarjetasPorPartido,
+    Map<Long, List<Usuario>> plantelesPorEquipo
   ) {
     modelo.put(GOLEADORES, goleadores);
     modelo.put(ASISTENCIAS, asistencias);
     modelo.put(GOLES_POR_PARTIDO, golesPorPartido);
-    modelo.put(JUGADORES_POR_EQUIPO, jugadoresPorEquipo);
+    modelo.put(TARJETAS_POR_PARTIDO, tarjetasPorPartido);
+    modelo.put(PLANTELES_POR_EQUIPO, plantelesPorEquipo);
   }
 
   static void sinEstadisticas(Map<String, Object> modelo) {
@@ -38,6 +42,7 @@ final class ModeloCompetencia {
       modelo,
       Collections.emptyList(),
       Collections.emptyList(),
+      Collections.emptyMap(),
       Collections.emptyMap(),
       Collections.emptyMap()
     );

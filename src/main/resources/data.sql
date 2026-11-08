@@ -40,10 +40,10 @@ INSERT INTO Usuario (email, password, rol, activo, nombreUsuario, nombreCompleto
 VALUES ('user12@rankfive.com', 'test', 'USER', true, 'user12', 'Usuario 12', '2002-04-11', 'Posadas', 'Arquero', 'Izquierda', 3800, '/images/avatars/user12.svg');
 
 INSERT INTO Usuario (email, password, rol, activo, nombreUsuario, nombreCompleto, fechaNacimiento, lugarResidencia, posicionPreferida, piernaHabil, pl, fotoPerfil)
-VALUES ('user13@rankfive.com', 'test', 'USER', true, 'user13', 'Usuario 13', '1996-03-03', 'Resistencia', 'Mediocampista', 'Derecha', 2000, '/images/avatars/user13.svg');
+VALUES ('user13@rankfive.com', 'test', 'USER', true, 'user13', 'Usuario 13', '1996-03-03', 'Resistencia', 'Mediocampista', 'Derecha', 3300, '/images/avatars/user13.svg');
 
 INSERT INTO Usuario (email, password, rol, activo, nombreUsuario, nombreCompleto, fechaNacimiento, lugarResidencia, posicionPreferida, piernaHabil, pl, fotoPerfil)
-VALUES ('user14@rankfive.com', 'test', 'USER', true, 'user14', 'Usuario 14', '1995-07-07', 'Corrientes', 'Defensor', 'Izquierda', 2500, '/images/avatars/user14.svg');
+VALUES ('user14@rankfive.com', 'test', 'USER', true, 'user14', 'Usuario 14', '1995-07-07', 'Corrientes', 'Defensor', 'Izquierda', 3400, '/images/avatars/user14.svg');
 
 INSERT INTO Usuario (email, password, rol, activo, nombreUsuario, nombreCompleto, fechaNacimiento, lugarResidencia, posicionPreferida, piernaHabil, pl, fotoPerfil)
 VALUES ('user15@rankfive.com', 'test', 'USER', true, 'user15', 'Usuario 15', '1994-01-20', 'Bariloche', 'Delantero', 'Derecha', 3000, '/images/avatars/user15.svg');

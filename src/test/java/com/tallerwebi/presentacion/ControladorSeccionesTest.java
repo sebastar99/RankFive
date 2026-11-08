@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.EncuentroTorneo;
+import com.tallerwebi.dominio.EstadisticaEquipo;
 import com.tallerwebi.dominio.EstadisticasJugador;
 import com.tallerwebi.dominio.FaseTorneo;
 import com.tallerwebi.dominio.Liga;
@@ -16,6 +17,7 @@ import com.tallerwebi.dominio.Partido;
 import com.tallerwebi.dominio.ResultadoInscripcion;
 import com.tallerwebi.dominio.ServicioArbitro;
 import com.tallerwebi.dominio.ServicioCompetencia;
+import com.tallerwebi.dominio.ServicioEstadisticasEquipo;
 import com.tallerwebi.dominio.ServicioEstadisticasJugador;
 import com.tallerwebi.dominio.ServicioEstadisticasTorneo;
 import com.tallerwebi.dominio.ServicioLiga;
@@ -40,6 +42,7 @@ public class ControladorSeccionesTest {
   private ServicioArbitro servicioArbitro;
   private ServicioLiga servicioLiga;
   private ServicioEstadisticasJugador servicioEstadisticasJugador;
+  private ServicioEstadisticasEquipo servicioEstadisticasEquipo;
   private ControladorSecciones controlador;
   private HttpServletRequest request;
   private HttpSession session;
@@ -52,6 +55,7 @@ public class ControladorSeccionesTest {
     servicioArbitro = mock(ServicioArbitro.class);
     servicioLiga = mock(ServicioLiga.class);
     servicioEstadisticasJugador = mock(ServicioEstadisticasJugador.class);
+    servicioEstadisticasEquipo = mock(ServicioEstadisticasEquipo.class);
     controlador =
       new ControladorSecciones(
         mock(ServicioRelacionAmistad.class),
@@ -59,7 +63,8 @@ public class ControladorSeccionesTest {
         servicioCompetencia,
         servicioArbitro,
         servicioLiga,
-        servicioEstadisticasJugador
+        servicioEstadisticasJugador,
+        servicioEstadisticasEquipo
       );
     request = mock(HttpServletRequest.class);
     session = mock(HttpSession.class);
@@ -87,7 +92,7 @@ public class ControladorSeccionesTest {
     when(session.getAttribute("usuario")).thenReturn(usuario);
     usuario.setRol("USER");
 
-    ModelAndView rr = controlador.registrarResultadoEncuentro(request, 7L, 1L, 2, 0);
+    ModelAndView rr = controlador.registrarResultadoEncuentro(request, 7L, 1L, 2, 0, null);
     assertThat(
       rr.getViewName(),
       equalTo("redirect:/torneos/detalle?id=7&aviso=" + Avisos.RESULTADO_INVALIDO)
@@ -261,14 +266,14 @@ public class ControladorSeccionesTest {
     assertThat(gf.getViewName(), equalTo("redirect:/torneos/detalle?id=7&aviso=FIXTURE_GENERADO"));
 
     when(servicioCompetencia.registrarResultadoEncuentro(1L, 2, 0)).thenReturn(true);
-    ModelAndView rr = controlador.registrarResultadoEncuentro(request, 7L, 1L, 2, 0);
+    ModelAndView rr = controlador.registrarResultadoEncuentro(request, 7L, 1L, 2, 0, null);
     assertThat(
       rr.getViewName(),
       equalTo("redirect:/torneos/detalle?id=7&aviso=RESULTADO_GUARDADO")
     );
 
     when(servicioCompetencia.registrarResultadoEncuentro(1L, 1, 1)).thenReturn(false);
-    ModelAndView ri = controlador.registrarResultadoEncuentro(request, 7L, 1L, 1, 1);
+    ModelAndView ri = controlador.registrarResultadoEncuentro(request, 7L, 1L, 1, 1, null);
     assertThat(
       ri.getViewName(),
       equalTo("redirect:/torneos/detalle?id=7&aviso=RESULTADO_INVALIDO")
@@ -291,7 +296,7 @@ public class ControladorSeccionesTest {
     verify(estadisticas).goleadores(7L);
     verify(estadisticas).golesPorEquipo(7L);
     assertThat(mav.getModel().get("calificables"), equalTo(Set.of(3L)));
-    assertThat(mav.getModel().containsKey("jugadoresPorEquipo"), equalTo(true));
+    assertThat(mav.getModel().containsKey("plantelesPorEquipo"), equalTo(true));
     assertThat(mav.getModel().get("faseActual"), equalTo(1));
   }
 
@@ -310,33 +315,63 @@ public class ControladorSeccionesTest {
   }
 
   @Test
-  public void registrarGolEncuentroSoloAdmin() {
+  public void registrarDetallesEncuentroSoloAdmin() {
     when(request.getSession(false)).thenReturn(session);
     when(session.getAttribute("usuario")).thenReturn(usuario);
     ServicioEstadisticasTorneo estadisticas = mock(ServicioEstadisticasTorneo.class);
     controlador.setServicioEstadisticasTorneo(estadisticas);
-    when(estadisticas.registrarGol(1L, 2L, "Messi", null)).thenReturn(true);
+    when(estadisticas.registrarDetalles(eq(1L), any())).thenReturn(true);
 
     usuario.setRol("USER");
     assertThat(
-      controlador.registrarGolEncuentro(request, 7L, 1L, 2L, "Messi", null).getViewName(),
-      equalTo("redirect:/torneos/detalle?id=7&aviso=" + Avisos.GOL_INVALIDO)
+      controlador.registrarDetallesEncuentro(request, 7L, 1L, datos()).getViewName(),
+      equalTo("redirect:/torneos/detalle?id=7&aviso=" + Avisos.DETALLES_INVALIDOS)
     );
-    verify(estadisticas, never()).registrarGol(any(), any(), any(), any());
+    verify(estadisticas, never()).registrarDetalles(any(), any());
 
     usuario.setRol("ADMIN");
     assertThat(
-      controlador.registrarGolEncuentro(request, 7L, 1L, 2L, "Messi", null).getViewName(),
-      equalTo("redirect:/torneos/detalle?id=7&aviso=" + Avisos.GOL_REGISTRADO)
+      controlador.registrarDetallesEncuentro(request, 7L, 1L, datos()).getViewName(),
+      equalTo("redirect:/torneos/detalle?id=7&aviso=" + Avisos.DETALLES_GUARDADOS)
     );
   }
 
   @Test
-  public void registrarGolEncuentroSinSesionRedirigeALogin() {
+  public void registrarDetallesEncuentroSinSesionRedirigeALogin() {
     assertThat(
-      controlador.registrarGolEncuentro(request, 7L, 1L, 2L, "Messi", null).getViewName(),
+      controlador.registrarDetallesEncuentro(request, 7L, 1L, datos()).getViewName(),
       equalTo("redirect:/login")
     );
+  }
+
+  @Test
+  public void registrarResultadoConDetallesLosReenviaYFallaSiSonInvalidos() {
+    when(request.getSession(false)).thenReturn(session);
+    when(session.getAttribute("usuario")).thenReturn(usuario);
+    usuario.setRol("ADMIN");
+    ServicioEstadisticasTorneo estadisticas = mock(ServicioEstadisticasTorneo.class);
+    controlador.setServicioEstadisticasTorneo(estadisticas);
+    when(servicioCompetencia.registrarResultadoEncuentro(1L, 2, 0)).thenReturn(true);
+    when(estadisticas.registrarDetalles(eq(1L), any())).thenReturn(true);
+
+    assertThat(
+      controlador.registrarResultadoEncuentro(request, 7L, 1L, 2, 0, datos()).getViewName(),
+      equalTo("redirect:/torneos/detalle?id=7&aviso=" + Avisos.RESULTADO_GUARDADO)
+    );
+    verify(estadisticas).registrarDetalles(eq(1L), any());
+
+    when(estadisticas.registrarDetalles(eq(1L), any())).thenReturn(false);
+    assertThat(
+      controlador.registrarResultadoEncuentro(request, 7L, 1L, 2, 0, datos()).getViewName(),
+      equalTo("redirect:/torneos/detalle?id=7&aviso=" + Avisos.DETALLES_INVALIDOS)
+    );
+  }
+
+  private static com.tallerwebi.presentacion.DTO.DatosDetallesEncuentro datos() {
+    com.tallerwebi.presentacion.DTO.DatosDetallesEncuentro datos =
+      new com.tallerwebi.presentacion.DTO.DatosDetallesEncuentro();
+    datos.setGolesAIds(List.of(1L));
+    return datos;
   }
 
   @Test
@@ -382,8 +417,12 @@ public class ControladorSeccionesTest {
     when(servicioEstadisticasJugador.obtenerEstadisticasDelUsuario(usuario.getId()))
       .thenReturn(estadisticasEsperadas);
 
+    java.util.List<EstadisticaEquipo> equipos = java.util.List.of();
+    when(servicioEstadisticasEquipo.estadisticasDelUsuario(usuario)).thenReturn(equipos);
+
     ModelAndView modelAndView = controlador.estadisticas(request);
     assertThat(modelAndView.getModel().get("estadisticas"), sameInstance(estadisticasEsperadas));
+    assertThat(modelAndView.getModel().get("equiposStats"), sameInstance(equipos));
 
     verify(servicioEstadisticasJugador).obtenerEstadisticasDelUsuario(usuario.getId());
   }

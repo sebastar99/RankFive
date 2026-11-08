@@ -12,6 +12,7 @@ import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.enums.TipoTarjeta;
 import java.util.List;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,15 +23,27 @@ public class ServicioEstadisticasJugadorImpl implements ServicioEstadisticasJuga
   private final RepositorioPartido repositorioPartido;
   private final RepositorioGolPartido repositorioGolPartido;
   private final RepositorioTarjetaPartido repositorioTarjetaPartido;
+  private final AporteEstadisticasOficiales aporteOficial;
 
   public ServicioEstadisticasJugadorImpl(
     RepositorioPartido repositorioPartido,
     RepositorioGolPartido repositorioGolPartido,
     RepositorioTarjetaPartido repositorioTarjetaPartido
   ) {
+    this(repositorioPartido, repositorioGolPartido, repositorioTarjetaPartido, null);
+  }
+
+  @Autowired
+  public ServicioEstadisticasJugadorImpl(
+    RepositorioPartido repositorioPartido,
+    RepositorioGolPartido repositorioGolPartido,
+    RepositorioTarjetaPartido repositorioTarjetaPartido,
+    AporteEstadisticasOficiales aporteOficial
+  ) {
     this.repositorioPartido = repositorioPartido;
     this.repositorioGolPartido = repositorioGolPartido;
     this.repositorioTarjetaPartido = repositorioTarjetaPartido;
+    this.aporteOficial = aporteOficial;
   }
 
   @Override
@@ -70,6 +83,9 @@ public class ServicioEstadisticasJugadorImpl implements ServicioEstadisticasJuga
     estadisticas.setPartidosEmpatados(partidosEmpatados);
     estadisticas.setTarjetasAmarillas(tarjetasAmarillas);
     estadisticas.setTarjetasRojas(tarjetasRojas);
+    if (aporteOficial != null) {
+      aporteOficial.sumar(usuarioId, estadisticas);
+    }
     return estadisticas;
   }
 

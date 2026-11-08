@@ -9,6 +9,7 @@ import com.tallerwebi.dominio.Partido;
 import com.tallerwebi.dominio.ResultadoInscripcion;
 import com.tallerwebi.dominio.ServicioArbitro;
 import com.tallerwebi.dominio.ServicioCompetencia;
+import com.tallerwebi.dominio.ServicioEstadisticasEquipo;
 import com.tallerwebi.dominio.ServicioEstadisticasJugador;
 import com.tallerwebi.dominio.ServicioEstadisticasTorneo;
 import com.tallerwebi.dominio.ServicioLiga;
@@ -16,6 +17,7 @@ import com.tallerwebi.dominio.ServicioPartido;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Torneo;
 import com.tallerwebi.dominio.Usuario;
+import com.tallerwebi.presentacion.DTO.DatosDetallesEncuentro;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,6 +41,7 @@ public class ControladorSecciones extends ControladorBase {
   private final ServicioLiga servicioLiga;
   private ServicioEstadisticasTorneo servicioEstadisticasTorneo;
   private final ServicioEstadisticasJugador servicioEstadisticasJugador;
+  private final ServicioEstadisticasEquipo servicioEstadisticasEquipo;
 
   private static final String AVISO = "aviso";
   private static final String PARAM_AVISO = "&aviso=";
@@ -54,7 +58,8 @@ public class ControladorSecciones extends ControladorBase {
     ServicioCompetencia servicioCompetencia,
     ServicioArbitro servicioArbitro,
     ServicioLiga servicioLiga,
-    ServicioEstadisticasJugador servicioEstadisticasJugador
+    ServicioEstadisticasJugador servicioEstadisticasJugador,
+    ServicioEstadisticasEquipo servicioEstadisticasEquipo
   ) {
     super(servicioRelacionAmistad);
     this.servicioPartido = servicioPartido;
@@ -62,6 +67,7 @@ public class ControladorSecciones extends ControladorBase {
     this.servicioArbitro = servicioArbitro;
     this.servicioLiga = servicioLiga;
     this.servicioEstadisticasJugador = servicioEstadisticasJugador;
+    this.servicioEstadisticasEquipo = servicioEstadisticasEquipo;
   }
 
   @Autowired(required = false)
@@ -132,6 +138,7 @@ public class ControladorSecciones extends ControladorBase {
       "estadisticas",
       servicioEstadisticasJugador.obtenerEstadisticasDelUsuario(usuario.getId())
     );
+    modelo.put("equiposStats", servicioEstadisticasEquipo.estadisticasDelUsuario(usuario));
     return new ModelAndView("estadisticas", modelo);
   }
 
@@ -211,28 +218,32 @@ public class ControladorSecciones extends ControladorBase {
     return new ModelAndView(REDIRECT_DETALLE + torneoId + PARAM_AVISO + codigo);
   }
 
-  @RequestMapping(path = "/torneos/encuentro/gol", method = RequestMethod.POST)
-  public ModelAndView registrarGolEncuentro(
+  @RequestMapping(path = "/torneos/encuentro/detalles", method = RequestMethod.POST)
+  public ModelAndView registrarDetallesEncuentro(
     HttpServletRequest request,
     @RequestParam(PARAM_TORNEO) Long torneoId,
     @RequestParam("encuentroId") Long encuentroId,
-    @RequestParam("inscripcionId") Long inscripcionId,
-    @RequestParam("goleador") String goleador,
-    @RequestParam(name = "asistidor", required = false) String asistidor
+    @ModelAttribute DatosDetallesEncuentro detalles
   ) {
     Usuario usuario = usuarioDeSesion(request);
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
     boolean registrado =
-      ModeloCompetencia.esAdmin(usuario) &&
-      servicioEstadisticasTorneo != null &&
-      servicioEstadisticasTorneo.registrarGol(encuentroId, inscripcionId, goleador, asistidor);
+      ModeloCompetencia.esAdmin(usuario) && guardarDetalles(encuentroId, detalles);
     return new ModelAndView(
       REDIRECT_DETALLE +
       torneoId +
       PARAM_AVISO +
-      (registrado ? Avisos.GOL_REGISTRADO : Avisos.GOL_INVALIDO)
+      (registrado ? Avisos.DETALLES_GUARDADOS : Avisos.DETALLES_INVALIDOS)
+    );
+  }
+
+  private boolean guardarDetalles(Long encuentroId, DatosDetallesEncuentro detalles) {
+    return (
+      servicioEstadisticasTorneo != null &&
+      detalles != null &&
+      servicioEstadisticasTorneo.registrarDetalles(encuentroId, detalles.aDominio())
     );
   }
 
@@ -247,7 +258,8 @@ public class ControladorSecciones extends ControladorBase {
       servicioEstadisticasTorneo.goleadores(torneoId),
       servicioEstadisticasTorneo.asistencias(torneoId),
       servicioEstadisticasTorneo.golesPorPartido(torneoId),
-      servicioEstadisticasTorneo.jugadoresPorInscripcion(torneoId)
+      servicioEstadisticasTorneo.tarjetasPorPartido(torneoId),
+      servicioEstadisticasTorneo.plantelesPorInscripcion(torneoId)
     );
     modelo.put("golesPorEquipo", servicioEstadisticasTorneo.golesPorEquipo(torneoId));
   }
@@ -334,7 +346,8 @@ public class ControladorSecciones extends ControladorBase {
     @RequestParam(PARAM_TORNEO) Long torneoId,
     @RequestParam("encuentroId") Long encuentroId,
     @RequestParam("golesA") Integer golesA,
-    @RequestParam("golesB") Integer golesB
+    @RequestParam("golesB") Integer golesB,
+    @ModelAttribute DatosDetallesEncuentro detalles
   ) {
     Usuario usuario = usuarioDeSesion(request);
     if (usuario == null) {
@@ -345,8 +358,15 @@ public class ControladorSecciones extends ControladorBase {
         REDIRECT_DETALLE + torneoId + PARAM_AVISO + Avisos.RESULTADO_INVALIDO
       );
     }
-    boolean ok = servicioCompetencia.registrarResultadoEncuentro(encuentroId, golesA, golesB);
-    String codigo = ok ? Avisos.RESULTADO_GUARDADO : Avisos.RESULTADO_INVALIDO;
+    if (!servicioCompetencia.registrarResultadoEncuentro(encuentroId, golesA, golesB)) {
+      return new ModelAndView(
+        REDIRECT_DETALLE + torneoId + PARAM_AVISO + Avisos.RESULTADO_INVALIDO
+      );
+    }
+    boolean sinDetalles = detalles == null || detalles.aDominio().estaVacio();
+    String codigo = sinDetalles || guardarDetalles(encuentroId, detalles)
+      ? Avisos.RESULTADO_GUARDADO
+      : Avisos.DETALLES_INVALIDOS;
     return new ModelAndView(REDIRECT_DETALLE + torneoId + PARAM_AVISO + codigo);
   }
 

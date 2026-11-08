@@ -71,6 +71,13 @@
     .stats-average dt small { display: block; margin-top: .35rem; font-size: .73rem; font-weight: 400; color: var(--rf-text-muted); }
     .stats-average dd { margin: 0; font-weight: 900; color: var(--rf-primary); font-size: 2rem; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
     .stats-average + .stats-average dd { color: var(--stats-blue); }
+    .stats-teams { display: grid; gap: .75rem; }
+    .stats-team { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border: 1px solid var(--rf-surface-border); border-radius: .8rem; background: rgba(255, 255, 255, .025); min-width: 0; }
+    .stats-team-name { font-weight: 800; overflow-wrap: anywhere; }
+    .stats-team-meta { display: block; color: var(--rf-text-muted); font-size: .78rem; margin-top: .25rem; }
+    .stats-team-record { font-weight: 700; font-size: .9rem; }
+    .stats-team-points { font-weight: 900; font-size: 1.4rem; color: var(--rf-primary); font-variant-numeric: tabular-nums; text-align: right; }
+    @media (max-width: 575.98px) { .stats-team { grid-template-columns: 1fr; } .stats-team-points { text-align: left; } }
     .stats-empty { display: flex; gap: .85rem; align-items: flex-start; padding: 1rem 1.25rem; margin-bottom: 1.5rem; border: 1px solid rgba(0, 224, 123, .2); border-radius: .8rem; background: rgba(0, 224, 123, .06); }
     .stats-empty > i { color: var(--rf-primary); font-size: 1.25rem; }
     .stats-empty strong { font-size: .9rem; }
@@ -248,6 +255,41 @@
         </dl>
       </section>
     </div>
+
+    <section class="stats-panel card-glass mb-4" aria-labelledby="stats-teams-title">
+      <div class="stats-panel-heading">
+        <div>
+          <h2 id="stats-teams-title" class="stats-panel-title"><i class="bi bi-shield-fill" aria-hidden="true"></i> Mis equipos</h2>
+          <p class="stats-panel-subtitle">Resultados oficiales de tus equipos activos en ligas y torneos.</p>
+        </div>
+      </div>
+      <div class="stats-empty mb-0" th:if="${#lists.isEmpty(equiposStats)}">
+        <i class="bi bi-people" aria-hidden="true"></i>
+        <div>
+          <strong>Todavía no tenés equipos activos.</strong>
+          <p>Creá uno y sumalo a una liga o torneo para ver sus estadísticas. <a th:href="@{/agregar-equipo}">Crear equipo</a></p>
+        </div>
+      </div>
+      <div class="stats-teams" th:unless="${#lists.isEmpty(equiposStats)}">
+        <article class="stats-team" th:each="e : ${equiposStats}">
+          <div>
+            <span class="stats-team-name" th:text="${e.equipo.nombre}">Equipo</span>
+            <span class="stats-team-meta">
+              F<span th:text="${e.equipo.formato}">5</span> ·
+              <span th:text="${e.rango.nombre}">Rango</span> ·
+              <span th:text="${e.competencias} + (${e.competencias == 1} ? ' competencia' : ' competencias')">0 competencias</span>
+            </span>
+            <span class="stats-team-record" th:if="${e.jugados > 0}"
+                  th:text="${e.ganados} + 'G · ' + ${e.empatados} + 'E · ' + ${e.perdidos} + 'P'">0G · 0E · 0P</span>
+            <span class="stats-team-record" th:if="${e.jugados == 0}">0G · 0E · 0P</span>
+            <span class="stats-team-meta" th:if="${e.jugados > 0}"
+                  th:text="'GF ' + ${e.golesFavor} + ' · GC ' + ${e.golesContra} + ' · DG ' + ${e.diferencia}">GF 0 · GC 0 · DG 0</span>
+            <span class="stats-pending" th:if="${e.jugados == 0}"><i class="bi bi-hourglass-split" aria-hidden="true"></i> Sin actividad oficial</span>
+          </div>
+          <div class="stats-team-points" th:text="${e.puntos} + ' pts'">0 pts</div>
+        </article>
+      </div>
+    </section>
 
     <section class="stats-panel card-glass" aria-labelledby="stats-discipline-title">
       <div class="stats-panel-heading">

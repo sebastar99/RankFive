@@ -1,9 +1,9 @@
 package com.tallerwebi.dominio.implementacion;
 
-import static com.tallerwebi.dominio.EstadisticasGoles.golesDe;
-import static com.tallerwebi.dominio.EstadisticasGoles.nombresValidos;
-import static com.tallerwebi.dominio.EstadisticasGoles.normalizar;
-
+import com.tallerwebi.dominio.ConstructorDetalles;
+import com.tallerwebi.dominio.ConstructorDetalles.GolCargado;
+import com.tallerwebi.dominio.ConstructorDetalles.TarjetaCargada;
+import com.tallerwebi.dominio.DetallesEncuentro;
 import com.tallerwebi.dominio.EstadisticasGoles;
 import com.tallerwebi.dominio.FilaEstadistica;
 import com.tallerwebi.dominio.GolLiga;
@@ -12,7 +12,12 @@ import com.tallerwebi.dominio.PartidoLiga;
 import com.tallerwebi.dominio.RepositorioGolLiga;
 import com.tallerwebi.dominio.RepositorioInscripcionLiga;
 import com.tallerwebi.dominio.RepositorioPartidoLiga;
+import com.tallerwebi.dominio.RepositorioTarjetaLiga;
+import com.tallerwebi.dominio.ResolucionDetalles;
 import com.tallerwebi.dominio.ServicioEstadisticasLiga;
+import com.tallerwebi.dominio.TarjetaLiga;
+import com.tallerwebi.dominio.Usuario;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -28,48 +33,76 @@ public class ServicioEstadisticasLigaImpl implements ServicioEstadisticasLiga {
   private final RepositorioGolLiga repoGol;
   private final RepositorioPartidoLiga repoPartido;
   private final RepositorioInscripcionLiga repoInscripcion;
+  private final RepositorioTarjetaLiga repoTarjeta;
 
   @Autowired
   public ServicioEstadisticasLigaImpl(
     RepositorioGolLiga repoGol,
     RepositorioPartidoLiga repoPartido,
-    RepositorioInscripcionLiga repoInscripcion
+    RepositorioInscripcionLiga repoInscripcion,
+    RepositorioTarjetaLiga repoTarjeta
   ) {
     this.repoGol = repoGol;
     this.repoPartido = repoPartido;
     this.repoInscripcion = repoInscripcion;
+    this.repoTarjeta = repoTarjeta;
   }
 
   @Override
-  public boolean registrarGol(
-    Long partidoId,
-    Long inscripcionId,
-    String goleador,
-    String asistidor
-  ) {
-    String nombreGoleador = normalizar(goleador);
-    String nombreAsistidor = normalizar(asistidor);
-    if (
-      partidoId == null || inscripcionId == null || !nombresValidos(nombreGoleador, nombreAsistidor)
-    ) {
-      return false;
-    }
-    PartidoLiga partido = repoPartido.buscarPorId(partidoId);
+  public boolean registrarDetalles(Long partidoId, DetallesEncuentro detalles) {
+    PartidoLiga partido = partidoId == null ? null : repoPartido.buscarPorId(partidoId);
     if (partido == null || !partido.estaJugado()) {
       return false;
     }
-    InscripcionLiga equipo = equipoDelPartido(partido, inscripcionId);
-    if (
-      equipo == null ||
-      repoGol.contarPor(partidoId, inscripcionId) >= golesDelEquipo(partido, inscripcionId)
-    ) {
+    InscripcionLiga local = partido.getLocal();
+    InscripcionLiga visitante = partido.getVisitante();
+    var resolucion = ResolucionDetalles.de(
+      detalles,
+      local.getEquipo(),
+      visitante.getEquipo(),
+      partido.getGolesLocal(),
+      partido.getGolesVisitante()
+    );
+    if (resolucion.isEmpty()) {
       return false;
     }
-    GolLiga gol = EstadisticasGoles.completar(new GolLiga(), nombreGoleador, nombreAsistidor);
-    gol.setPartido(partido);
-    gol.setInscripcion(equipo);
-    repoGol.guardar(gol);
+    repoGol.borrarPorPartido(partidoId);
+    repoTarjeta.borrarPorPartido(partidoId);
+    guardar(partido, local, resolucion.get().golesLocal(), resolucion.get().tarjetasLocal());
+    guardar(
+      partido,
+      visitante,
+      resolucion.get().golesVisitante(),
+      resolucion.get().tarjetasVisitante()
+    );
     return true;
+  }
+
+  private void guardar(
+    PartidoLiga partido,
+    InscripcionLiga inscripcion,
+    List<GolCargado> goles,
+    List<TarjetaCargada> tarjetas
+  ) {
+    for (GolCargado cargado : goles) {
+      GolLiga gol = EstadisticasGoles.completar(
+        new GolLiga(),
+        cargado.goleador(),
+        cargado.asistidor()
+      );
+      gol.setPartido(partido);
+      gol.setInscripcion(inscripcion);
+      repoGol.guardar(gol);
+    }
+    for (TarjetaCargada cargada : tarjetas) {
+      TarjetaLiga tarjeta = new TarjetaLiga();
+      tarjeta.setPartido(partido);
+      tarjeta.setInscripcion(inscripcion);
+      tarjeta.setUsuarioAmonestado(cargada.jugador());
+      tarjeta.setJugador(ConstructorDetalles.nombreVisible(cargada.jugador()));
+      tarjeta.setTipo(cargada.tipo());
+      repoTarjeta.guardar(tarjeta);
+    }
   }
 
   @Override
@@ -88,33 +121,32 @@ public class ServicioEstadisticasLigaImpl implements ServicioEstadisticasLiga {
   }
 
   @Override
-  public Map<Long, List<String>> jugadoresPorInscripcion(Long ligaId) {
-    Map<Long, List<String>> jugadores = new HashMap<>();
+  public Map<Long, List<TarjetaLiga>> tarjetasPorPartido(Long ligaId) {
+    Map<Long, List<TarjetaLiga>> agrupadas = new HashMap<>();
+    if (ligaId != null) {
+      for (TarjetaLiga tarjeta : repoTarjeta.listarPorLiga(ligaId)) {
+        agrupadas.computeIfAbsent(tarjeta.getPartidoId(), id -> new ArrayList<>()).add(tarjeta);
+      }
+    }
+    return agrupadas;
+  }
+
+  @Override
+  public Map<Long, List<Usuario>> plantelesPorInscripcion(Long ligaId) {
+    Map<Long, List<Usuario>> planteles = new HashMap<>();
     if (ligaId == null) {
-      return jugadores;
+      return planteles;
     }
     for (InscripcionLiga insc : repoInscripcion.listarPorLiga(ligaId)) {
-      jugadores.put(insc.getId(), EstadisticasGoles.nombresDe(insc.getEquipo()));
+      planteles.put(
+        insc.getId(),
+        ConstructorDetalles.plantelDe(insc.getEquipo()).stream().toList()
+      );
     }
-    return jugadores;
+    return planteles;
   }
 
   private List<GolLiga> goles(Long ligaId) {
     return ligaId == null ? Collections.emptyList() : repoGol.listarPorLiga(ligaId);
-  }
-
-  private static InscripcionLiga equipoDelPartido(PartidoLiga partido, Long inscripcionId) {
-    if (partido.getLocal() != null && inscripcionId.equals(partido.getLocal().getId())) {
-      return partido.getLocal();
-    }
-    if (partido.getVisitante() != null && inscripcionId.equals(partido.getVisitante().getId())) {
-      return partido.getVisitante();
-    }
-    return null;
-  }
-
-  private static int golesDelEquipo(PartidoLiga partido, Long inscripcionId) {
-    boolean esLocal = inscripcionId.equals(partido.getLocal().getId());
-    return golesDe(esLocal ? partido.getGolesLocal() : partido.getGolesVisitante());
   }
 }

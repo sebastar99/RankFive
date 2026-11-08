@@ -33,6 +33,21 @@ public class RepositorioPartidoLigaImpl implements RepositorioPartidoLiga {
   }
 
   @Override
+  public List<PartidoLiga> listarJugados() {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "select p from PartidoLiga p " +
+        "join fetch p.local l left join fetch l.equipo " +
+        "join fetch p.visitante v left join fetch v.equipo " +
+        "where p.estado = :jugado",
+        PartidoLiga.class
+      )
+      .setParameter("jugado", PartidoLiga.JUGADO)
+      .list();
+  }
+
+  @Override
   public List<PartidoLiga> listarPorLiga(Long ligaId) {
     return sessionFactory
       .getCurrentSession()
