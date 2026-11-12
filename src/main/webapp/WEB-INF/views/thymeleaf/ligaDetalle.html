@@ -50,7 +50,7 @@
           <button th:if="${yaInscripto or !#maps.isEmpty(fechas)}" type="button" class="btn btn-outline-success btn-sm" disabled
                   th:text="${yaInscripto} ? 'Ya inscripto' : 'Inscripción cerrada'">Ya inscripto</button>
           <div th:if="${!yaInscripto and #maps.isEmpty(fechas)}"
-               th:replace="~{fragments/competencia :: inscripcionLiga(${liga}, ${equiposCompatibles}, ${yaInscripto})}"></div>
+               th:replace="~{fragments/competencia :: inscripcionLiga(${liga}, ${equiposCompatibles}, ${yaInscripto}, ${soloIntegrante})}"></div>
         </div>
       </div>
 

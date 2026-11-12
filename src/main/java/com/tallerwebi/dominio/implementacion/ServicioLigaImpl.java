@@ -69,13 +69,15 @@ public class ServicioLigaImpl implements ServicioLiga {
     if (validacion != null) {
       return validacion;
     }
-    SeleccionEquipo seleccion = SeleccionEquipo.elegir(
-      servicioEquipo.listarEquiposActivosDe(usuario),
-      liga.getFormato(),
-      equipoId
-    );
+    List<Equipo> capitaneados = servicioEquipo.listarEquiposCapitaneados(usuario);
+    SeleccionEquipo seleccion = SeleccionEquipo.elegir(capitaneados, liga.getFormato(), equipoId);
     if (seleccion.error() != null) {
-      return seleccion.error();
+      return SeleccionEquipo.refinar(
+        seleccion.error(),
+        capitaneados,
+        servicioEquipo.listarEquiposActivosDe(usuario),
+        liga.getFormato()
+      );
     }
     Equipo equipoSeleccionado = seleccion.equipo();
     InscripcionLiga insc = new InscripcionLiga();
@@ -92,7 +94,7 @@ public class ServicioLigaImpl implements ServicioLiga {
     if (usuario == null || usuario.getId() == null || formato == null) {
       return Collections.emptyList();
     }
-    return SeleccionEquipo.compatibles(servicioEquipo.listarEquiposActivosDe(usuario), formato);
+    return SeleccionEquipo.compatibles(servicioEquipo.listarEquiposCapitaneados(usuario), formato);
   }
 
   private ResultadoInscripcion validar(Usuario usuario, Liga liga) {

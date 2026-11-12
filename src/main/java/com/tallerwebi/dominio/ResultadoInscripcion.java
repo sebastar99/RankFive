@@ -4,6 +4,7 @@ public enum ResultadoInscripcion {
   INSCRIPTO("Inscripción realizada con éxito"),
   YA_INSCRIPTO("Ya estás inscripto en esta competencia"),
   SIN_EQUIPO_ACTIVO("Necesitás un equipo activo para inscribirte"),
+  NO_ES_CAPITAN("Solo el capitán del equipo puede inscribirlo en la competencia"),
   SIN_EQUIPO_COMPATIBLE("Necesitás un equipo activo del mismo formato que la competencia"),
   SELECCIONAR_EQUIPO("Elegí con qué equipo querés inscribirte"),
   EQUIPO_NO_DISPONIBLE(

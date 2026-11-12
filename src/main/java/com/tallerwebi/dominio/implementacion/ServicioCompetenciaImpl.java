@@ -88,13 +88,15 @@ public class ServicioCompetenciaImpl implements ServicioCompetencia {
     if (validacion != null) {
       return validacion;
     }
-    SeleccionEquipo seleccion = SeleccionEquipo.elegir(
-      servicioEquipo.listarEquiposActivosDe(usuario),
-      torneo.getFormato(),
-      equipoId
-    );
+    List<Equipo> capitaneados = servicioEquipo.listarEquiposCapitaneados(usuario);
+    SeleccionEquipo seleccion = SeleccionEquipo.elegir(capitaneados, torneo.getFormato(), equipoId);
     if (seleccion.error() != null) {
-      return seleccion.error();
+      return SeleccionEquipo.refinar(
+        seleccion.error(),
+        capitaneados,
+        servicioEquipo.listarEquiposActivosDe(usuario),
+        torneo.getFormato()
+      );
     }
     Equipo equipoSeleccionado = seleccion.equipo();
     InscripcionTorneo insc = new InscripcionTorneo();
@@ -114,7 +116,7 @@ public class ServicioCompetenciaImpl implements ServicioCompetencia {
     if (usuario == null || usuario.getId() == null || formato == null) {
       return Collections.emptyList();
     }
-    return SeleccionEquipo.compatibles(servicioEquipo.listarEquiposActivosDe(usuario), formato);
+    return SeleccionEquipo.compatibles(servicioEquipo.listarEquiposCapitaneados(usuario), formato);
   }
 
   private ResultadoInscripcion validarInscripcion(Usuario usuario, Torneo torneo) {
@@ -139,7 +141,7 @@ public class ServicioCompetenciaImpl implements ServicioCompetencia {
 
   @Override
   public boolean tieneEquipoActivo(Usuario usuario) {
-    List<Equipo> equipos = servicioEquipo.listarEquiposActivosDe(usuario);
+    List<Equipo> equipos = servicioEquipo.listarEquiposCapitaneados(usuario);
     return equipos != null && !equipos.isEmpty();
   }
 

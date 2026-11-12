@@ -7,11 +7,14 @@ import com.tallerwebi.dominio.Liga;
 import com.tallerwebi.dominio.NotificacionPl;
 import com.tallerwebi.dominio.Partido;
 import com.tallerwebi.dominio.ResultadoInscripcion;
+import com.tallerwebi.dominio.SeleccionEquipo;
 import com.tallerwebi.dominio.ServicioArbitro;
 import com.tallerwebi.dominio.ServicioCompetencia;
+import com.tallerwebi.dominio.ServicioEquipo;
 import com.tallerwebi.dominio.ServicioEstadisticasEquipo;
 import com.tallerwebi.dominio.ServicioEstadisticasJugador;
 import com.tallerwebi.dominio.ServicioEstadisticasTorneo;
+import com.tallerwebi.dominio.ServicioInscripciones;
 import com.tallerwebi.dominio.ServicioLiga;
 import com.tallerwebi.dominio.ServicioPartido;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
@@ -42,13 +45,14 @@ public class ControladorSecciones extends ControladorBase {
   private ServicioEstadisticasTorneo servicioEstadisticasTorneo;
   private final ServicioEstadisticasJugador servicioEstadisticasJugador;
   private final ServicioEstadisticasEquipo servicioEstadisticasEquipo;
+  private final ServicioEquipo servicioEquipo;
+  private ServicioInscripciones servicioInscripciones;
 
   private static final String AVISO = "aviso";
   private static final String PARAM_AVISO = "&aviso=";
   private static final String PARAM_TORNEO = "torneoId";
   private static final String REDIRECT_DETALLE = "redirect:/torneos/detalle?id=";
   private static final String ESTADO_PENDIENTE = "PENDIENTE";
-  private static final String ROLE_ADMIN = "ADMIN";
   private static final String REDIRECT_TORNEOS = "redirect:/torneos";
 
   @Autowired
@@ -59,7 +63,8 @@ public class ControladorSecciones extends ControladorBase {
     ServicioArbitro servicioArbitro,
     ServicioLiga servicioLiga,
     ServicioEstadisticasJugador servicioEstadisticasJugador,
-    ServicioEstadisticasEquipo servicioEstadisticasEquipo
+    ServicioEstadisticasEquipo servicioEstadisticasEquipo,
+    ServicioEquipo servicioEquipo
   ) {
     super(servicioRelacionAmistad);
     this.servicioPartido = servicioPartido;
@@ -68,11 +73,17 @@ public class ControladorSecciones extends ControladorBase {
     this.servicioLiga = servicioLiga;
     this.servicioEstadisticasJugador = servicioEstadisticasJugador;
     this.servicioEstadisticasEquipo = servicioEstadisticasEquipo;
+    this.servicioEquipo = servicioEquipo;
   }
 
   @Autowired(required = false)
   public void setServicioEstadisticasTorneo(ServicioEstadisticasTorneo servicioEstadisticasTorneo) {
     this.servicioEstadisticasTorneo = servicioEstadisticasTorneo;
+  }
+
+  @Autowired(required = false)
+  public void setServicioInscripciones(ServicioInscripciones servicioInscripciones) {
+    this.servicioInscripciones = servicioInscripciones;
   }
 
   @RequestMapping(path = "/torneos", method = RequestMethod.GET)
@@ -88,6 +99,9 @@ public class ControladorSecciones extends ControladorBase {
     List<Torneo> torneos = servicioCompetencia.listarTorneos();
     Map<Long, List<Equipo>> equiposPorTorneo = new HashMap<>();
     Map<Integer, List<Equipo>> equiposPorFormato = new HashMap<>();
+    Map<Integer, Boolean> integrantesPorFormato = new HashMap<>();
+    List<Equipo> capitaneados = servicioEquipo.listarEquiposCapitaneados(usuario);
+    List<Equipo> integrados = servicioEquipo.listarEquiposActivosDe(usuario);
     Set<Long> inscriptos = new HashSet<>();
     for (Torneo torneo : torneos) {
       equiposPorTorneo.put(
@@ -96,6 +110,10 @@ public class ControladorSecciones extends ControladorBase {
           torneo.getFormato(),
           formato -> servicioCompetencia.listarEquiposCompatibles(usuario, formato)
         )
+      );
+      integrantesPorFormato.computeIfAbsent(
+        torneo.getFormato(),
+        formato -> SeleccionEquipo.soloEsIntegrante(capitaneados, integrados, formato)
       );
       if (servicioCompetencia.yaInscripto(usuario, torneo.getId())) {
         inscriptos.add(torneo.getId());
@@ -112,6 +130,10 @@ public class ControladorSecciones extends ControladorBase {
           formato -> servicioLiga.listarEquiposCompatibles(usuario, formato)
         )
       );
+      integrantesPorFormato.computeIfAbsent(
+        liga.getFormato(),
+        formato -> SeleccionEquipo.soloEsIntegrante(capitaneados, integrados, formato)
+      );
       if (servicioLiga.yaInscripto(usuario, liga.getId())) {
         ligasInscriptas.add(liga.getId());
       }
@@ -123,6 +145,8 @@ public class ControladorSecciones extends ControladorBase {
     modelo.put("torneosInscriptos", inscriptos);
     modelo.put("ligasInscriptas", ligasInscriptas);
     modelo.put("tieneEquipoActivo", servicioCompetencia.tieneEquipoActivo(usuario));
+    modelo.put("integrantesPorFormato", integrantesPorFormato);
+    modelo.put("esIntegrante", !integrados.isEmpty());
     Avisos.agregar(modelo, aviso);
     return new ModelAndView("ligaTorneos", modelo);
   }
@@ -198,6 +222,14 @@ public class ControladorSecciones extends ControladorBase {
     modelo.put("proximoEncuentro", proximoEncuentro(fases));
     modelo.put("yaInscripto", servicioCompetencia.yaInscripto(usuario, torneoId));
     modelo.put("tieneEquipoActivo", servicioCompetencia.tieneEquipoActivo(usuario));
+    modelo.put(
+      "soloIntegrante",
+      SeleccionEquipo.soloEsIntegrante(
+        servicioEquipo.listarEquiposCapitaneados(usuario),
+        servicioEquipo.listarEquiposActivosDe(usuario),
+        torneo.getFormato()
+      )
+    );
     Avisos.agregar(modelo, aviso);
     return new ModelAndView("torneoDetalle", modelo);
   }
@@ -295,7 +327,7 @@ public class ControladorSecciones extends ControladorBase {
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
-    if (usuario.getRol() == null || !ROLE_ADMIN.equalsIgnoreCase(usuario.getRol())) {
+    if (!ModeloCompetencia.esAdmin(usuario)) {
       return new ModelAndView(REDIRECT_DETALLE + torneoId + PARAM_AVISO + Avisos.FIXTURE_INVALIDO);
     }
     boolean ok = servicioCompetencia.generarFixtureSiNoExiste(torneoId);
@@ -309,7 +341,7 @@ public class ControladorSecciones extends ControladorBase {
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
-    if (usuario.getRol() == null || !ROLE_ADMIN.equalsIgnoreCase(usuario.getRol())) {
+    if (!ModeloCompetencia.esAdmin(usuario)) {
       return new ModelAndView(REDIRECT_TORNEOS);
     }
     Map<String, Object> modelo = new HashMap<>(modeloBase(usuario));
@@ -353,7 +385,7 @@ public class ControladorSecciones extends ControladorBase {
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
-    if (usuario.getRol() == null || !ROLE_ADMIN.equalsIgnoreCase(usuario.getRol())) {
+    if (!ModeloCompetencia.esAdmin(usuario)) {
       return new ModelAndView(
         REDIRECT_DETALLE + torneoId + PARAM_AVISO + Avisos.RESULTADO_INVALIDO
       );
@@ -370,13 +402,29 @@ public class ControladorSecciones extends ControladorBase {
     return new ModelAndView(REDIRECT_DETALLE + torneoId + PARAM_AVISO + codigo);
   }
 
+  @RequestMapping(path = "/torneos/abrir-inscripcion", method = RequestMethod.POST)
+  public ModelAndView abrirInscripcionTorneo(
+    HttpServletRequest request,
+    @RequestParam(PARAM_TORNEO) Long torneoId
+  ) {
+    Usuario usuario = usuarioDeSesion(request);
+    if (usuario == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+    if (!ModeloCompetencia.esAdmin(usuario)) {
+      return new ModelAndView(REDIRECT_TORNEOS);
+    }
+    servicioInscripciones.abrirInscripcionTorneo(torneoId);
+    return new ModelAndView(REDIRECT_DETALLE + torneoId + PARAM_AVISO + Avisos.INSCRIPCION_ABIERTA);
+  }
+
   @RequestMapping(path = "/ligas/nueva", method = RequestMethod.GET)
   public ModelAndView nuevaLiga(HttpServletRequest request) {
     Usuario usuario = usuarioDeSesion(request);
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
-    if (usuario.getRol() == null || !ROLE_ADMIN.equalsIgnoreCase(usuario.getRol())) {
+    if (!ModeloCompetencia.esAdmin(usuario)) {
       return new ModelAndView(REDIRECT_TORNEOS);
     }
     Map<String, Object> modelo = new HashMap<>(modeloBase(usuario));
@@ -422,7 +470,7 @@ public class ControladorSecciones extends ControladorBase {
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
-    if (usuario.getRol() == null || !ROLE_ADMIN.equalsIgnoreCase(usuario.getRol())) {
+    if (!ModeloCompetencia.esAdmin(usuario)) {
       return new ModelAndView(REDIRECT_TORNEOS);
     }
     if (esTorneo) {
