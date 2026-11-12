@@ -134,10 +134,6 @@
       </div>
     </dl>
 
-    <p class="arbitro-popup-nota">
-      PL y calificaciones de ejemplo.
-      No se actualizan con las votaciones.
-    </p>
   `;
 
   document.body.appendChild(popup);
