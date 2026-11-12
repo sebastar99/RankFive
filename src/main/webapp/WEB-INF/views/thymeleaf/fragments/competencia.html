@@ -126,7 +126,8 @@
   <div class="arbitro-item" th:each="arb, st : ${arbitros}">
     <div class="arbitro-avatar"><i class="bi bi-person-badge-fill"></i></div>
     <div class="arbitro-info">
-      <div class="arbitro-nombre"><span th:text="${st.count + '. '}">1. </span><span th:text="${arb.nombre}">Árbitro</span></div>
+      <div class="arbitro-nombre"><span th:text="${st.count + '. '}">1. </span><button type="button"class="arbitro-perfil-boton" th:attr="data-arbitro-nombre=${arb.nombre}" th:text="${arb.nombre}"> Árbitro
+</button></div>
       <div class="arbitro-meta">
         <span th:text="${arb.pl}">0</span> PL ·
         <span th:text="${arb.cantidadCalificaciones}">0</span> calificaciones
@@ -230,7 +231,9 @@
 
   <div class="partido-extra">
     <span th:if="${arbitro != null}">
-      <i class="bi bi-person-badge me-1"></i><span th:text="${arbitro.nombre}">Árbitro</span>
+      <i class="bi bi-person-badge me-1"></i><button
+    type="button" class="arbitro-perfil-boton" th:attr="data-arbitro-nombre=${arbitro.nombre}"th:text="${arbitro.nombre}"> Árbitro
+</button>
       <span class="arbitro-mini"><i class="bi bi-star-fill"></i> <span th:text="${#numbers.formatDecimal(arbitro.promedio, 1, 1)}">0.0</span></span>
     </span>
   </div>
@@ -270,7 +273,13 @@
         th:action="@{${urlCalificar}}" method="post" class="calificar-form">
     <input type="hidden" th:name="${campoComp}" th:value="${compId}" />
     <input type="hidden" th:name="${campoPartido}" th:value="${pId}" />
-    <span class="small text-muted">¿Cómo dirigió <span class="text-light" th:text="${arbitro.nombre}">el árbitro</span>?</span>
+    <span class="small text-muted">¿Cómo dirigió <button
+    type="button"
+    class="arbitro-perfil-boton"
+    th:attr="data-arbitro-nombre=${arbitro.nombre}"
+    th:text="${arbitro.nombre}">
+    el árbitro
+</button>?</span>
     <div class="estrellas" role="radiogroup" aria-label="Puntaje">
       <th:block th:each="n : ${#numbers.sequence(5, 1)}">
         <input type="radio" name="puntaje" th:id="${'estrella-' + pId + '-' + n}" th:value="${n}" required>
