@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Estadísticas por partido | Rank5</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css(v=20)}">
+    <link rel="stylesheet" th:href="@{/css/estadisticasPartido.css}">
+</head>
+
+<body class="dashboard-page stats-page">
+
+<div class="pitch-bg" aria-hidden="true"></div>
+
+<header class="db-header fixed-top">
+    <div class="container">
+        <div class="db-header-content">
+
+            <a th:href="@{/dashboard}" class="db-brand">
+                <span class="db-brand-logo">
+                    <i class="bi bi-trophy-fill" aria-hidden="true"></i>
+                </span>
+
+                <span class="db-brand-text">
+                    Rank<span class="db-brand-accent">5</span>
+                </span>
+            </a>
+
+            <span class="db-page-title">
+                Estadísticas por partido
+            </span>
+
+            <a th:href="@{/partidos}" class="db-link">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                Volver a partidos
+            </a>
+
+        </div>
+    </div>
+</header>
+
+<main class="container db-content">
+
+    <section class="stats-hero card-glass">
+
+        <div class="stats-eyebrow">
+            <i class="bi bi-activity" aria-hidden="true"></i>
+            Informe del encuentro
+        </div>
+
+        <h1 class="stats-title">
+            El partido, <span>en números.</span>
+        </h1>
+
+        <p
+            class="stats-description"
+            th:text="${#temporals.format(estadisticas.fecha, 'dd/MM/yyyy HH:mm')}">
+            Fecha del partido
+        </p>
+
+        <div th:if="${estadisticas.jugado}">
+
+            <div class="stats-score">
+                <span>Equipo A</span>
+
+                <strong
+                    th:text="${estadisticas.golesEquipoA + ' - ' + estadisticas.golesEquipoB}">
+                    0 - 0
+                </strong>
+
+                <span>Equipo B</span>
+            </div>
+
+            <p class="text-center mb-0">
+                <span class="rank-badge">Finalizado</span>
+            </p>
+
+        </div>
+
+        <div
+            th:unless="${estadisticas.jugado}"
+            class="stats-empty">
+
+            <strong>Partido pendiente</strong>
+
+            <p class="stats-description mb-0">
+                Las estadísticas estarán disponibles cuando se registre
+                el resultado.
+            </p>
+
+        </div>
+
+    </section>
+
+    <div th:if="${estadisticas.jugado}">
+
+        <section
+            class="stats-panel card-glass"
+            th:each="lado : ${ {'A', 'B'} }"
+            th:with="filas=${lado == 'A' ? estadisticas.equipoA : estadisticas.equipoB}">
+
+            <h2 class="stats-panel-title">
+                <i class="bi bi-shield-fill" aria-hidden="true"></i>
+
+                <span th:text="${'Equipo ' + lado}">
+                    Equipo
+                </span>
+            </h2>
+
+            <div
+                class="stats-table-wrap"
+                role="region"
+                tabindex="0"
+                th:attr="aria-label=${'Estadísticas del equipo ' + lado}">
+
+                <table class="stats-table">
+
+                    <caption
+                        class="visually-hidden"
+                        th:text="${'Estadísticas por jugador del equipo ' + lado}">
+                        Estadísticas por jugador
+                    </caption>
+
+                    <thead>
+                    <tr>
+                        <th scope="col">Jugador</th>
+                        <th scope="col">Goles</th>
+                        <th scope="col">Asistencias</th>
+                        <th scope="col">Amarillas</th>
+                        <th scope="col">Rojas</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="fila : ${filas}">
+                        <th scope="row" th:text="${fila.nombre}">
+                            Jugador
+                        </th>
+
+                        <td th:text="${fila.goles}">0</td>
+
+                        <td th:text="${fila.asistencias}">0</td>
+
+                        <td
+                            class="stats-yellow"
+                            th:text="${fila.amarillas}">
+                            0
+                        </td>
+
+                        <td
+                            class="stats-red"
+                            th:text="${fila.rojas}">
+                            0
+                        </td>
+                    </tr>
+                    </tbody>
+
+                </table>
+            </div>
+
+        </section>
+
+        <p class="stats-description small">
+            Se muestran los detalles registrados de este encuentro.
+            Un cero indica que no hay registros para ese jugador.
+            Si falta cargar algún gol o asistencia, el detalle puede
+            no coincidir con el marcador.
+        </p>
+
+    </div>
+
+</main>
+
+</body>
+</html>

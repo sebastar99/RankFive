@@ -266,6 +266,12 @@
                         <div th:if="${partido.fueJugado()}" class="rank-badge">
                             <span th:text="${partido.golesEquipoA} + ' - ' + ${partido.golesEquipoB}">0 - 0</span>
                         </div>
+                        <a th:href="@{/partidos/{id}/estadisticas(id=${partido.id})}"
+                           class="btn btn-sm btn-outline-light mt-2">
+                            <i class="bi bi-bar-chart-line me-1"></i>
+                            Ver estadísticas por partido
+                        </a>
+
                         <details th:if="${partido.fueJugado()}" class="mt-2 goles-detalle w-100">
                             <summary class="small"><i class="bi bi-pencil-square me-1"></i>Editar goles y asistencias
                             </summary>
