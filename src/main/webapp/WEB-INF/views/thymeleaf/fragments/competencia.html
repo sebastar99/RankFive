@@ -10,7 +10,7 @@
   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
 </div>
 
-<div th:fragment="inscripcionTorneo(torneo, equipos, inscripto)">
+<div th:fragment="inscripcionTorneo(torneo, equipos, inscripto, soloIntegrante)">
   <button th:if="${inscripto}" type="button" class="btn btn-outline-success" disabled>
     <i class="bi bi-check2-circle"></i>Ya inscripto
   </button>
@@ -33,15 +33,26 @@
       <button type="button" class="btn btn-primary" disabled>
         <i class="bi bi-lock-fill"></i>Inscribirse
       </button>
-      <p class="small text-muted mt-2 mb-0">Necesit&aacute;s un equipo activo de F<span th:text="${torneo.formato}">5</span> para inscribirte.</p>
+      <p th:if="${soloIntegrante}" class="small text-muted mt-2 mb-0">Solo el capit&aacute;n de tu equipo puede inscribirlo.</p>
+      <p th:unless="${soloIntegrante}" class="small text-muted mt-2 mb-0">Necesit&aacute;s un equipo activo de F<span th:text="${torneo.formato}">5</span> para inscribirte.</p>
     </div>
   </th:block>
-  <button th:if="${!inscripto and !torneo.inscripcionAbierta}" type="button" class="btn btn-outline-light" disabled>
-    <i class="bi bi-bell"></i>Pr&oacute;ximamente
-  </button>
+  <th:block th:if="${!inscripto and !torneo.inscripcionAbierta}">
+    <form th:if="${usuario != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN')}"
+          th:action="@{/torneos/abrir-inscripcion}" method="post" class="m-0">
+      <input type="hidden" name="torneoId" th:value="${torneo.id}">
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-unlock-fill"></i>Abrir inscripci&oacute;n
+      </button>
+    </form>
+    <button th:unless="${usuario != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN')}"
+            type="button" class="btn btn-outline-light" disabled>
+      <i class="bi bi-bell"></i>Pr&oacute;ximamente
+    </button>
+  </th:block>
 </div>
 
-<div th:fragment="inscripcionLiga(liga, equipos, inscripto)">
+<div th:fragment="inscripcionLiga(liga, equipos, inscripto, soloIntegrante)">
   <button th:if="${inscripto}" type="button" class="btn btn-outline-success" disabled>
     <i class="bi bi-check2-circle"></i>Ya inscripto
   </button>
@@ -64,12 +75,23 @@
       <button type="button" class="btn btn-primary" disabled>
         <i class="bi bi-lock-fill"></i>Inscribirse
       </button>
-      <p class="small text-muted mt-2 mb-0">Necesit&aacute;s un equipo activo de F<span th:text="${liga.formato}">5</span> para inscribirte.</p>
+      <p th:if="${soloIntegrante}" class="small text-muted mt-2 mb-0">Solo el capit&aacute;n de tu equipo puede inscribirlo.</p>
+      <p th:unless="${soloIntegrante}" class="small text-muted mt-2 mb-0">Necesit&aacute;s un equipo activo de F<span th:text="${liga.formato}">5</span> para inscribirte.</p>
     </div>
   </th:block>
-  <button th:if="${!inscripto and !liga.inscripcionAbierta}" type="button" class="btn btn-outline-light" disabled>
-    <i class="bi bi-bell"></i>Pr&oacute;ximamente
-  </button>
+  <th:block th:if="${!inscripto and !liga.inscripcionAbierta}">
+    <form th:if="${usuario != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN')}"
+          th:action="@{/ligas/abrir-inscripcion}" method="post" class="m-0">
+      <input type="hidden" name="ligaId" th:value="${liga.id}">
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-unlock-fill"></i>Abrir inscripci&oacute;n
+      </button>
+    </form>
+    <button th:unless="${usuario != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN')}"
+            type="button" class="btn btn-outline-light" disabled>
+      <i class="bi bi-bell"></i>Pr&oacute;ximamente
+    </button>
+  </th:block>
 </div>
 
 <div th:fragment="tabla(filas, clasificados)" class="table-responsive">

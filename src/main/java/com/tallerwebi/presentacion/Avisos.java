@@ -13,6 +13,7 @@ public final class Avisos {
   public static final String RESULTADO_INVALIDO = "RESULTADO_INVALIDO";
   public static final String DETALLES_GUARDADOS = "DETALLES_GUARDADOS";
   public static final String DETALLES_INVALIDOS = "DETALLES_INVALIDOS";
+  public static final String INSCRIPCION_ABIERTA = "INSCRIPCION_ABIERTA";
 
   private static final String AVISO = "aviso";
   private static final String AVISO_OK = "avisoOk";
@@ -25,7 +26,9 @@ public final class Avisos {
     RESULTADO_GUARDADO,
     "Resultado registrado",
     DETALLES_GUARDADOS,
-    "Goles y tarjetas guardados"
+    "Goles y tarjetas guardados",
+    INSCRIPCION_ABIERTA,
+    "Inscripción abierta correctamente"
   );
 
   private static final Map<String, String> ERROR = Map.of(

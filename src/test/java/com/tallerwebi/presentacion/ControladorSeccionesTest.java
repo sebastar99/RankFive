@@ -17,6 +17,7 @@ import com.tallerwebi.dominio.Partido;
 import com.tallerwebi.dominio.ResultadoInscripcion;
 import com.tallerwebi.dominio.ServicioArbitro;
 import com.tallerwebi.dominio.ServicioCompetencia;
+import com.tallerwebi.dominio.ServicioEquipo;
 import com.tallerwebi.dominio.ServicioEstadisticasEquipo;
 import com.tallerwebi.dominio.ServicioEstadisticasJugador;
 import com.tallerwebi.dominio.ServicioEstadisticasTorneo;
@@ -64,7 +65,8 @@ public class ControladorSeccionesTest {
         servicioArbitro,
         servicioLiga,
         servicioEstadisticasJugador,
-        servicioEstadisticasEquipo
+        servicioEstadisticasEquipo,
+        mock(ServicioEquipo.class)
       );
     request = mock(HttpServletRequest.class);
     session = mock(HttpSession.class);

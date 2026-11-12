@@ -438,6 +438,26 @@ public class ServicioEquipoTest {
     verify(repositorioInvitacion, never()).actualizar(any());
   }
 
+  @Test
+  public void soloEsIntegranteDistingueMembresiaDeCapitania() {
+    Equipo ajeno = new Equipo();
+    ajeno.setFormato(5);
+    Equipo propio = new Equipo();
+    propio.setFormato(5);
+    Equipo ajenoF8 = new Equipo();
+    ajenoF8.setFormato(8);
+
+    assertThat(SeleccionEquipo.soloEsIntegrante(List.of(), List.of(), 5), is(false));
+    assertThat(SeleccionEquipo.soloEsIntegrante(null, null, 5), is(false));
+    assertThat(SeleccionEquipo.soloEsIntegrante(List.of(), List.of(ajeno), 5), is(true));
+    assertThat(SeleccionEquipo.soloEsIntegrante(List.of(propio), List.of(propio), 5), is(false));
+    assertThat(SeleccionEquipo.soloEsIntegrante(List.of(propio), List.of(propio), 8), is(false));
+    assertThat(
+      SeleccionEquipo.soloEsIntegrante(List.of(propio), List.of(propio, ajenoF8), 8),
+      is(true)
+    );
+  }
+
   private static void completarPlantel(Equipo equipo, int cantidad) {
     while (equipo.getJugadores().size() < cantidad) {
       int numero = equipo.getJugadores().size();

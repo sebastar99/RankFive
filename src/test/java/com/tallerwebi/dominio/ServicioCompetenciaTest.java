@@ -2,6 +2,7 @@ package com.tallerwebi.dominio;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -111,7 +112,7 @@ public class ServicioCompetenciaTest {
     equipo.setNombre("Los Pibes");
     equipo.setFormato(5);
     torneo.setFormato(5);
-    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(equipo));
+    when(servicioEquipo.listarEquiposCapitaneados(usuario)).thenReturn(List.of(equipo));
 
     ResultadoInscripcion resultado = servicio.inscribirATorneo(usuario, 10L);
 
@@ -126,7 +127,7 @@ public class ServicioCompetenciaTest {
   public void noInscribeUnEquipoDeOtroFormatoNiSinFormatoDefinido() {
     Equipo equipo = new Equipo();
     equipo.setFormato(5);
-    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(equipo));
+    when(servicioEquipo.listarEquiposCapitaneados(usuario)).thenReturn(List.of(equipo));
     torneo.setFormato(8);
 
     assertThat(servicio.inscribirATorneo(usuario, 10L).esExitoso(), is(false));
@@ -138,12 +139,45 @@ public class ServicioCompetenciaTest {
 
   @Test
   public void noInscribeSinEquipoActivo() {
-    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(Collections.emptyList());
+    when(servicioEquipo.listarEquiposCapitaneados(usuario)).thenReturn(Collections.emptyList());
 
     ResultadoInscripcion resultado = servicio.inscribirATorneo(usuario, 10L);
 
     assertThat(resultado, equalTo(ResultadoInscripcion.SIN_EQUIPO_ACTIVO));
     assertThat(servicio.tieneEquipoActivo(usuario), is(false));
+    verify(repoInscripcion, never()).guardar(any(InscripcionTorneo.class));
+  }
+
+  @Test
+  public void unIntegranteQueNoEsCapitanNoPuedeInscribirElEquipo() {
+    Equipo ajeno = new Equipo();
+    ajeno.setFormato(5);
+    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(ajeno));
+    when(servicioEquipo.listarEquiposCapitaneados(usuario)).thenReturn(Collections.emptyList());
+
+    assertThat(
+      servicio.inscribirATorneo(usuario, 10L),
+      equalTo(ResultadoInscripcion.NO_ES_CAPITAN)
+    );
+    assertThat(servicio.listarEquiposCompatibles(usuario, 5), hasSize(0));
+    assertThat(servicio.tieneEquipoActivo(usuario), is(false));
+    verify(repoInscripcion, never()).guardar(any(InscripcionTorneo.class));
+  }
+
+  @Test
+  public void unCapitanDeOtroFormatoQueIntegraUnEquipoCompatibleRecibeNoEsCapitan() {
+    torneo.setFormato(8);
+    Equipo propioF5 = new Equipo();
+    propioF5.setFormato(5);
+    Equipo ajenoF8 = new Equipo();
+    ajenoF8.setFormato(8);
+    when(servicioEquipo.listarEquiposCapitaneados(usuario)).thenReturn(List.of(propioF5));
+    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(propioF5, ajenoF8));
+
+    assertThat(
+      servicio.inscribirATorneo(usuario, 10L),
+      equalTo(ResultadoInscripcion.NO_ES_CAPITAN)
+    );
     verify(repoInscripcion, never()).guardar(any(InscripcionTorneo.class));
   }
 
@@ -239,7 +273,7 @@ public class ServicioCompetenciaTest {
 
     when(repoFase.listarPorTorneo(10L)).thenReturn(Collections.emptyList());
     torneo.setCupoEquipos(null);
-    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(null);
+    when(servicioEquipo.listarEquiposCapitaneados(usuario)).thenReturn(null);
     assertThat(
       servicio.inscribirATorneo(usuario, 10L),
       equalTo(ResultadoInscripcion.SIN_EQUIPO_ACTIVO)

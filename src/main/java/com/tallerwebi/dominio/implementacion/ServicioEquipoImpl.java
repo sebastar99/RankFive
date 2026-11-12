@@ -192,6 +192,14 @@ public class ServicioEquipoImpl implements ServicioEquipo {
   }
 
   @Override
+  public List<Equipo> listarEquiposCapitaneados(Usuario usuarioActual) {
+    if (sinId(usuarioActual)) {
+      return Collections.emptyList();
+    }
+    return repositorioEquipo.listarCapitaneados(usuarioActual.getId());
+  }
+
+  @Override
   public List<InvitacionEquipo> listarInvitacionesPendientes(Usuario usuarioActual) {
     if (sinId(usuarioActual)) {
       return Collections.emptyList();

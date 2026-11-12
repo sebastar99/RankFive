@@ -31,4 +31,34 @@ public record SeleccionEquipo(Equipo equipo, ResultadoInscripcion error) {
     }
     return activos.stream().filter(equipo -> formato.equals(equipo.getFormato())).toList();
   }
+
+  /**
+   * El usuario no capitanea ningún equipo compatible pero sí integra equipos
+   * (cualquiera si no capitanea nada; del formato buscado si capitanea otros).
+   */
+  public static boolean soloEsIntegrante(
+    List<Equipo> capitaneados,
+    List<Equipo> integrados,
+    Integer formato
+  ) {
+    if (capitaneados == null || capitaneados.isEmpty()) {
+      return integrados != null && !integrados.isEmpty();
+    }
+    return (
+      compatibles(capitaneados, formato).isEmpty() && !compatibles(integrados, formato).isEmpty()
+    );
+  }
+
+  /** Devuelve NO_ES_CAPITAN cuando el error se debe a falta de capitanía; si no, el original. */
+  public static ResultadoInscripcion refinar(
+    ResultadoInscripcion error,
+    List<Equipo> capitaneados,
+    List<Equipo> integrados,
+    Integer formato
+  ) {
+    if (error != null && soloEsIntegrante(capitaneados, integrados, formato)) {
+      return ResultadoInscripcion.NO_ES_CAPITAN;
+    }
+    return error;
+  }
 }
