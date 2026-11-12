@@ -30,6 +30,8 @@ public interface ServicioEquipo {
 
   List<Equipo> listarEquiposActivosDe(Usuario usuarioActual);
 
+  List<Equipo> listarEquiposCapitaneados(Usuario usuarioActual);
+
   List<InvitacionEquipo> listarInvitacionesPendientes(Usuario usuarioActual);
 
   InvitacionEquipo buscarOfertaPendiente(Long invitacionId, Usuario usuarioActual);

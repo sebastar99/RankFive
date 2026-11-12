@@ -5,8 +5,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.tallerwebi.dominio.Equipo;
@@ -153,6 +156,73 @@ public class InscripcionCompanerosVistaTest {
     assertThat(requireNonNull(urlLiga), containsString("YA_INSCRIPTO"));
     assertEquals(1L, cantidad("InscripcionTorneo"));
     assertEquals(1L, cantidad("InscripcionLiga"));
+  }
+
+  @Test
+  public void elIntegranteQueNoEsCapitanNoPuedeInscribirElEquipoNiVerloEnElSelector()
+    throws Exception {
+    Torneo nuevoTorneo = torneoAbierto(5);
+    Liga nuevaLiga = ligaAbierta(5);
+
+    String urlTorneo = mockMvc
+      .perform(
+        post("/torneos/inscribirse")
+          .sessionAttr("usuario", requireNonNull(companiero))
+          .param("torneoId", nuevoTorneo.getId().toString())
+          .param("equipoId", equipo.getId().toString())
+      )
+      .andExpect(status().is3xxRedirection())
+      .andReturn()
+      .getResponse()
+      .getRedirectedUrl();
+
+    String urlLiga = mockMvc
+      .perform(
+        post("/ligas/inscribirse")
+          .sessionAttr("usuario", requireNonNull(companiero))
+          .param("ligaId", nuevaLiga.getId().toString())
+          .param("equipoId", equipo.getId().toString())
+      )
+      .andExpect(status().is3xxRedirection())
+      .andReturn()
+      .getResponse()
+      .getRedirectedUrl();
+
+    assertThat(requireNonNull(urlTorneo), containsString("NO_ES_CAPITAN"));
+    assertThat(requireNonNull(urlLiga), containsString("NO_ES_CAPITAN"));
+    assertEquals(1L, cantidad("InscripcionTorneo"));
+    assertEquals(1L, cantidad("InscripcionLiga"));
+
+    String detalle = html(get("/ligas/detalle?id=" + nuevaLiga.getId()), companiero);
+    assertThat(detalle, not(containsString("SacaPuntos FC</option>")));
+    assertThat(detalle, not(containsString("action=\"/ligas/inscribirse\"")));
+    assertThat(detalle, containsString("puede inscribirlo"));
+    assertThat(detalle.replaceAll("<[^>]*>", ""), not(containsString("equipo activo de F5")));
+  }
+
+  @Test
+  public void elIntegranteVeQueSoloElCapitanPuedeInscribirEnListadoYDetalle() throws Exception {
+    Torneo nuevoTorneo = torneoAbierto(5);
+
+    String listado = html(get("/torneos"), companiero);
+    assertThat(listado, containsString("puede inscribirlo"));
+    assertThat(listado, not(containsString("action=\"/torneos/inscribirse\"")));
+
+    String detalle = html(get("/torneos/detalle?id=" + nuevoTorneo.getId()), companiero);
+    assertThat(detalle, containsString("puede inscribirlo"));
+    assertThat(detalle, not(containsString("action=\"/torneos/inscribirse\"")));
+    assertThat(detalle.replaceAll("<[^>]*>", ""), not(containsString("equipo activo de F5")));
+  }
+
+  @Test
+  public void quienNoTieneEquipoSigueViendoQueNecesitaUnEquipoActivo() throws Exception {
+    Usuario sinEquipo = usuario("sinEquipo");
+    Liga nuevaLiga = ligaAbierta(5);
+
+    String detalle = html(get("/ligas/detalle?id=" + nuevaLiga.getId()), sinEquipo);
+
+    assertThat(detalle.replaceAll("<[^>]*>", ""), containsString("equipo activo de F5"));
+    assertThat(detalle, not(containsString("action=\"/ligas/inscribirse\"")));
   }
 
   @Test
@@ -334,6 +404,102 @@ public class InscripcionCompanerosVistaTest {
     }
   }
 
+  @Test
+  public void elAdminPuedeAbrirLaInscripcionDeUnTorneoDesdeElDetalle() throws Exception {
+    Torneo cerrado = torneoCerrado(5);
+    Usuario admin = usuario("admin");
+    admin.setRol("ADMIN");
+
+    mockMvc
+      .perform(
+        post("/torneos/abrir-inscripcion")
+          .sessionAttr("usuario", requireNonNull(admin))
+          .param("torneoId", cerrado.getId().toString())
+      )
+      .andExpect(status().is3xxRedirection())
+      .andExpect(
+        redirectedUrl("/torneos/detalle?id=" + cerrado.getId() + "&aviso=INSCRIPCION_ABIERTA")
+      );
+
+    assertTrue(cerrado.getInscripcionAbierta());
+    String htmlDetalle = html(
+      get("/torneos/detalle").param("id", cerrado.getId().toString()),
+      admin
+    );
+    assertThat(htmlDetalle, not(containsString("abrir-inscripcion")));
+  }
+
+  @Test
+  public void elAdminVeElBotonParaAbrirLaInscripcionYElUsuarioNo() throws Exception {
+    Torneo cerrado = torneoCerrado(5);
+    Usuario admin = usuario("admin");
+    admin.setRol("ADMIN");
+    Usuario comun = usuario("usuario");
+
+    String htmlAdmin = html(get("/torneos/detalle").param("id", cerrado.getId().toString()), admin);
+    String htmlComun = html(get("/torneos/detalle").param("id", cerrado.getId().toString()), comun);
+
+    assertThat(htmlAdmin, containsString("/torneos/abrir-inscripcion"));
+    assertThat(htmlAdmin, containsString("Abrir"));
+    assertThat(htmlComun, not(containsString("abrir-inscripcion")));
+    assertThat(htmlComun, containsString("xima"));
+  }
+
+  @Test
+  public void unUsuarioComunNoPuedeAbrirLaInscripcionDeUnTorneo() throws Exception {
+    Torneo cerrado = torneoCerrado(5);
+    Usuario comun = usuario("usuario");
+
+    mockMvc
+      .perform(
+        post("/torneos/abrir-inscripcion")
+          .sessionAttr("usuario", requireNonNull(comun))
+          .param("torneoId", cerrado.getId().toString())
+      )
+      .andExpect(status().is3xxRedirection())
+      .andExpect(redirectedUrl("/torneos"));
+
+    assertFalse(cerrado.getInscripcionAbierta());
+  }
+
+  @Test
+  public void elAdminPuedeAbrirLaInscripcionDeUnaLiga() throws Exception {
+    Liga cerrada = new Liga();
+    cerrada.setNombre("Liga cerrada");
+    cerrada.setFormato(5);
+    cerrada.setCupoEquipos(10);
+    cerrada.setInscripcionAbierta(false);
+    cerrada.setFechaInicio(LocalDate.now());
+    sesion().persist(cerrada);
+    Usuario admin = usuario("admin");
+    admin.setRol("ADMIN");
+
+    mockMvc
+      .perform(
+        post("/ligas/abrir-inscripcion")
+          .sessionAttr("usuario", requireNonNull(admin))
+          .param("ligaId", cerrada.getId().toString())
+      )
+      .andExpect(status().is3xxRedirection())
+      .andExpect(
+        redirectedUrl("/ligas/detalle?id=" + cerrada.getId() + "&aviso=INSCRIPCION_ABIERTA")
+      );
+
+    assertTrue(cerrada.getInscripcionAbierta());
+  }
+
+  @Test
+  public void elAdminVeElBotonParaCrearUnaLigaYElUsuarioNo() throws Exception {
+    Usuario admin = usuario("admin");
+    admin.setRol("ADMIN");
+    Usuario comun = usuario("comun");
+
+    assertThat(html(get("/torneos"), admin), containsString("/ligas/nueva"));
+    assertThat(html(get("/torneos"), admin), containsString("/torneos/nuevo"));
+    assertThat(html(get("/torneos"), comun), not(containsString("/ligas/nueva")));
+    assertThat(html(get("/torneos"), comun), not(containsString("/torneos/nuevo")));
+  }
+
   private String inscribirLiga(Liga destino, Long equipoId) throws Exception {
     var peticion = post("/ligas/inscribirse")
       .sessionAttr("usuario", requireNonNull(capitan))
@@ -368,6 +534,17 @@ public class InscripcionCompanerosVistaTest {
     nuevo.setFormato(formato);
     nuevo.setCupoEquipos(16);
     nuevo.setInscripcionAbierta(true);
+    nuevo.setFechaInicio(LocalDate.now());
+    sesion().persist(nuevo);
+    return nuevo;
+  }
+
+  private Torneo torneoCerrado(int formato) {
+    Torneo nuevo = new Torneo();
+    nuevo.setNombre("Copa cerrada F" + formato);
+    nuevo.setFormato(formato);
+    nuevo.setCupoEquipos(16);
+    nuevo.setInscripcionAbierta(false);
     nuevo.setFechaInicio(LocalDate.now());
     sesion().persist(nuevo);
     return nuevo;

@@ -26,4 +26,12 @@ public class Liga {
   private Boolean inscripcionAbierta = Boolean.TRUE;
   private LocalDate fechaInicio;
   private String ubicacion;
+
+  public boolean abrirInscripcion() {
+    if (Boolean.TRUE.equals(inscripcionAbierta)) {
+      return false;
+    }
+    inscripcionAbierta = Boolean.TRUE;
+    return true;
+  }
 }

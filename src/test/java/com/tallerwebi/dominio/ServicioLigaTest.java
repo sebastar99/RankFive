@@ -56,13 +56,40 @@ public class ServicioLigaTest {
     Equipo equipo = new Equipo();
     equipo.setNombre("Los Pibes");
     equipo.setFormato(5);
-    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(equipo));
+    when(servicioEquipo.listarEquiposCapitaneados(usuario)).thenReturn(List.of(equipo));
 
     assertThat(servicio.inscribir(usuario, 5L), equalTo(ResultadoInscripcion.INSCRIPTO));
     verify(repoInscripcion).guardar(any(InscripcionLiga.class));
 
-    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(Collections.emptyList());
+    when(servicioEquipo.listarEquiposCapitaneados(usuario)).thenReturn(Collections.emptyList());
     assertThat(servicio.inscribir(usuario, 5L), equalTo(ResultadoInscripcion.SIN_EQUIPO_ACTIVO));
+  }
+
+  @Test
+  public void unIntegranteQueNoEsCapitanNoPuedeInscribirElEquipo() {
+    Equipo ajeno = new Equipo();
+    ajeno.setFormato(5);
+    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(ajeno));
+    when(servicioEquipo.listarEquiposCapitaneados(usuario)).thenReturn(Collections.emptyList());
+
+    assertThat(servicio.inscribir(usuario, 5L), equalTo(ResultadoInscripcion.NO_ES_CAPITAN));
+    assertThat(servicio.listarEquiposCompatibles(usuario, 5), hasSize(0));
+    verify(servicioEquipo, times(2)).listarEquiposCapitaneados(usuario);
+    verify(repoInscripcion, never()).guardar(any(InscripcionLiga.class));
+  }
+
+  @Test
+  public void unCapitanDeOtroFormatoQueIntegraUnEquipoCompatibleRecibeNoEsCapitan() {
+    liga.setFormato(8);
+    Equipo propioF5 = new Equipo();
+    propioF5.setFormato(5);
+    Equipo ajenoF8 = new Equipo();
+    ajenoF8.setFormato(8);
+    when(servicioEquipo.listarEquiposCapitaneados(usuario)).thenReturn(List.of(propioF5));
+    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(propioF5, ajenoF8));
+
+    assertThat(servicio.inscribir(usuario, 5L), equalTo(ResultadoInscripcion.NO_ES_CAPITAN));
+    verify(repoInscripcion, never()).guardar(any(InscripcionLiga.class));
   }
 
   @Test
@@ -70,7 +97,7 @@ public class ServicioLigaTest {
     liga.setFormato(8);
     Equipo futbol5 = new Equipo();
     futbol5.setFormato(5);
-    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(futbol5));
+    when(servicioEquipo.listarEquiposCapitaneados(usuario)).thenReturn(List.of(futbol5));
 
     assertThat(
       servicio.inscribir(usuario, 5L),
@@ -88,7 +115,7 @@ public class ServicioLigaTest {
     Equipo segundo = new Equipo();
     segundo.setId(12L);
     segundo.setFormato(5);
-    when(servicioEquipo.listarEquiposActivosDe(usuario)).thenReturn(List.of(primero, segundo));
+    when(servicioEquipo.listarEquiposCapitaneados(usuario)).thenReturn(List.of(primero, segundo));
 
     assertThat(servicio.inscribir(usuario, 5L), equalTo(ResultadoInscripcion.SELECCIONAR_EQUIPO));
     assertThat(

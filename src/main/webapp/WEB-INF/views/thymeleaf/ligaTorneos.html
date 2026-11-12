@@ -55,7 +55,8 @@
       <div th:if="${!tieneEquipoActivo and !(usuario != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN'))}"
            class="alert alert-info d-flex align-items-center gap-2 py-2" role="alert">
         <i class="bi bi-info-circle-fill"></i>
-        <span>Necesitás un equipo activo para inscribirte en un torneo.</span>
+        <span th:if="${esIntegrante}">Solo el capitán de tu equipo puede inscribirlo en una competencia.</span>
+        <span th:unless="${esIntegrante}">Necesitás un equipo activo para inscribirte en un torneo.</span>
       </div>
 
       <div class="torneo-grid">
@@ -81,7 +82,7 @@
               <i class="bi bi-info-circle"></i>Ver Información
             </a>
             <div th:if="${!(usuario != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN'))}">
-              <div th:replace="~{fragments/competencia :: inscripcionTorneo(${t}, ${equiposPorTorneo[t.id]}, ${inscripto})}"></div>
+              <div th:replace="~{fragments/competencia :: inscripcionTorneo(${t}, ${equiposPorTorneo[t.id]}, ${inscripto}, ${integrantesPorFormato.get(t.formato)})}"></div>
             </div>
           </div>
         </div>
@@ -89,7 +90,11 @@
 
       <hr class="my-4"/>
 
-      <h2 class="h6 text-light mb-3">Ligas</h2>
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h2 class="h6 text-light m-0">Ligas</h2>
+        <a th:if="${usuario != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN')}"
+           th:href="@{/ligas/nueva}" class="btn btn-primary btn-action"><i class="bi bi-plus-circle me-2"></i>Crear liga</a>
+      </div>
       <div class="torneo-grid">
         <div class="torneo-card card-glass" th:each="l : ${ligas}">
           <div class="torneo-head">
@@ -112,7 +117,7 @@
               <i class="bi bi-info-circle"></i>Ver Información
             </a>
             <div th:if="${!(usuario != null and #strings.equalsIgnoreCase(usuario.rol, 'ADMIN'))}">
-              <div th:replace="~{fragments/competencia :: inscripcionLiga(${l}, ${equiposPorLiga[l.id]}, ${inscripta})}"></div>
+              <div th:replace="~{fragments/competencia :: inscripcionLiga(${l}, ${equiposPorLiga[l.id]}, ${inscripta}, ${integrantesPorFormato.get(l.formato)})}"></div>
             </div>
           </div>
         </div>

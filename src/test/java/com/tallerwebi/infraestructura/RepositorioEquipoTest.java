@@ -162,6 +162,28 @@ public class RepositorioEquipoTest {
   @Test
   @Transactional
   @Rollback
+  public void listarCapitaneadosSoloDevuelveLosEquiposDondeElUsuarioEsOwner() {
+    Usuario owner = guardarUsuario("o@test.com", "owner", 1500);
+    Usuario amigo = guardarUsuario("a@test.com", "amigo", 2500);
+    Usuario otroCapitan = guardarUsuario("x@test.com", "ajeno", 2000);
+
+    Equipo propio = guardarEquipo(owner, EstadoEquipo.ACTIVO, amigo);
+    guardarEquipo(owner, EstadoEquipo.PENDIENTE);
+    guardarEquipo(otroCapitan, EstadoEquipo.ACTIVO, owner);
+    sessionFactory.getCurrentSession().flush();
+
+    List<Equipo> deOwner = repositorioEquipo.listarCapitaneados(owner.getId());
+    List<Equipo> deAmigo = repositorioEquipo.listarCapitaneados(amigo.getId());
+
+    assertThat(deOwner, hasSize(1));
+    assertThat(deOwner.get(0).getId(), equalTo(propio.getId()));
+    assertThat(deAmigo, hasSize(0));
+    assertThat(repositorioEquipo.listarCapitaneados(999L), hasSize(0));
+  }
+
+  @Test
+  @Transactional
+  @Rollback
   public void invitacionesPendientesSeListanYCuentanPorDestinatario() {
     Usuario owner = guardarUsuario("o@test.com", "owner", 1500);
     Usuario amigo = guardarUsuario("a@test.com", "amigo", 2500);

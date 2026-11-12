@@ -89,4 +89,18 @@ public class RepositorioEquipoImpl implements RepositorioEquipo {
       .setParameter("u", usuarioId)
       .list();
   }
+
+  @Override
+  public List<Equipo> listarCapitaneados(Long usuarioId) {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "select distinct e from Equipo e join fetch e.owner left join fetch e.jugadores " +
+        "where e.estado = :activo and e.owner.id = :u order by e.fechaCreacion desc",
+        Equipo.class
+      )
+      .setParameter("activo", EstadoEquipo.ACTIVO)
+      .setParameter("u", usuarioId)
+      .list();
+  }
 }

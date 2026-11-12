@@ -3,9 +3,12 @@ package com.tallerwebi.presentacion;
 import com.tallerwebi.dominio.Liga;
 import com.tallerwebi.dominio.PartidoLiga;
 import com.tallerwebi.dominio.ResultadoInscripcion;
+import com.tallerwebi.dominio.SeleccionEquipo;
 import com.tallerwebi.dominio.ServicioArbitro;
 import com.tallerwebi.dominio.ServicioCompetencia;
+import com.tallerwebi.dominio.ServicioEquipo;
 import com.tallerwebi.dominio.ServicioEstadisticasLiga;
+import com.tallerwebi.dominio.ServicioInscripciones;
 import com.tallerwebi.dominio.ServicioLiga;
 import com.tallerwebi.dominio.ServicioRelacionAmistad;
 import com.tallerwebi.dominio.Usuario;
@@ -32,18 +35,22 @@ public class ControladorLiga extends ControladorBase {
 
   private final ServicioLiga servicioLiga;
   private final ServicioCompetencia servicioCompetencia;
+  private final ServicioEquipo servicioEquipo;
   private ServicioArbitro servicioArbitro;
   private ServicioEstadisticasLiga servicioEstadisticas;
+  private ServicioInscripciones servicioInscripciones;
 
   @Autowired
   public ControladorLiga(
     ServicioRelacionAmistad servicioRelacionAmistad,
     ServicioLiga servicioLiga,
-    ServicioCompetencia servicioCompetencia
+    ServicioCompetencia servicioCompetencia,
+    ServicioEquipo servicioEquipo
   ) {
     super(servicioRelacionAmistad);
     this.servicioLiga = servicioLiga;
     this.servicioCompetencia = servicioCompetencia;
+    this.servicioEquipo = servicioEquipo;
   }
 
   @Autowired(required = false)
@@ -54,6 +61,11 @@ public class ControladorLiga extends ControladorBase {
   @Autowired(required = false)
   public void setServicioEstadisticas(ServicioEstadisticasLiga servicioEstadisticas) {
     this.servicioEstadisticas = servicioEstadisticas;
+  }
+
+  @Autowired(required = false)
+  public void setServicioInscripciones(ServicioInscripciones servicioInscripciones) {
+    this.servicioInscripciones = servicioInscripciones;
   }
 
   @RequestMapping(path = "/ligas/detalle", method = RequestMethod.GET)
@@ -82,6 +94,14 @@ public class ControladorLiga extends ControladorBase {
     modelo.put(
       "equiposCompatibles",
       servicioLiga.listarEquiposCompatibles(usuario, liga.getFormato())
+    );
+    modelo.put(
+      "soloIntegrante",
+      SeleccionEquipo.soloEsIntegrante(
+        servicioEquipo.listarEquiposCapitaneados(usuario),
+        servicioEquipo.listarEquiposActivosDe(usuario),
+        liga.getFormato()
+      )
     );
     if (servicioArbitro != null) {
       ModeloCompetencia.arbitraje(
@@ -120,13 +140,29 @@ public class ControladorLiga extends ControladorBase {
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
-    if (usuario.getRol() == null || !"ADMIN".equalsIgnoreCase(usuario.getRol())) {
+    if (!ModeloCompetencia.esAdmin(usuario)) {
       String codigo = Avisos.FIXTURE_INVALIDO;
       return new ModelAndView(REDIRECT_DETALLE + ligaId + PARAM_AVISO + codigo);
     }
     boolean ok = servicioLiga.generarFixtureSiNoExiste(ligaId);
     String codigo = ok ? Avisos.FIXTURE_GENERADO : Avisos.FIXTURE_INVALIDO;
     return new ModelAndView(REDIRECT_DETALLE + ligaId + PARAM_AVISO + codigo);
+  }
+
+  @RequestMapping(path = "/ligas/abrir-inscripcion", method = RequestMethod.POST)
+  public ModelAndView abrirInscripcion(
+    HttpServletRequest request,
+    @RequestParam(PARAM_LIGA) Long ligaId
+  ) {
+    Usuario usuario = usuarioDeSesion(request);
+    if (usuario == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+    if (!ModeloCompetencia.esAdmin(usuario)) {
+      return new ModelAndView("redirect:/torneos");
+    }
+    servicioInscripciones.abrirInscripcionLiga(ligaId);
+    return new ModelAndView(REDIRECT_DETALLE + ligaId + PARAM_AVISO + Avisos.INSCRIPCION_ABIERTA);
   }
 
   @RequestMapping(path = "/ligas/partido/resultado", method = RequestMethod.POST)

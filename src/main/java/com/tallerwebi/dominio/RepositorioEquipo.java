@@ -13,5 +13,7 @@ public interface RepositorioEquipo {
 
   List<Equipo> listarActivosDe(Long usuarioId);
 
+  List<Equipo> listarCapitaneados(Long usuarioId);
+
   List<Equipo> listarActivos();
 }
