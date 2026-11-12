@@ -47,7 +47,7 @@
       pl: 2700,
       puntos: 28,
       votos: 7,
-      foto: "https://www.afa.com.ar/upload/banners/tellovert.jpg",
+      foto: "https://media.diariouno.com.ar/p/61d2e226ed1be15457793382ee8fcc2c/adjuntos/298/imagenes/009/613/0009613955/1200x0/smart/facundo-tello.jpg",
       carrera: "Represent\u00f3 al arbitraje argentino en Qatar 2022. Estuvo a cargo del cruce entre Marruecos y Portugal por los cuartos de final."
     }],
 
